@@ -9,10 +9,19 @@ import {
   ArrowLeftRight,
   FileText,
   Settings,
-  LogOut
+  LogOut,
+  ChevronUp
 } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
-
+import Image from 'next/image'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 interface UserData {
   id: string
   email: string
@@ -48,37 +57,19 @@ export function DashboardSidebar({ user }: SidebarProps) {
   }
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-64 bg-primary/4 flex flex-col">
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900">Church App</h1>
-      </div>
-
-      {/* User info */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-            {user?.email?.[0]?.toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.email}
-            </p>
-            <p className="text-xs text-gray-500 capitalize">
-              {user?.role}
-            </p>
-          </div>
-        </div>
-        {user?.churches?.name && (
-          <div className="mt-2 text-xs text-gray-600 flex items-center">
-            <Building2 className="w-3 h-3 mr-1" />
-            {user.churches.name}
-          </div>
-        )}
+      <div className="h-16 flex items-center px-6">        
+        <Image 
+          src="/Acrostic-Logo-blue.png"
+          height={90}
+          width={120}
+          alt="Logo"
+          />
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
         {filteredNavigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           const Icon = item.icon
@@ -91,34 +82,66 @@ export function DashboardSidebar({ user }: SidebarProps) {
                 flex items-center px-3 py-2 text-sm font-medium rounded-lg
                 transition-colors duration-150
                 ${isActive
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-dark-500 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'text-accent font-display font-semibold'
+                  : 'text-primary font-display hover:text-accent'
                 }
               `}
             >
-              <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-blue-700' : 'text-dark-500'}`} />
+              <Icon className={`w-6 h-6 mr-3 -mt-1 ${isActive ? 'text-accent' : ''}`} />
               {item.name}
             </Link>
           )
         })}
       </nav>
 
-      {/* Settings and logout */}
-      <div className="px-4 py-4 border-t border-gray-200 space-y-1">
-        <Link
-          href="/settings"
-          className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
-        >
-          <Settings className="w-5 h-5 mr-3 text-gray-400" />
-          Settings
-        </Link>
-        <button
-          onClick={handleSignout}
-          className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
-        >
-          <LogOut className="w-5 h-5 mr-3 text-gray-400" />
-          Sign out
-        </button>
+      {/* User Profile - Footer */}
+      <div className="px-4 py-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full focus:outline-none">
+            <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                  {user?.email?.[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm text-primary font-semibold truncate">
+                  {user?.email}
+                </p>
+                <p className="text-xs text-accent capitalize">
+                  {user?.role}
+                  {user?.churches?.name && ` • ${user.churches.name}`}
+                </p>
+              </div>
+              <ChevronUp className="h-4 w-4 text-primary" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <div className="px-2 py-2">
+              <p className="text-sm font-medium">{user?.email}</p>
+              <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+              {user?.churches?.name && (
+                <p className="text-xs text-foreground flex items-center mt-1">
+                  <Building2 className="w-3 h-3 mr-1" />
+                  {user.churches.name}
+                </p>
+              )}
+            </div>
+            <DropdownMenuItem asChild>
+              <Link href="/settings" className="cursor-pointer text-primary">
+                <Settings className="w-4 h-4 mr-2 text-primary" />
+                Settings
+              </Link>
+            </DropdownMenuItem>            
+            <DropdownMenuItem
+              onClick={handleSignout}
+              className="cursor-pointer text-primary font-semibold"
+            >
+              <LogOut className="w-4 h-4 mr-2 text-primary" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   )

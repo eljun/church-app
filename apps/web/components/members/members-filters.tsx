@@ -52,7 +52,7 @@ export function MembersFilters() {
   const hasActiveFilters = Array.from(searchParams.keys()).length > 0
 
   return (
-    <div className="bg-white rounded-lg border p-4">
+    <div className="border border-primary/15 p-4">
       <div className="flex flex-col gap-4">
         {/* Search */}
         <form onSubmit={handleSearch} className="flex gap-2">

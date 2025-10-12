@@ -44,7 +44,7 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="font-display text-3xl font-bold text-gray-900">Transfer Request Details</h1>
+          <h1 className="font-display text-3xl font-bold ">Transfer Request Details</h1>
           <p className="mt-1 text-sm text-gray-500">
             View and manage this transfer request
           </p>

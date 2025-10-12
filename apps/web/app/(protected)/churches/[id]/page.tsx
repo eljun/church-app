@@ -77,7 +77,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
         <div className="bg-white rounded-lg border p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-display text-3xl font-bold text-gray-900">
+              <h1 className="font-display text-3xl font-bold ">
                 {church.name}
               </h1>
               <p className="mt-1 text-sm text-gray-500">
@@ -100,7 +100,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Field & District</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base ">
                   {church.field}
                 </p>
                 <p className="text-sm text-gray-500">{church.district}</p>
@@ -114,7 +114,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Location</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base ">
                   {church.city && church.province
                     ? `${church.city}, ${church.province}`
                     : church.city || church.province || 'N/A'}
@@ -132,7 +132,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Established</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base ">
                   {formatDate(church.established_date)}
                 </p>
                 {yearsSinceEstablished !== null && yearsSinceEstablished > 0 && (
@@ -150,7 +150,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Members</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base ">
                   {memberCount.toLocaleString()} {memberCount === 1 ? 'member' : 'members'}
                 </p>
                 {memberCount > 0 && (
@@ -172,7 +172,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Coordinates</p>
-                  <p className="mt-1 text-base text-gray-900">
+                  <p className="mt-1 text-base ">
                     {church.latitude}, {church.longitude}
                   </p>
                 </div>

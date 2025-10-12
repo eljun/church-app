@@ -57,7 +57,13 @@
 - `/transfers/new` - Create Transfer Request ✅
 - `/transfers/[id]` - Transfer Detail View ✅
 - `/transfers/bulk` - Bulk Transfer Tool ✅
-- `/reports` - **TODO: Build this** (Phase 5)
+- `/reports` - Reports & Analytics Dashboard ✅
+- `/reports/member-growth` - Member Growth Report ✅
+- `/reports/transfers` - Transfer Reports ✅
+- `/reports/baptism-anniversaries` - Baptism Anniversaries ✅
+- `/reports/birthdays` - Birthday Report ✅
+- `/reports/statistics` - Statistics Dashboard ✅
+- `/reports/custom` - Custom Report Builder ✅
 - `/settings` - **TODO: Build this** (Phase 8)
 
 ## 🎯 Next Phase: Transfer Management
@@ -494,10 +500,66 @@ Visit: http://localhost:3000
 
 ---
 
-**Current State:** Phase 4 COMPLETE ✅
-**Next Phase:** Phase 5 - Reports & Analytics
-**Status:** Ready for production deployment
-**All Issues Resolved:** Transfer system fully functional
+**Current State:** Phase 5 COMPLETE ✅ (with major enhancements)
+**Next Phase:** Phase 6 - Events & Activities
+**Status:** Production ready (requires database migration for gender field)
+**All Features Working:** Reports, Analytics, Custom Reports, Dashboard fully functional
+
+### Latest Updates (2025-10-12):
+
+#### Report System Fixes
+✅ **Member Statistics Fixed** - Zero counts issue resolved
+✅ **Gender Field Added** - Male/Female demographics now supported
+✅ **Growth Chart Enhanced** - Now tracks baptism dates instead of record creation
+✅ **Database Migration Created** - Gender field migration ready to apply
+
+#### Custom Report Builder (NEW!)
+✅ **Dynamic Field Selection** - Choose from 13 member fields
+✅ **Advanced Filtering** - Church, status, age, gender, baptism filters
+✅ **Live Preview** - Table preview with first 50 records
+✅ **CSV Export** - One-click export with proper formatting
+✅ **Quick Templates** - 6 pre-configured report templates
+✅ **Role-Based Access** - Automatic data filtering by user role
+
+#### Dashboard Rebuild (NEW!)
+✅ **Member Statistics** - 4 key metric cards
+✅ **Demographics** - Gender, Spiritual Condition, Church by Field
+✅ **Age Distribution Chart** - Children, Youth, Adults, Seniors breakdown
+✅ **Upcoming Events** - Birthdays and Baptism Anniversaries
+✅ **Baptism Growth Trend** - Monthly growth chart with cumulative tracking
+
+#### Color Scheme Update (NEW!)
+✅ **Branded Color Palette** - Consistent colors across all charts
+✅ **Custom Chart Colors** - 6 new colors defined in globals.css
+✅ **Updated Components** - All charts and progress bars using new palette
+  - Purple/Lavender (#9D98CA)
+  - Coral/Pink (#DA7E8E)
+  - Taupe (#C7B5AD)
+  - Light Beige (#E3D9C7)
+  - Sky Blue (#8ED8F8)
+  - Mint Green (#9BD3AE)
+
+**✅ Phase 5 Complete:**
+- Reports & Analytics Dashboard (main navigation hub)
+- Member Growth Report (with interactive charts)
+- Transfer Reports (with statistics and history)
+- Baptism Anniversary Report (with milestone tracking)
+- Birthday Report (grouped by month with milestones)
+- Statistics Dashboard (comprehensive metrics overview)
+- Custom Report Builder (templates and filters)
+- Export functionality (PDF, Excel, CSV)
+- Recharts integration for data visualization
+- Demographics breakdowns (gender, spiritual condition)
+- Upcoming events tracking (birthdays and anniversaries)
+
+**📊 Reports Routes:**
+- `/reports` - Main dashboard with category cards ✅
+- `/reports/member-growth` - Growth trends with charts ✅
+- `/reports/transfers` - Transfer analytics and history ✅
+- `/reports/baptism-anniversaries` - Anniversary tracking ✅
+- `/reports/birthdays` - Birthday calendar ✅
+- `/reports/statistics` - Statistical overview ✅
+- `/reports/custom` - Custom report builder ✅
 
 ## 📚 Recent Achievements
 
@@ -538,4 +600,274 @@ Visit: http://localhost:3000
 - Database migration for images array
 - Automatic image_url sync trigger
 - Next.js image domain configuration
+
+### Phase 5 Report Fixes (2025-10-12):
+**Issue 1: Zero Statistics in Reports**
+- Problem: All member statistics showing 0 counts
+- Root cause: Query filtering by empty string instead of NULL for superadmin
+- Fix: Added conditional query building to only filter by church_id when defined
+- File: `apps/web/lib/queries/reports.ts`
+
+**Issue 2: Male/Female Demographics Missing**
+- Problem: Gender statistics showing 0 / 0
+- Root cause: `gender` field missing from database schema
+- Fix: Created database migration `004_add_gender_field.sql`
+- Updated: Form validation, member form component, and default values
+- Files: `member.ts`, `member-form.tsx`, `004_add_gender_field.sql`
+- **Action Required**: Run database migration before gender tracking works
+
+**Issue 3: Empty Growth Chart**
+- Problem: Chart showing "No growth data available"
+- Root cause: Default date range (last year) may not have member records
+- Fix: Added debug logging and improved empty state messaging
+- Enhancement: Better UX with helpful instructions
+- File: `member-growth-report.tsx`
+
+**Documentation Created:**
+- `MEMBER_REPORT_FIX_SUMMARY.md` - Member report fixes and solutions
+- `DATABASE_MIGRATION_INSTRUCTIONS.md` - Gender field migration guide
+- `BAPTISM_GROWTH_UPDATE.md` - Baptism date tracking implementation
+- `CUSTOM_REPORTS_IMPLEMENTATION.md` - Complete custom report builder docs
+- `DASHBOARD_REBUILD_SUMMARY.md` - New dashboard structure and features
+- `AGE_DISTRIBUTION_FEATURE.md` - Age group tracking implementation
+- `COLOR_SCHEME_UPDATE.md` - Branded color palette documentation
+
+## 📦 Files & Components Structure
+
+### New Components Created
+- `components/reports/custom-report-builder.tsx` - Custom report UI
+- `components/reports/age-distribution-chart.tsx` - Age groups bar chart
+- `lib/types/custom-reports.ts` - Type definitions for custom reports
+- `lib/queries/reports.ts` - Enhanced with age distribution query
+- `app/api/reports/custom/route.ts` - API endpoint for report generation
+
+### Updated Components
+- `app/(protected)/page.tsx` - Completely rebuilt dashboard
+- `components/reports/member-growth-chart.tsx` - New color scheme
+- `components/reports/member-growth-report.tsx` - Baptism date tracking
+- `app/globals.css` - Added 6 custom chart colors
+
+### Database Migrations
+- `packages/database/migrations/004_add_gender_field.sql` - Gender field migration
+
+## 🎯 Key Features Added This Session
+
+### 1. Custom Report Builder (`/reports/custom`)
+**What it does:**
+- Allows users to build custom member reports
+- Select any combination of 13 fields
+- Apply multiple filters (church, status, age, gender, etc.)
+- Preview data in table format
+- Export to CSV with one click
+
+**Use cases:**
+- "Show me all female members aged 18-30 from Church X"
+- "Export contact directory for all active members"
+- "List unbaptized members with inactive spiritual condition"
+
+### 2. Age Distribution Tracking
+**What it does:**
+- Categorizes members into 4 age groups
+- Children (<12), Youth (12-34), Adults (35-65), Seniors (66+)
+- Displays bar chart with color-coded categories
+- Shows percentages and counts
+
+**Where it appears:**
+- Main dashboard (new section)
+- Can be added to reports page
+
+### 3. Dashboard Redesign
+**What changed:**
+- Removed old placeholder components
+- Added real data from report queries
+- New sections:
+  1. Member Statistics (4 cards)
+  2. Demographics (3 cards with progress bars)
+  3. Age Distribution (bar chart)
+  4. Upcoming Events (2 cards)
+  5. Baptism Growth Trend (line chart)
+
+**Key improvement:**
+- Church by Field breakdown (shows member distribution across fields)
+- All data respects role-based filtering
+
+### 4. Baptism Date Tracking
+**What changed:**
+- Member Growth chart now uses `date_of_baptism` instead of `created_at`
+- Shows actual spiritual growth, not just database records
+- Extended default range to 5 years for more data
+- Better empty state messaging
+
+**Why it matters:**
+- More accurate growth tracking
+- Reflects actual ministry effectiveness
+- Useful for year-over-year comparisons
+
+### 5. Branded Color Scheme
+**What it does:**
+- Consistent color palette across all charts
+- 6 custom colors matching brand identity
+- Applied to all progress bars and charts
+
+**Colors:**
+- Purple/Lavender - Children, Fields
+- Coral/Pink - Seniors, Female
+- Taupe - Inactive spiritual
+- Sky Blue - Adults, Male, New Baptisms
+- Mint Green - Youth, Active, Cumulative
+
+## 🚀 Production Deployment Checklist
+
+Before deploying to production:
+
+- [ ] **Run Database Migration**
+  ```bash
+  # Apply gender field migration
+  psql -h <db-host> -U postgres -d postgres -f packages/database/migrations/004_add_gender_field.sql
+  ```
+
+- [ ] **Update Existing Members (Optional)**
+  - Manually add gender to existing member records
+  - Or leave as null (gender field is optional)
+
+- [ ] **Verify Environment Variables**
+  - Check Supabase connection
+  - Verify storage bucket configuration
+  - Test authentication flow
+
+- [ ] **Test Key Features**
+  - Dashboard loads with real data
+  - Custom reports generate and export
+  - Age distribution displays correctly
+  - Baptism growth chart shows data
+  - All colors display correctly
+
+- [ ] **Performance Check**
+  - Dashboard load time
+  - Report generation speed
+  - CSV export functionality
+  - Chart rendering performance
+
+## 📊 Current Dashboard Structure
+
+```
+Dashboard (/)
+├─ Header
+│  ├─ Title: "Dashboard"
+│  └─ Description: "Overview of your church management system"
+│
+├─ Member Statistics (4 cards)
+│  ├─ Total Members
+│  ├─ Active Spiritually
+│  ├─ Inactive Spiritually
+│  └─ Baptized Members
+│
+├─ Demographics (3 cards)
+│  ├─ Gender Distribution
+│  │  ├─ Male (Sky Blue)
+│  │  └─ Female (Coral/Pink)
+│  ├─ Spiritual Condition
+│  │  ├─ Active (Mint Green)
+│  │  └─ Inactive (Taupe)
+│  └─ Church by Field
+│     └─ Fields with member counts (Purple/Lavender)
+│
+├─ Age Distribution (full-width card)
+│  ├─ Summary stats (4 columns)
+│  └─ Bar chart
+│     ├─ Children (Purple/Lavender)
+│     ├─ Youth (Mint Green)
+│     ├─ Adults (Sky Blue)
+│     └─ Seniors (Coral/Pink)
+│
+├─ Upcoming Events (2 cards)
+│  ├─ Birthdays (next 30 days)
+│  └─ Baptism Anniversaries (next 30 days)
+│
+└─ Baptism Growth Trend (full-width card)
+   └─ Line chart
+      ├─ New Baptisms (Sky Blue)
+      └─ Cumulative Baptisms (Mint Green)
+```
+
+## 🔧 Technical Improvements Made
+
+### Query Optimization
+- Parallel data fetching with `Promise.all()`
+- Role-based filtering at database level
+- Efficient aggregation queries
+- Proper indexing on queried fields
+
+### Component Architecture
+- Reusable chart components
+- Consistent prop interfaces
+- Server/Client component separation
+- Type-safe implementations
+
+### User Experience
+- Responsive layouts on all screens
+- Loading states and skeletons
+- Empty states with helpful messages
+- Interactive tooltips and legends
+- Smooth animations
+
+### Code Quality
+- TypeScript strict mode
+- Proper error handling
+- Validation at multiple layers
+- Clean, documented code
+- No console errors or warnings
+
+## 🎨 UI/UX Improvements (Latest Session - 2025-10-13)
+
+### Sidebar Enhancement
+✅ **User Profile Redesign** - Moved profile to footer area
+✅ **ShadCN Avatar Component** - Professional avatar with user initial
+✅ **Dropdown Menu** - Clean dropdown for Settings and Sign out
+✅ **Better Layout** - More space for navigation items
+✅ **Visual Hierarchy** - ChevronUp icon indicates expandable menu
+
+**Files Updated:**
+- `components/dashboard/sidebar.tsx` - Complete sidebar redesign
+- Added Avatar component integration
+- Implemented DropdownMenu pattern
+- Moved user info from header to footer
+
+### Build Quality Improvements
+✅ **All Lint Errors Fixed** - Zero TypeScript errors
+✅ **Type Safety Enhanced** - Proper type annotations throughout
+✅ **Unused Imports Removed** - Clean, optimized code
+✅ **Production Build Passing** - Ready for deployment
+
+**Files Fixed:**
+- Fixed unused imports in all page components
+- Resolved `any` type errors in queries and utilities
+- Fixed type errors in components
+- Removed unused variables
+- Enhanced type safety for Supabase queries
+
+**Technical Fixes:**
+- Fixed church data type handling in dashboard
+- Fixed birthday member types in reports
+- Fixed member report data transformation
+- Fixed jsPDF import destructuring
+- Added proper TypeScript type guards
+
+### Component Updates (2025-10-13)
+```
+Sidebar Component
+├─ Logo (top)
+├─ Navigation Links (middle)
+│  ├─ Dashboard
+│  ├─ Members
+│  ├─ Churches (superadmin only)
+│  ├─ Transfers
+│  └─ Reports
+└─ User Profile Dropdown (footer)
+   ├─ Avatar with initial
+   ├─ Email & Role display
+   ├─ Church name (if admin)
+   ├─ Settings link
+   └─ Sign out button (red)
+```
 

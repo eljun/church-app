@@ -68,6 +68,7 @@ export function MemberForm({
       full_name: '',
       birthday: '',
       age: 0,
+      gender: undefined,
       date_of_baptism: null,
       baptized_by: null,
       physical_condition: 'fit',
@@ -234,6 +235,29 @@ export function MemberForm({
               <FormDescription>
                 Automatically calculated from birthday
               </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Gender */}
+        <FormField
+          control={form.control}
+          name="gender"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Gender (Optional)</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

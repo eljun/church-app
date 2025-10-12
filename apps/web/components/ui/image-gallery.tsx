@@ -66,7 +66,7 @@ export function ImageGallery({ images, alt = 'Gallery image', className }: Image
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
                 <svg
-                  className="w-6 h-6 text-gray-900"
+                  className="w-6 h-6 "
                   fill="none"
                   strokeWidth="2"
                   stroke="currentColor"
@@ -96,7 +96,7 @@ export function ImageGallery({ images, alt = 'Gallery image', className }: Image
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
                     <svg
-                      className="w-6 h-6 text-gray-900"
+                      className="w-6 h-6 "
                       fill="none"
                       strokeWidth="2"
                       stroke="currentColor"
@@ -132,7 +132,7 @@ export function ImageGallery({ images, alt = 'Gallery image', className }: Image
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
                   <svg
-                    className="w-6 h-6 text-gray-900"
+                    className="w-6 h-6 "
                     fill="none"
                     strokeWidth="2"
                     stroke="currentColor"
@@ -166,7 +166,7 @@ export function ImageGallery({ images, alt = 'Gallery image', className }: Image
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
                     <svg
-                      className="w-6 h-6 text-gray-900"
+                      className="w-6 h-6 "
                       fill="none"
                       strokeWidth="2"
                       stroke="currentColor"

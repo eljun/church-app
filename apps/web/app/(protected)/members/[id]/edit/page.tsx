@@ -30,7 +30,7 @@ export default async function EditMemberPage({ params }: EditMemberPageProps) {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Page header */}
         <div>
-          <h1 className="font-display text-3xl font-bold text-gray-900">Edit Member</h1>
+          <h1 className="font-display text-3xl font-bold ">Edit Member</h1>
           <p className="mt-1 text-sm text-gray-500">
             Update member information for {member.full_name}
           </p>

@@ -96,7 +96,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
         <div className="bg-white rounded-lg border p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-display text-3xl font-bold text-gray-900">
+              <h1 className="font-display text-3xl font-bold ">
                 {member.full_name}
               </h1>
               <p className="mt-1 text-sm text-gray-500">
@@ -120,7 +120,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Church</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base ">
                   {member.churches?.name || 'N/A'}
                 </p>
               </div>
@@ -133,7 +133,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Age & Birthday</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base ">
                   {member.age} years old
                 </p>
                 <p className="text-sm text-gray-500">{formatDate(member.birthday)}</p>
@@ -147,7 +147,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Baptism</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base ">
                   {formatDate(member.date_of_baptism)}
                 </p>
                 {baptismYears !== null && baptismYears > 0 && (
@@ -170,7 +170,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Physical Condition</p>
-                <p className="mt-1 text-base text-gray-900 capitalize">
+                <p className="mt-1 text-base  capitalize">
                   {member.physical_condition}
                 </p>
                 {member.illness_description && (
@@ -189,7 +189,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">SP Number</p>
-                  <p className="mt-1 text-base text-gray-900">{member.sp}</p>
+                  <p className="mt-1 text-base ">{member.sp}</p>
                 </div>
               </div>
             )}
@@ -200,7 +200,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
         {transferHistory.length > 0 && (
           <div className="bg-white rounded-lg border">
             <div className="p-6 border-b">
-              <h2 className="font-display text-xl font-bold text-gray-900">
+              <h2 className="font-display text-xl font-bold ">
                 Transfer History
               </h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -239,7 +239,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
           <div className="bg-white rounded-lg border p-6">
             <div className="text-center text-gray-500">
               <Activity className="mx-auto h-12 w-12 text-gray-300" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
+              <h3 className="mt-2 text-sm font-medium ">
                 No transfer history
               </h3>
               <p className="mt-1 text-sm text-gray-500">

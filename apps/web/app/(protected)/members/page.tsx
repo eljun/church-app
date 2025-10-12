@@ -43,8 +43,8 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-gray-900">Members</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="font-display text-3xl font-bold text-primary">Members</h1>
+          <p className="mt-1 text-sm text-foreground">
             Manage your church members ({count.toLocaleString()} total)
           </p>
         </div>

@@ -1,40 +1,358 @@
-import { getDashboardStats, getMembershipGrowth, getRecentActivities } from '@/lib/queries/dashboard'
-import { StatsCards } from '@/components/dashboard/stats-cards'
-import { MembershipGrowthChart } from '@/components/dashboard/membership-growth-chart'
-import { RecentActivities } from '@/components/dashboard/recent-activities'
+import {
+  UsersIcon,
+  UserCheckIcon,
+  UserXIcon,
+  CalendarHeartIcon,
+  CakeIcon,
+} from 'lucide-react'
+import {
+  getMemberStatistics,
+  getMemberGrowthData,
+  getUpcomingBirthdays,
+  getUpcomingBaptismAnniversaries,
+  getAgeDistribution,
+} from '@/lib/queries/reports'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { StatisticsCard } from '@/components/reports/statistics-card'
+import { MemberGrowthChart } from '@/components/reports/member-growth-chart'
+import { AgeDistributionChart } from '@/components/reports/age-distribution-chart'
+import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default async function DashboardPage() {
+  const supabase = await createClient()
+
+  // Get user info for filtering
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role, church_id')
+    .eq('id', user?.id || '')
+    .single()
+
   // Fetch all data in parallel
-  const [stats, growth, activities] = await Promise.all([
-    getDashboardStats(),
-    getMembershipGrowth(),
-    getRecentActivities(10),
-  ])
+  const [memberStats, growthData, upcomingBirthdays, upcomingAnniversaries, ageDistribution, churches] =
+    await Promise.all([
+      getMemberStatistics(userData?.role === 'admin' ? userData.church_id : undefined),
+      getMemberGrowthData({
+        church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+      }),
+      getUpcomingBirthdays({
+        church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+        months_ahead: 1,
+      }),
+      getUpcomingBaptismAnniversaries({
+        church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+        months_ahead: 1,
+      }),
+      getAgeDistribution(userData?.role === 'admin' ? userData.church_id : undefined),
+      // Get church/field breakdown
+      supabase
+        .from('members')
+        .select('church_id, churches(name, field)')
+        .eq('status', 'active')
+        .then(({ data }) => {
+          // Group by church and field
+          const churchCounts = new Map<string, { name: string; field: string; count: number }>()
+          data?.forEach((member) => {
+            const churches = member.churches as { name: string; field: string } | { name: string; field: string }[] | null
+            const churchData = Array.isArray(churches) ? churches[0] : churches
+            const churchName = churchData?.name || 'Unknown'
+            const field = churchData?.field || 'Unknown'
+            const key = `${field}:${churchName}`
+
+            if (churchCounts.has(key)) {
+              churchCounts.get(key)!.count++
+            } else {
+              churchCounts.set(key, { name: churchName, field, count: 1 })
+            }
+          })
+
+          // Group by field
+          const fieldCounts = new Map<string, { churches: string[]; count: number }>()
+          Array.from(churchCounts.values()).forEach(({ name, field, count }) => {
+            if (fieldCounts.has(field)) {
+              fieldCounts.get(field)!.count += count
+              fieldCounts.get(field)!.churches.push(`${name} (${count})`)
+            } else {
+              fieldCounts.set(field, { churches: [`${name} (${count})`], count })
+            }
+          })
+
+          return { churchCounts, fieldCounts }
+        }),
+    ])
+
+  // Calculate percentages
+  const activePercentage =
+    memberStats.total > 0 ? Math.round((memberStats.active / memberStats.total) * 100) : 0
+  const baptizedPercentage =
+    memberStats.total > 0 ? Math.round((memberStats.baptized / memberStats.total) * 100) : 0
+  const malePercentage =
+    memberStats.total > 0 ? Math.round((memberStats.male / memberStats.total) * 100) : 0
+  const femalePercentage =
+    memberStats.total > 0 ? Math.round((memberStats.female / memberStats.total) * 100) : 0
+
+  // Process growth data for chart
+  const processGrowthData = (data: Array<{ date_of_baptism: string }>) => {
+    if (data.length === 0) return []
+
+    const grouped = new Map<string, number>()
+    data.forEach((member) => {
+      const date = new Date(member.date_of_baptism)
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      grouped.set(key, (grouped.get(key) || 0) + 1)
+    })
+
+    const sorted = Array.from(grouped.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+    let cumulative = 0
+
+    return sorted.map(([date, count]) => {
+      cumulative += count
+      return { date, count, cumulative }
+    })
+  }
+
+  const chartData = processGrowthData(growthData)
 
   return (
     <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="font-display text-3xl font-bold ">Dashboard</h1>
         <p className="mt-1 text-sm text-gray-500">
           Overview of your church management system
         </p>
       </div>
 
-      {/* Statistics cards */}
-      <StatsCards stats={stats} />
-
-      {/* Charts and activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Membership growth chart - spans 2 columns */}
-        <div className="lg:col-span-2">
-          <MembershipGrowthChart data={growth} />
+      {/* Member Statistics */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Member Statistics</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatisticsCard
+            title="Total Members"
+            value={memberStats.total.toLocaleString()}
+            icon={UsersIcon}
+            description="All active members"
+          />
+          <StatisticsCard
+            title="Active Spiritually"
+            value={memberStats.active.toLocaleString()}
+            icon={UserCheckIcon}
+            description={`${activePercentage}% of total members`}
+          />
+          <StatisticsCard
+            title="Inactive Spiritually"
+            value={memberStats.inactive.toLocaleString()}
+            icon={UserXIcon}
+            description={`${100 - activePercentage}% of total members`}
+          />
+          <StatisticsCard
+            title="Baptized Members"
+            value={memberStats.baptized.toLocaleString()}
+            icon={CalendarHeartIcon}
+            description={`${baptizedPercentage}% of total members`}
+          />
         </div>
+      </div>
 
-        {/* Recent activities */}
-        <div>
-          <RecentActivities activities={activities} />
+      {/* Demographics */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Demographics</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Gender Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Gender Distribution</CardTitle>
+              <CardDescription>Member breakdown by gender</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: '#8ED8F8' }} />
+                  <span className="text-sm">Male</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{memberStats.male}</span>
+                  <span className="text-sm text-gray-500">({malePercentage}%)</span>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full"
+                  style={{ width: `${malePercentage}%`, backgroundColor: '#8ED8F8' }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: '#DA7E8E' }} />
+                  <span className="text-sm">Female</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{memberStats.female}</span>
+                  <span className="text-sm text-gray-500">({femalePercentage}%)</span>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full"
+                  style={{ width: `${femalePercentage}%`, backgroundColor: '#DA7E8E' }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Spiritual Condition */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Spiritual Condition</CardTitle>
+              <CardDescription>Active vs. Inactive members</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: '#9BD3AE' }} />
+                  <span className="text-sm">Active</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{memberStats.active}</span>
+                  <span className="text-sm text-gray-500">({activePercentage}%)</span>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full"
+                  style={{ width: `${activePercentage}%`, backgroundColor: '#9BD3AE' }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: '#C7B5AD' }} />
+                  <span className="text-sm">Inactive</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{memberStats.inactive}</span>
+                  <span className="text-sm text-gray-500">({100 - activePercentage}%)</span>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full"
+                  style={{ width: `${100 - activePercentage}%`, backgroundColor: '#C7B5AD' }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Church by Field */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Church by Field</CardTitle>
+              <CardDescription>Members grouped by field</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 max-h-[200px] overflow-y-auto">
+              {Array.from(churches.fieldCounts.entries())
+                .sort((a, b) => b[1].count - a[1].count)
+                .map(([field, { count }]) => (
+                  <div key={field} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{field}</span>
+                      <span className="text-sm text-gray-500">{count}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div
+                        className="h-1.5 rounded-full"
+                        style={{
+                          width: `${memberStats.total > 0 ? (count / memberStats.total) * 100 : 0}%`,
+                          backgroundColor: '#9D98CA'
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+            </CardContent>
+          </Card>
         </div>
+      </div>
+
+      {/* Age Distribution */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Age Distribution</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>Member Age Groups</CardTitle>
+            <CardDescription>
+              Breakdown by age categories: Children (&lt;12), Youth (12-34), Adults (35-65), Seniors (66+)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AgeDistributionChart data={ageDistribution} />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Upcoming Events */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Upcoming Events (Next 30 Days)</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CakeIcon className="h-5 w-5 text-pink-600" />
+                Birthdays
+              </CardTitle>
+              <CardDescription>Members with birthdays this month</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{upcomingBirthdays.length}</div>
+              <Button asChild variant="link" className="px-0 mt-2">
+                <Link href="/reports/birthdays">View all birthdays →</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarHeartIcon className="h-5 w-5 text-green-600" />
+                Baptism Anniversaries
+              </CardTitle>
+              <CardDescription>Anniversaries this month</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{upcomingAnniversaries.length}</div>
+              <Button asChild variant="link" className="px-0 mt-2">
+                <Link href="/reports/baptism-anniversaries">View all anniversaries →</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Baptism Growth Trend */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Baptism Growth Trend</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Baptism Growth</CardTitle>
+            <CardDescription>New baptisms and cumulative total based on baptism dates (Last 5 years)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {chartData.length > 0 ? (
+              <MemberGrowthChart data={chartData} />
+            ) : (
+              <div className="flex h-[300px] flex-col items-center justify-center text-gray-500 space-y-2">
+                <p className="text-lg font-medium">No baptism data available</p>
+                <p className="text-sm text-center max-w-md">
+                  No baptisms recorded in the last 5 years. Members without baptism dates are not included in this chart.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

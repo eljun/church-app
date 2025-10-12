@@ -103,7 +103,7 @@ export function ChurchesTable({ churches, currentPage, totalPages, totalCount }:
   return (
     <div className="space-y-4">
       {/* Table */}
-      <div className="rounded-lg border bg-white">
+      <div className="border border-primary/15 bg-white">
         <Table>
           <TableHeader>
             <TableRow>

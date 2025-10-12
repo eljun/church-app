@@ -33,7 +33,7 @@ export default async function EditChurchPage({ params }: EditChurchPageProps) {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Page header */}
         <div>
-          <h1 className="font-display text-3xl font-bold text-gray-900">Edit Church</h1>
+          <h1 className="font-display text-3xl font-bold ">Edit Church</h1>
           <p className="mt-1 text-sm text-gray-500">
             Update church information for {church.name}
           </p>

@@ -122,7 +122,7 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
   return (
     <div className="space-y-4">
       {/* Table */}
-      <div className="rounded-lg border bg-white">
+      <div className="border border-primary/20">
         <Table>
           <TableHeader>
             <TableRow>

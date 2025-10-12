@@ -90,7 +90,7 @@ export function ChurchForm({ initialData, mode = 'create' }: ChurchFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Information */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
+          <h2 className="text-lg font-semibold ">Basic Information</h2>
 
           {/* Name */}
           <FormField
@@ -141,7 +141,7 @@ export function ChurchForm({ initialData, mode = 'create' }: ChurchFormProps) {
 
         {/* Location Information */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">Location</h2>
+          <h2 className="text-lg font-semibold ">Location</h2>
 
           {/* City and Province */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -248,7 +248,7 @@ export function ChurchForm({ initialData, mode = 'create' }: ChurchFormProps) {
 
         {/* Additional Information */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">Additional Information</h2>
+          <h2 className="text-lg font-semibold ">Additional Information</h2>
 
           {/* Established Date */}
           <FormField
