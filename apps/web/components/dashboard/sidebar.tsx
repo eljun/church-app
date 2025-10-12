@@ -92,11 +92,11 @@ export function DashboardSidebar({ user }: SidebarProps) {
                 transition-colors duration-150
                 ${isActive
                   ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  : 'text-dark-500 hover:bg-gray-50 hover:text-gray-900'
                 }
               `}
             >
-              <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-blue-700' : 'text-gray-400'}`} />
+              <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-blue-700' : 'text-dark-500'}`} />
               {item.name}
             </Link>
           )

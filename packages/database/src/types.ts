@@ -30,6 +30,7 @@ export interface Church {
   latitude: number | null;
   longitude: number | null;
   image_url: string | null;
+  images: string[];
   is_active: boolean;
   established_date: string | null;
   created_at: string;

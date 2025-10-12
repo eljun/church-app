@@ -15,6 +15,7 @@ export const createChurchSchema = z.object({
   latitude: z.coerce.number().min(-90).max(90).nullable().optional(),
   longitude: z.coerce.number().min(-180).max(180).nullable().optional(),
   image_url: z.string().url('Invalid image URL').nullable().optional(),
+  images: z.array(z.string().url('Invalid image URL')).default([]),
   is_active: z.boolean().default(true),
   established_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 })

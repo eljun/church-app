@@ -32,80 +32,61 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { deleteMember } from '@/lib/actions/members'
+import { deleteChurch } from '@/lib/actions/churches'
 import { toast } from 'sonner'
 
-interface Member {
+interface Church {
   id: string
-  full_name: string
-  age: number
-  birthday: string
-  date_of_baptism: string | null
-  physical_condition: 'fit' | 'sickly'
-  spiritual_condition: 'active' | 'inactive'
-  status: 'active' | 'transferred_out' | 'resigned' | 'disfellowshipped' | 'deceased'
-  churches: {
-    name: string
-  } | null
+  name: string
+  field: string
+  district: string
+  city: string | null
+  province: string | null
+  is_active: boolean
+  established_date: string | null
 }
 
-interface MembersTableProps {
-  members: Member[]
+interface ChurchesTableProps {
+  churches: Church[]
   currentPage: number
   totalPages: number
   totalCount: number
 }
 
-export function MembersTable({ members, currentPage, totalPages, totalCount }: MembersTableProps) {
+export function ChurchesTable({ churches, currentPage, totalPages, totalCount }: ChurchesTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [memberToDelete, setMemberToDelete] = useState<string | null>(null)
+  const [churchToDelete, setChurchToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const buildPaginationUrl = (page: number) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('page', page.toString())
-    return `/members?${params.toString()}`
+    return `/churches?${params.toString()}`
   }
 
   const handleDelete = async () => {
-    if (!memberToDelete) return
+    if (!churchToDelete) return
 
     setIsDeleting(true)
-    const result = await deleteMember(memberToDelete)
+    const result = await deleteChurch(churchToDelete)
     setIsDeleting(false)
 
     if ('error' in result) {
       toast.error(result.error)
     } else {
-      toast.success('Member deleted successfully')
+      toast.success('Church deleted successfully')
       setDeleteDialogOpen(false)
-      setMemberToDelete(null)
+      setChurchToDelete(null)
       router.refresh()
     }
   }
 
-  const getStatusBadge = (status: Member['status']) => {
-    const variants: Record<Member['status'], 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      active: 'default',
-      transferred_out: 'secondary',
-      resigned: 'outline',
-      disfellowshipped: 'destructive',
-      deceased: 'secondary',
-    }
-
+  const getStatusBadge = (isActive: boolean) => {
     return (
-      <Badge variant={variants[status]}>
-        {status.replace('_', ' ')}
-      </Badge>
-    )
-  }
-
-  const getSpiritualBadge = (condition: Member['spiritual_condition']) => {
-    return (
-      <Badge variant={condition === 'active' ? 'default' : 'secondary'}>
-        {condition}
+      <Badge variant={isActive ? 'default' : 'secondary'}>
+        {isActive ? 'Active' : 'Inactive'}
       </Badge>
     )
   }
@@ -127,39 +108,41 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Church</TableHead>
-              <TableHead>Age</TableHead>
-              <TableHead>Birthday</TableHead>
-              <TableHead>Baptism Date</TableHead>
-              <TableHead>Spiritual</TableHead>
+              <TableHead>Field</TableHead>
+              <TableHead>District</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Established</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {members.length === 0 ? (
+            {churches.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
-                  No members found
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  No churches found
                 </TableCell>
               </TableRow>
             ) : (
-              members.map((member) => (
-                <TableRow key={member.id} className="hover:bg-gray-50">
+              churches.map((church) => (
+                <TableRow key={church.id} className="hover:bg-gray-50">
                   <TableCell className="font-medium">
                     <Link
-                      href={`/members/${member.id}`}
+                      href={`/churches/${church.id}`}
                       className="hover:underline"
                     >
-                      {member.full_name}
+                      {church.name}
                     </Link>
                   </TableCell>
-                  <TableCell>{member.churches?.name || 'N/A'}</TableCell>
-                  <TableCell>{member.age}</TableCell>
-                  <TableCell>{formatDate(member.birthday)}</TableCell>
-                  <TableCell>{formatDate(member.date_of_baptism)}</TableCell>
-                  <TableCell>{getSpiritualBadge(member.spiritual_condition)}</TableCell>
-                  <TableCell>{getStatusBadge(member.status)}</TableCell>
+                  <TableCell>{church.field}</TableCell>
+                  <TableCell>{church.district}</TableCell>
+                  <TableCell>
+                    {church.city && church.province
+                      ? `${church.city}, ${church.province}`
+                      : church.city || church.province || 'N/A'}
+                  </TableCell>
+                  <TableCell>{formatDate(church.established_date)}</TableCell>
+                  <TableCell>{getStatusBadge(church.is_active)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -172,13 +155,13 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                          <Link href={`/members/${member.id}`}>
+                          <Link href={`/churches/${church.id}`}>
                             <Eye className="mr-2 h-4 w-4" />
                             View
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href={`/members/${member.id}/edit`}>
+                          <Link href={`/churches/${church.id}/edit`}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
                           </Link>
@@ -187,7 +170,7 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
                         <DropdownMenuItem
                           className="text-red-600"
                           onClick={() => {
-                            setMemberToDelete(member.id)
+                            setChurchToDelete(church.id)
                             setDeleteDialogOpen(true)
                           }}
                         >
@@ -208,7 +191,7 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {(currentPage - 1) * 50 + 1} to {Math.min(currentPage * 50, totalCount)} of {totalCount} members
+            Showing {(currentPage - 1) * 50 + 1} to {Math.min(currentPage * 50, totalCount)} of {totalCount} churches
           </p>
           <div className="flex gap-2">
             <Button
@@ -237,7 +220,7 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the member
+              This action cannot be undone. This will permanently delete the church
               from the database.
             </AlertDialogDescription>
           </AlertDialogHeader>
