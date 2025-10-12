@@ -16,9 +16,15 @@
 # next.js
 /.next/
 /out/
+**/apps/**/.next/
+**/apps/**/out/
+**/.next/
+**/out/
 
 # production
 /build
+**/build
+**/dist
 
 # misc
 .DS_Store
@@ -42,6 +48,7 @@ next-env.d.ts
 
 # turbo
 .turbo
+**/.turbo
 
 # expo
 .expo/
