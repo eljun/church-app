@@ -18,9 +18,9 @@ interface HeaderProps {
 
 export function DashboardHeader({}: HeaderProps) {
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+    <header className="h-12 flex  justify-end px-6">
       {/* Search bar */}
-      <div className="flex-1 max-w-md">
+      {/* <div className="flex-1 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
@@ -29,7 +29,7 @@ export function DashboardHeader({}: HeaderProps) {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Right section */}
       <div className="flex items-center space-x-4">

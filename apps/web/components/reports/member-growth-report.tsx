@@ -41,25 +41,25 @@ export function MemberGrowthReport({ initialData, stats }: MemberGrowthReportPro
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Total Members</CardDescription>
-            <CardTitle className="text-3xl">{stats.total}</CardTitle>
+            <CardTitle className="text-3xl text-primary">{stats.total}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Active Members</CardDescription>
-            <CardTitle className="text-3xl">{stats.active}</CardTitle>
+            <CardTitle className="text-3xl text-primary">{stats.active}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Male / Female</CardDescription>
-            <CardTitle className="text-3xl">{stats.male} / {stats.female}</CardTitle>
+            <CardTitle className="text-3xl text-primary">{stats.male} / {stats.female}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Baptized</CardDescription>
-            <CardTitle className="text-3xl">{stats.baptized}</CardTitle>
+            <CardTitle className="text-3xl text-primary">{stats.baptized}</CardTitle>
           </CardHeader>
         </Card>
       </div>

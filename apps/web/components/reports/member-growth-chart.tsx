@@ -14,12 +14,12 @@ export function MemberGrowthChart({ data }: MemberGrowthChartProps) {
   return (
     <ResponsiveContainer width="100%" height={400}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
+        <CartesianGrid strokeDasharray="0 3" />
         <XAxis
           dataKey="date"
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 10 }}
         />
-        <YAxis tick={{ fontSize: 12 }} />
+        <YAxis tick={{ fontSize: 10 }} />
         <Tooltip />
         <Legend />
         <Line

@@ -59,7 +59,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
   return (
     <aside className="w-64 bg-primary/4 flex flex-col">
       {/* Logo */}
-      <div className="h-16 flex items-center px-6">        
+      <div className="h-16 flex items-center px-6 my-4">        
         <Image 
           src="/Acrostic-Logo-blue.png"
           height={90}
