@@ -1,0 +1,25 @@
+{
+  "name": "@church-app/database",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "import-csv": "tsx src/import-csv.ts",
+    "analyze-data": "tsx src/analyze-data.ts",
+    "clean-data": "tsx src/clean-data.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.46.1",
+    "zod": "^3.24.1",
+    "csv-parse": "^5.6.0",
+    "csv-stringify": "^6.5.2",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "tsx": "^4.19.2"
+  }
+}
