@@ -1,3 +1,0 @@
-(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["chunks/Personal_church-app_05135a67._.js",84971,e=>{"use strict";e.s(["Headers",()=>n,"Request",()=>l,"Response",()=>r,"default",()=>h,"fetch",()=>t]);var s="undefined"!=typeof self?self:e.g;let t=s.fetch,h=s.fetch.bind(s),n=s.Headers,l=s.Request,r=s.Response},85375,(e,s,t)=>{self._ENTRIES||={};let h=Promise.resolve().then(()=>e.i(23508));h.catch(()=>{}),self._ENTRIES.middleware_middleware=new Proxy(h,{get(e,s){if("then"===s)return(s,t)=>e.then(s,t);let t=(...t)=>e.then(e=>(0,e[s])(...t));return t.then=(t,h)=>e.then(e=>e[s]).then(t,h),t}})}]);
-
-//# sourceMappingURL=Personal_church-app_05135a67._.js.map
