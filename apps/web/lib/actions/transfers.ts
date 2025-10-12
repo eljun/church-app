@@ -75,7 +75,7 @@ export async function createTransferRequest(input: CreateTransferRequestInput) {
       .single()
 
     if (error) {
-      return { error: error.message }
+      return { error: `Failed to create transfer: ${error.message}` }
     }
 
     // Log action

@@ -14,7 +14,6 @@ export const createTransferRequestSchema = z.object({
 
 export const approveTransferSchema = z.object({
   transfer_request_id: z.string().uuid('Invalid transfer request ID'),
-  approved_by: z.string().uuid('Invalid user ID'),
 })
 
 export const rejectTransferSchema = z.object({
