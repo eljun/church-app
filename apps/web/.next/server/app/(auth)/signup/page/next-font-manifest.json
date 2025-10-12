@@ -1,0 +1,26 @@
+{
+  "pages": {},
+  "app": {
+    "[project]/Personal/church-app/apps/web/app/(auth)/signup/page": [
+      "static/media/Gilroy_Light-s.p.a486eb3d.ttf",
+      "static/media/Gilroy_LightItalic-s.p.8bbf89d0.ttf",
+      "static/media/Gilroy_Regular-s.p.d310b0bd.ttf",
+      "static/media/Gilroy_RegularItalic-s.p.d2615bc7.ttf",
+      "static/media/Gilroy_Medium-s.p.0095cfb1.ttf",
+      "static/media/Gilroy_MediumItalic-s.p.183070f1.ttf",
+      "static/media/Gilroy_SemiBold-s.p.f6f01d53.ttf",
+      "static/media/Gilroy_SemiBoldItalic-s.p.4d460294.ttf",
+      "static/media/Gilroy_Bold-s.p.081adda2.ttf",
+      "static/media/Gilroy_BoldItalic-s.p.80534437.ttf",
+      "static/media/AgenorNeue_Thin-s.p.ab72e383.otf",
+      "static/media/AgenorNeue_Light-s.p.4fc1bd3d.otf",
+      "static/media/AgenorNeue_Regular-s.p.bd922205.otf",
+      "static/media/AgenorNeue_SemiBold-s.p.74f62b04.otf",
+      "static/media/AgenorNeue_Bold-s.p.b0573e0b.otf",
+      "static/media/AgenorNeue_ExtraBold-s.p.40d22625.otf",
+      "static/media/AgenorNeue_Black-s.p.8ba64325.otf"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pagesUsingSizeAdjust": false
+}

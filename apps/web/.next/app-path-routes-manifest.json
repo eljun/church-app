@@ -1,0 +1,7 @@
+{
+  "/(auth)/login/page": "/login",
+  "/(auth)/signup/page": "/signup",
+  "/(protected)/page": "/",
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico"
+}
