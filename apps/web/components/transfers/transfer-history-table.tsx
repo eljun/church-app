@@ -53,7 +53,7 @@ export function TransferHistoryTable({ history }: TransferHistoryTableProps) {
         <TableBody>
           {history.map((record) => (
             <TableRow key={record.id}>
-              <TableCell>
+              <TableCell className="py-6">
                 <Link
                   href={`/members/${record.members.id}`}
                   className="font-medium hover:underline"

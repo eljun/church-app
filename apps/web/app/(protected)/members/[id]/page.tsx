@@ -96,7 +96,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
         <div className="bg-white rounded-lg border p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-display text-3xl font-bold ">
+              <h1 className="font-display text-3xl font-bold text-primary ">
                 {member.full_name}
               </h1>
               <p className="mt-1 text-sm text-gray-500">

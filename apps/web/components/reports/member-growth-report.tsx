@@ -140,7 +140,7 @@ export function MemberGrowthReport({ initialData, stats }: MemberGrowthReportPro
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Baptized</span>
-                <span className="font-semibold text-blue-600">{stats.baptized}</span>
+                <span className="font-semibold text-primary">{stats.baptized}</span>
               </div>
             </div>
           </div>

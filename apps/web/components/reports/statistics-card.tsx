@@ -23,10 +23,10 @@ export function StatisticsCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {Icon && <Icon className="h-6 w-6 text-primary" />}
+        <span className="rounded-sm p-2 bg-accent/20 border border-accent/30">{Icon && <Icon className="h-5 w-5 text-accent" />}</span>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-4xl font-display text-primary">{value}</div>
         {description && (
           <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}

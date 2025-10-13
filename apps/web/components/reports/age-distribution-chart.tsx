@@ -12,31 +12,31 @@ interface AgeDistributionChartProps {
 }
 
 export function AgeDistributionChart({ data }: AgeDistributionChartProps) {
-  // Transform data for chart using new color scheme
+  // Transform data for chart using brand color scheme
   const chartData = [
     {
       category: 'Children',
       count: data.children,
       label: '< 12 years',
-      color: '#9D98CA', // Purple/Lavender (chart-1)
+      color: '#9DACC7', // Primary with lighter shade (20% opacity equivalent)
     },
     {
       category: 'Youth',
       count: data.youth,
       label: '12-34 years',
-      color: '#9BD3AE', // Mint Green (chart-6)
+      color: '#B2A675', // Inactive color
     },
     {
       category: 'Adults',
       count: data.adults,
       label: '35-65 years',
-      color: '#8ED8F8', // Sky Blue (chart-5)
+      color: '#87B984', // Accent color
     },
     {
       category: 'Seniors',
       count: data.seniors,
       label: '66+ years',
-      color: '#DA7E8E', // Coral/Pink (chart-2)
+      color: '#2B4C7E', // Primary color
     },
   ]
 
@@ -64,7 +64,7 @@ export function AgeDistributionChart({ data }: AgeDistributionChartProps) {
       {/* Bar chart */}
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="6 6" />
           <XAxis
             dataKey="category"
             tick={{ fontSize: 12 }}

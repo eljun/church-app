@@ -9,6 +9,7 @@
 import { signup } from '@/app/actions/auth'
 import Link from 'next/link'
 import { useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,21 +31,33 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Create your account
-          </CardTitle>
-          <CardDescription className="text-center">
-            Sign up for Church Management System
-          </CardDescription>
-        </CardHeader>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary to-accent py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo */}
+        <div className="flex justify-center">
+          <Image
+            src="/Full-white-logo.png"
+            height={120}
+            width={200}
+            alt="Church Membership System Logo"
+            priority
+          />
+        </div>
+
+        <Card className="w-full bg-transparent border-0 shadow-none text-white">
+          <CardHeader className="space-y-1">
+            {/* <CardTitle className="text-2xl font-bold text-center">
+              Create your account
+            </CardTitle> */}
+            <CardDescription className="text-2xl text-center text-white">
+              Sign up for Church Membership System
+            </CardDescription>
+          </CardHeader>
 
         <form action={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white/80">Email</Label>
               <Input
                 id="email"
                 name="email"
@@ -53,11 +66,12 @@ export default function SignupPage() {
                 placeholder="Enter your email"
                 required
                 disabled={loading}
+                className="border border-white/70 py-5"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-white/80">Password</Label>
               <Input
                 id="password"
                 name="password"
@@ -67,6 +81,7 @@ export default function SignupPage() {
                 minLength={6}
                 required
                 disabled={loading}
+                className="border border-white/70 py-5"
               />
             </div>
 
@@ -84,24 +99,27 @@ export default function SignupPage() {
             )}
           </CardContent>
 
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex mt-4 flex-col space-y-4">
             <Button
               type="submit"
               className="w-full"
+              size="lg"
+              variant="secondary"
               disabled={loading}
             >
               {loading ? 'Creating account...' : 'Sign up'}
             </Button>
 
-            <p className="text-sm text-center text-gray-600">
+            <p className="text-sm text-center text-white/80">
               Already have an account?{' '}
-              <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
+              <Link href="/login" className="font-medium text-white hover:text-accent">
                 Sign in
               </Link>
             </p>
           </CardFooter>
         </form>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

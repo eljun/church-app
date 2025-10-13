@@ -120,8 +120,8 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="font-display text-3xl font-bold ">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="font-display text-3xl font-bold text-primary">Dashboard</h1>
+        <p className="mt-1 text-sm text-primary/80">
           Overview of your church management system
         </p>
       </div>
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Demographics */}
-      <div>
+      <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Demographics</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {/* Gender Distribution */}
@@ -170,7 +170,7 @@ export default async function DashboardPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: '#8ED8F8' }} />
+                  <div className="h-3 w-3 rounded-full bg-primary" />
                   <span className="text-sm">Male</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -180,14 +180,14 @@ export default async function DashboardPage() {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="h-2 rounded-full"
-                  style={{ width: `${malePercentage}%`, backgroundColor: '#8ED8F8' }}
+                  className="h-2 rounded-full bg-primary"
+                  style={{ width: `${malePercentage}%` }}
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: '#DA7E8E' }} />
+                  <div className="h-3 w-3 rounded-full bg-accent" />
                   <span className="text-sm">Female</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -197,8 +197,8 @@ export default async function DashboardPage() {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="h-2 rounded-full"
-                  style={{ width: `${femalePercentage}%`, backgroundColor: '#DA7E8E' }}
+                  className="h-2 rounded-full bg-accent"
+                  style={{ width: `${femalePercentage}%` }}
                 />
               </div>
             </CardContent>
@@ -213,7 +213,7 @@ export default async function DashboardPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: '#9BD3AE' }} />
+                  <div className="h-3 w-3 rounded-full bg-primary" />
                   <span className="text-sm">Active</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -223,14 +223,14 @@ export default async function DashboardPage() {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="h-2 rounded-full"
-                  style={{ width: `${activePercentage}%`, backgroundColor: '#9BD3AE' }}
+                  className="h-2 rounded-full bg-primary"
+                  style={{ width: `${activePercentage}%` }}
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: '#C7B5AD' }} />
+                  <div className="h-3 w-3 rounded-full bg-inactive" />
                   <span className="text-sm">Inactive</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -240,8 +240,8 @@ export default async function DashboardPage() {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="h-2 rounded-full"
-                  style={{ width: `${100 - activePercentage}%`, backgroundColor: '#C7B5AD' }}
+                  className="h-2 rounded-full bg-inactive"
+                  style={{ width: `${100 - activePercentage}%` }}
                 />
               </div>
             </CardContent>
@@ -264,10 +264,9 @@ export default async function DashboardPage() {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div
-                        className="h-1.5 rounded-full"
+                        className="h-1.5 rounded-full bg-primary"
                         style={{
-                          width: `${memberStats.total > 0 ? (count / memberStats.total) * 100 : 0}%`,
-                          backgroundColor: '#9D98CA'
+                          width: `${memberStats.total > 0 ? (count / memberStats.total) * 100 : 0}%`
                         }}
                       />
                     </div>
@@ -279,7 +278,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Age Distribution */}
-      <div>
+      <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Age Distribution</h2>
         <Card>
           <CardHeader>
@@ -295,7 +294,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Upcoming Events */}
-      <div>
+      <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Upcoming Events (Next 30 Days)</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
@@ -333,7 +332,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Baptism Growth Trend */}
-      <div>
+      <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Baptism Growth Trend</h2>
         <Card>
           <CardHeader>

@@ -20,14 +20,14 @@ export default async function NewMemberPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="font-display text-3xl font-bold ">Add New Member</h1>
+        <h1 className="font-display text-3xl font-bold text-primary ">Add New Member</h1>
         <p className="mt-1 text-sm text-gray-500">
           Create a new member record in the system
         </p>
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-white p-6">
         <MemberForm
           churches={churches}
           userRole={userData?.role || 'admin'}

@@ -24,7 +24,7 @@ export default async function NewTransferPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="font-display text-3xl font-bold ">New Transfer Request</h1>
+        <h1 className="font-display text-3xl font-bold text-primary ">New Transfer Request</h1>
         <p className="mt-1 text-sm text-gray-500">
           Request a member transfer between churches
         </p>

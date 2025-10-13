@@ -61,7 +61,7 @@ export default async function TransfersReportPage({ searchParams }: TransfersRep
             </Link>
           </Button>
           <div>
-            <h1 className="font-display text-3xl font-bold ">Transfer Reports</h1>
+            <h1 className="font-display text-3xl font-bold text-primary ">Transfer Reports</h1>
             <p className="mt-1 text-sm text-gray-500">
               Analyze member transfers in and out of your church
             </p>

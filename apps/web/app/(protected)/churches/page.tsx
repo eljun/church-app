@@ -47,7 +47,7 @@ export default async function ChurchesPage({ searchParams }: ChurchesPageProps) 
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold ">Churches</h1>
+          <h1 className="font-display text-3xl font-bold text-primary ">Churches</h1>
           <p className="mt-1 text-sm text-gray-500">
             Manage churches in the organization ({count.toLocaleString()} total)
           </p>

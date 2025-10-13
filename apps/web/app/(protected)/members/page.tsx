@@ -43,7 +43,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-primary">Members</h1>
+          <h1 className="font-display text-3xl font-bold text-primary text-primary">Members</h1>
           <p className="mt-1 text-sm text-foreground">
             Manage your church members ({count.toLocaleString()} total)
           </p>
@@ -62,7 +62,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       </Suspense>
 
       {/* Members table */}
-      <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>
+      <Suspense fallback={<div className="h-96 animate" />}>
         <MembersTable
           members={members}
           currentPage={page}

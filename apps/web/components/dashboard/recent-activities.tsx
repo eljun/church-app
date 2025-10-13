@@ -27,7 +27,7 @@ const actionIcons: Record<string, LucideIcon> = {
 
 const actionColors: Record<string, string> = {
   created_member: 'bg-green-50 text-green-600',
-  updated_member: 'bg-blue-50 text-blue-600',
+  updated_member: 'bg-blue-50 text-primary',
   deleted_member: 'bg-red-50 text-red-600',
   created_transfer_request: 'bg-purple-50 text-purple-600',
   approved_transfer_request: 'bg-green-50 text-green-600',
@@ -91,7 +91,7 @@ export function RecentActivities({ activities }: RecentActivitiesProps) {
         <CardFooter className="border-t">
           <a
             href="/audit-logs"
-            className="text-sm font-medium text-blue-600 hover:text-blue-700"
+            className="text-sm font-medium text-primary hover:text-blue-700"
           >
             View all activities →
           </a>

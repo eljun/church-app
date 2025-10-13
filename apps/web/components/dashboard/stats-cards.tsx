@@ -20,7 +20,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       icon: Users,
       color: 'bg-blue-500',
       bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      textColor: 'text-primary',
     },
     {
       name: 'Active Members',

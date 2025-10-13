@@ -1,6 +1,6 @@
 'use client'
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 interface MemberGrowthChartProps {
   data: Array<{
@@ -11,6 +11,10 @@ interface MemberGrowthChartProps {
 }
 
 export function MemberGrowthChart({ data }: MemberGrowthChartProps) {
+  // Brand colors matching the theme
+  const primaryColor = '#2B4C7E' // Primary color from theme
+  const accentColor = '#87B984' // Accent color from theme
+
   return (
     <ResponsiveContainer width="100%" height={400}>
       <LineChart data={data}>
@@ -25,16 +29,18 @@ export function MemberGrowthChart({ data }: MemberGrowthChartProps) {
         <Line
           type="monotone"
           dataKey="count"
-          stroke="#8ED8F8"
+          stroke={primaryColor}
           name="New Baptisms"
           strokeWidth={2}
+          fill={primaryColor}
         />
         <Line
           type="monotone"
           dataKey="cumulative"
-          stroke="#9BD3AE"
+          stroke={accentColor}
           name="Cumulative Baptisms"
           strokeWidth={2}
+          fill={accentColor}
         />
       </LineChart>
     </ResponsiveContainer>

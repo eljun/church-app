@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Search, X } from 'lucide-react'
+import { Search, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -17,6 +17,7 @@ export function MembersFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
 
   const [query, setQuery] = useState(searchParams.get('query') || '')
 
@@ -52,7 +53,7 @@ export function MembersFilters() {
   const hasActiveFilters = Array.from(searchParams.keys()).length > 0
 
   return (
-    <div className="border border-primary/15 p-4">
+    <div className="bg-white border border-primary/15 p-4">
       <div className="flex flex-col gap-4">
         {/* Search */}
         <form onSubmit={handleSearch} className="flex gap-2">
@@ -65,7 +66,7 @@ export function MembersFilters() {
               className="pl-9"
             />
           </div>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" variant="outline" disabled={isPending}>
             Search
           </Button>
           {hasActiveFilters && (
@@ -81,74 +82,90 @@ export function MembersFilters() {
           )}
         </form>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Spiritual Condition */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Spiritual Condition
-            </label>
-            <Select
-              value={searchParams.get('spiritual_condition') || 'all'}
-              onValueChange={(value) => updateFilters('spiritual_condition', value)}
-              disabled={isPending}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Advanced Filter Toggle */}
+        <button
+          type="button"
+          onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+        >
+          Advanced Filter
+          {isAdvancedOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
 
-          {/* Status */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Status
-            </label>
-            <Select
-              value={searchParams.get('status') || 'all'}
-              onValueChange={(value) => updateFilters('status', value)}
-              disabled={isPending}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="transferred_out">Transferred Out</SelectItem>
-                <SelectItem value="resigned">Resigned</SelectItem>
-                <SelectItem value="disfellowshipped">Disfellowshipped</SelectItem>
-                <SelectItem value="deceased">Deceased</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Collapsible Filters */}
+        {isAdvancedOpen && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            {/* Spiritual Condition */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Spiritual Condition
+              </label>
+              <Select
+                value={searchParams.get('spiritual_condition') || 'all'}
+                onValueChange={(value) => updateFilters('spiritual_condition', value)}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Physical Condition */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Physical Condition
-            </label>
-            <Select
-              value={searchParams.get('physical_condition') || 'all'}
-              onValueChange={(value) => updateFilters('physical_condition', value)}
-              disabled={isPending}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="fit">Fit</SelectItem>
-                <SelectItem value="sickly">Sickly</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Status */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Status
+              </label>
+              <Select
+                value={searchParams.get('status') || 'all'}
+                onValueChange={(value) => updateFilters('status', value)}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="transferred_out">Transferred Out</SelectItem>
+                  <SelectItem value="resigned">Resigned</SelectItem>
+                  <SelectItem value="disfellowshipped">Disfellowshipped</SelectItem>
+                  <SelectItem value="deceased">Deceased</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Physical Condition */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Physical Condition
+              </label>
+              <Select
+                value={searchParams.get('physical_condition') || 'all'}
+                onValueChange={(value) => updateFilters('physical_condition', value)}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="fit">Fit</SelectItem>
+                  <SelectItem value="sickly">Sickly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Active filters count */}
         {hasActiveFilters && (

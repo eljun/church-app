@@ -43,7 +43,6 @@ interface Church {
   city: string | null
   province: string | null
   is_active: boolean
-  established_date: string | null
 }
 
 interface ChurchesTableProps {
@@ -111,7 +110,6 @@ export function ChurchesTable({ churches, currentPage, totalPages, totalCount }:
               <TableHead>Field</TableHead>
               <TableHead>District</TableHead>
               <TableHead>Location</TableHead>
-              <TableHead>Established</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
@@ -141,7 +139,6 @@ export function ChurchesTable({ churches, currentPage, totalPages, totalCount }:
                       ? `${church.city}, ${church.province}`
                       : church.city || church.province || 'N/A'}
                   </TableCell>
-                  <TableCell>{formatDate(church.established_date)}</TableCell>
                   <TableCell>{getStatusBadge(church.is_active)}</TableCell>
                   <TableCell>
                     <DropdownMenu>

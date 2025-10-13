@@ -77,7 +77,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
         <div className="bg-white rounded-lg border p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-display text-3xl font-bold ">
+              <h1 className="font-display text-3xl font-bold text-primary ">
                 {church.name}
               </h1>
               <p className="mt-1 text-sm text-gray-500">
@@ -156,7 +156,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
                 {memberCount > 0 && (
                   <Link
                     href={`/members?church_id=${id}`}
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm text-primary hover:underline"
                   >
                     View all members
                   </Link>

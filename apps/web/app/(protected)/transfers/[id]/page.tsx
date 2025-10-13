@@ -44,7 +44,7 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="font-display text-3xl font-bold ">Transfer Request Details</h1>
+          <h1 className="font-display text-3xl font-bold text-primary ">Transfer Request Details</h1>
           <p className="mt-1 text-sm text-gray-500">
             View and manage this transfer request
           </p>
@@ -69,7 +69,7 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
                   <p className="text-sm text-gray-500">Name</p>
                   <Link
                     href={`/members/${transfer.members.id}`}
-                    className="text-lg font-medium text-blue-600 hover:underline"
+                    className="text-lg font-medium text-primary hover:underline"
                   >
                     {transfer.members.full_name}
                   </Link>
@@ -92,7 +92,7 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
                   <p className="text-sm text-gray-500">From Church</p>
                   <Link
                     href={`/churches/${transfer.from_church.id}`}
-                    className="text-lg font-medium text-blue-600 hover:underline"
+                    className="text-lg font-medium text-primary hover:underline"
                   >
                     {transfer.from_church.name}
                   </Link>
@@ -101,7 +101,7 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
                   <p className="text-sm text-gray-500">To Church</p>
                   <Link
                     href={`/churches/${transfer.to_church.id}`}
-                    className="text-lg font-medium text-blue-600 hover:underline"
+                    className="text-lg font-medium text-primary hover:underline"
                   >
                     {transfer.to_church.name}
                   </Link>

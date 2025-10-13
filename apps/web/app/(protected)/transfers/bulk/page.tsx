@@ -35,7 +35,7 @@ export default async function BulkTransferPage({ searchParams }: BulkTransferPag
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="font-display text-3xl font-bold ">Bulk Transfer Tool</h1>
+        <h1 className="font-display text-3xl font-bold text-primary ">Bulk Transfer Tool</h1>
         <p className="mt-1 text-sm text-gray-500">
           Transfer multiple members from one church to another at once
         </p>

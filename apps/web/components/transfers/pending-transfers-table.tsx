@@ -134,7 +134,7 @@ export function PendingTransfersTable({ transfers }: PendingTransfersTableProps)
                 <TableCell>
                   <Link
                     href={`/members/${transfer.members.id}`}
-                    className="font-medium text-blue-600 hover:underline"
+                    className="font-medium text-primary hover:underline"
                   >
                     {transfer.members.full_name}
                   </Link>
@@ -150,7 +150,7 @@ export function PendingTransfersTable({ transfers }: PendingTransfersTableProps)
                 <TableCell>
                   <Link
                     href={`/churches/${transfer.to_church.id}`}
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                    className="text-sm font-medium text-primary hover:underline"
                   >
                     {transfer.to_church.name}
                   </Link>

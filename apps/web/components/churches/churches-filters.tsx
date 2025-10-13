@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Search, X } from 'lucide-react'
+import { Search, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -22,6 +22,7 @@ export function ChurchesFilters({ fields, districts }: ChurchesFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
 
   const [query, setQuery] = useState(searchParams.get('query') || '')
 
@@ -70,7 +71,7 @@ export function ChurchesFilters({ fields, districts }: ChurchesFiltersProps) {
               className="pl-9"
             />
           </div>
-          <Button type="submit" variant="secondary" disabled={isPending}>
+          <Button type="submit" variant="outline" disabled={isPending}>
             Search
           </Button>
           {hasActiveFilters && (
@@ -86,77 +87,93 @@ export function ChurchesFilters({ fields, districts }: ChurchesFiltersProps) {
           )}
         </form>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Field Filter */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Field
-            </label>
-            <Select
-              value={searchParams.get('field') || 'all'}
-              onValueChange={(value) => updateFilters('field', value)}
-              disabled={isPending}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All Fields" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Fields</SelectItem>
-                {fields.map((field) => (
-                  <SelectItem key={field} value={field}>
-                    {field}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Advanced Filter Toggle */}
+        <button
+          type="button"
+          onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+        >
+          Advanced Filter
+          {isAdvancedOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
 
-          {/* District Filter */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              District
-            </label>
-            <Select
-              value={searchParams.get('district') || 'all'}
-              onValueChange={(value) => updateFilters('district', value)}
-              disabled={isPending}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All Districts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Districts</SelectItem>
-                {districts.map((district) => (
-                  <SelectItem key={district} value={district}>
-                    {district}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Collapsible Filters */}
+        {isAdvancedOpen && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            {/* Field Filter */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Field
+              </label>
+              <Select
+                value={searchParams.get('field') || 'all'}
+                onValueChange={(value) => updateFilters('field', value)}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Fields" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Fields</SelectItem>
+                  {fields.map((field) => (
+                    <SelectItem key={field} value={field}>
+                      {field}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Status Filter */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Status
-            </label>
-            <Select
-              value={searchParams.get('is_active') || 'all'}
-              onValueChange={(value) => updateFilters('is_active', value)}
-              disabled={isPending}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="true">Active</SelectItem>
-                <SelectItem value="false">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* District Filter */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                District
+              </label>
+              <Select
+                value={searchParams.get('district') || 'all'}
+                onValueChange={(value) => updateFilters('district', value)}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Districts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Districts</SelectItem>
+                  {districts.map((district) => (
+                    <SelectItem key={district} value={district}>
+                      {district}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Status
+              </label>
+              <Select
+                value={searchParams.get('is_active') || 'all'}
+                onValueChange={(value) => updateFilters('is_active', value)}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="true">Active</SelectItem>
+                  <SelectItem value="false">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Active filters count */}
         {hasActiveFilters && (
