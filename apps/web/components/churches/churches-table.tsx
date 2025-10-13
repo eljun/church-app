@@ -85,7 +85,7 @@ export function ChurchesTable({ churches, currentPage, totalPages, totalCount }:
 
   const getStatusBadge = (isActive: boolean) => {
     return (
-      <Badge variant={isActive ? 'default' : 'secondary'}>
+      <Badge variant={isActive ? 'secondary' : 'inactive'}>
         {isActive ? 'Active' : 'Inactive'}
       </Badge>
     )

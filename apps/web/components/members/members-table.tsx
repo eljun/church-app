@@ -88,10 +88,10 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
 
   const getStatusBadge = (status: Member['status']) => {
     const variants: Record<Member['status'], 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      active: 'default',
+      active: 'secondary',
       transferred_out: 'secondary',
       resigned: 'outline',
-      disfellowshipped: 'destructive',
+      disfellowshipped: 'inactive',
       deceased: 'secondary',
     }
 
@@ -104,7 +104,7 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
 
   const getSpiritualBadge = (condition: Member['spiritual_condition']) => {
     return (
-      <Badge variant={condition === 'active' ? 'default' : 'secondary'}>
+      <Badge variant={condition === 'active' ? 'secondary' : 'inactive'}>
         {condition}
       </Badge>
     )
@@ -131,7 +131,7 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
               <TableHead>Age</TableHead>
               <TableHead>Birthday</TableHead>
               <TableHead>Baptism Date</TableHead>
-              <TableHead>Spiritual</TableHead>
+              {/* <TableHead>Spiritual</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
@@ -145,7 +145,7 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
               </TableRow>
             ) : (
               members.map((member) => (
-                <TableRow key={member.id} className="hover:bg-gray-50">
+                <TableRow key={member.id}>
                   <TableCell className="font-medium">
                     <Link
                       href={`/members/${member.id}`}
@@ -158,7 +158,7 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
                   <TableCell>{member.age}</TableCell>
                   <TableCell>{formatDate(member.birthday)}</TableCell>
                   <TableCell>{formatDate(member.date_of_baptism)}</TableCell>
-                  <TableCell>{getSpiritualBadge(member.spiritual_condition)}</TableCell>
+                  {/* <TableCell>{getSpiritualBadge(member.spiritual_condition)}</TableCell> */}
                   <TableCell>{getStatusBadge(member.status)}</TableCell>
                   <TableCell>
                     <DropdownMenu>

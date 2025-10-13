@@ -70,7 +70,7 @@ export function ChurchesFilters({ fields, districts }: ChurchesFiltersProps) {
               className="pl-9"
             />
           </div>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" variant="secondary" disabled={isPending}>
             Search
           </Button>
           {hasActiveFilters && (

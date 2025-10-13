@@ -18,6 +18,10 @@ export const createMemberSchema = z.object({
   spiritual_condition: z.enum(['active', 'inactive']).default('active'),
   status: z.enum(['active', 'transferred_out', 'resigned', 'disfellowshipped', 'deceased']).default('active'),
   sp: z.string().nullable().optional(),
+  disfellowship_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  resignation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  date_of_death: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  cause_of_death: z.string().nullable().optional(),
 })
 
 export const updateMemberSchema = createMemberSchema.partial().extend({

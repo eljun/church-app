@@ -56,7 +56,7 @@ export function TransferHistoryTable({ history }: TransferHistoryTableProps) {
               <TableCell>
                 <Link
                   href={`/members/${record.members.id}`}
-                  className="font-medium text-blue-600 hover:underline"
+                  className="font-medium hover:underline"
                 >
                   {record.members.full_name}
                 </Link>
@@ -64,7 +64,7 @@ export function TransferHistoryTable({ history }: TransferHistoryTableProps) {
               <TableCell>
                 <Link
                   href={`/churches/${record.from_church_id}`}
-                  className="text-sm text-gray-600 hover:underline"
+                  className="text-sm  hover:underline"
                 >
                   {record.from_church}
                 </Link>
@@ -72,7 +72,7 @@ export function TransferHistoryTable({ history }: TransferHistoryTableProps) {
               <TableCell>
                 <Link
                   href={`/churches/${record.to_church_id}`}
-                  className="text-sm font-medium text-blue-600 hover:underline"
+                  className="text-sm font-medium hover:underline"
                 >
                   {record.to_church}
                 </Link>

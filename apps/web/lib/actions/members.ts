@@ -116,6 +116,21 @@ export async function updateMember(input: UpdateMemberInput) {
       return { error: 'Forbidden: Cannot update member from another church' }
     }
 
+    // Handle status-specific date fields to comply with database constraints
+    // Clear dates that don't match the current status
+    if (updateData.status) {
+      if (updateData.status !== 'disfellowshipped') {
+        updateData.disfellowship_date = null
+      }
+      if (updateData.status !== 'resigned') {
+        updateData.resignation_date = null
+      }
+      if (updateData.status !== 'deceased') {
+        updateData.date_of_death = null
+        updateData.cause_of_death = null
+      }
+    }
+
     // Update member
     const { data: member, error } = await supabase
       .from('members')

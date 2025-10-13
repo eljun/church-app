@@ -15,7 +15,7 @@ export function TransferStats({ pendingCount, totalTransfers, historyCount }: Tr
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-          <Clock className="h-4 w-4 text-orange-600" />
+          <Clock className="h-6 w-6 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{pendingCount}</div>
@@ -28,7 +28,7 @@ export function TransferStats({ pendingCount, totalTransfers, historyCount }: Tr
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Approved Transfers</CardTitle>
-          <CheckCircle className="h-4 w-4 text-green-600" />
+          <CheckCircle className="h-6 w-6 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{approvedCount}</div>
@@ -41,7 +41,7 @@ export function TransferStats({ pendingCount, totalTransfers, historyCount }: Tr
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total History</CardTitle>
-          <Archive className="h-4 w-4 text-blue-600" />
+          <Archive className="h-6 w-6 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{historyCount}</div>

@@ -48,6 +48,7 @@ export default async function EditMemberPage({ params }: EditMemberPageProps) {
               full_name: member.full_name,
               birthday: member.birthday,
               age: member.age,
+              gender: member.gender,
               date_of_baptism: member.date_of_baptism,
               baptized_by: member.baptized_by,
               physical_condition: member.physical_condition,
@@ -55,6 +56,10 @@ export default async function EditMemberPage({ params }: EditMemberPageProps) {
               spiritual_condition: member.spiritual_condition,
               status: member.status,
               sp: member.sp,
+              disfellowship_date: member.disfellowship_date,
+              resignation_date: member.resignation_date,
+              date_of_death: member.date_of_death,
+              cause_of_death: member.cause_of_death,
             }}
             mode="edit"
           />
