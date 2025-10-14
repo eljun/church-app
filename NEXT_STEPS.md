@@ -1006,3 +1006,57 @@ Events Routes
 - Event reminders/notifications
 - Multi-image gallery (like church images)
 
+
+---
+
+## 🔒 Security & Role-Based Access Control Enhancements (2025-10-14)
+
+### Phase 6.5: Security Hardening & Permissions
+
+**What Was Implemented:**
+
+#### Authentication & User Management
+✅ **Auto-Create User on Signup** - Database trigger creates public.users record when signing up
+✅ **Email Verification UI** - Success screen with instructions after signup  
+✅ **Loading States** - Buttons disabled with spinner during auth operations
+✅ **Password Visibility Toggle** - Eye icon to show/hide password in forms
+✅ **Branded 404 Pages** - Custom not-found pages with gradient branding
+
+#### Role-Based Access Control (Admin vs Superadmin)
+
+**Church Access:**
+✅ **Sidebar Navigation** - Admins see "My Church", Superadmins see "Churches"
+✅ **Church Detail Protection** - Admins can only view/edit their assigned church  
+✅ **Church List Redirect** - Admins redirected to their church detail page
+✅ **RLS Enforcement** - Server-side permission checks on all church routes
+
+**Member Management:**
+✅ **Delete Button Restriction** - Only superadmins can delete members
+✅ **Member Access Control** - Admins limited to their church's members
+
+**Transfer Management:**
+✅ **Transfer Approval Logic** - Only receiving church admin or superadmin can approve
+✅ **Transfer Member Visibility** - RLS policy allows viewing members in transfer requests
+✅ **Transfer Execution Fix** - Member church_id updates correctly on approval
+✅ **Bulk Transfer Security** - Admins locked to their church as source
+✅ **Improved UI Flow** - Step 1 hidden for admins, cleaner workflow
+
+**Event Management:**
+✅ **Event Scope Control** - Admins locked to church-specific events
+✅ **Read-Only Scope Field** - Church scope shown but not editable for admins
+
+#### Database Migrations Created:
+- 003_auto_create_user_on_signup.sql
+- 004_allow_member_view_in_transfers.sql  
+- 005_allow_member_update_in_transfer_approval.sql
+
+#### Security Test Results:
+✅ Admin cannot view other churches via direct URL
+✅ Admin cannot approve transfers from their own church
+✅ Admin cannot delete members
+✅ Admin cannot create organization-wide events
+✅ Admin cannot bulk transfer from other churches
+✅ Source church admin cannot see transfer approval buttons
+✅ Destination church admin sees member details in transfers
+✅ Member church_id updates successfully on approval
+

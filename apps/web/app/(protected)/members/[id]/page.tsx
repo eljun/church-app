@@ -96,7 +96,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
         <div className="bg-white border p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-display text-3xl font-bold text-primary ">
+              <h1 className="font-display text-3xl  text-primary ">
                 {member.full_name}
               </h1>
               <p className="mt-1 text-sm text-gray-500">
@@ -200,7 +200,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
         {transferHistory.length > 0 && (
           <div className="bg-white border">
             <div className="p-6 border-b">
-              <h2 className="font-display text-xl font-bold ">
+              <h2 className="font-display text-xl  ">
                 Transfer History
               </h2>
               <p className="mt-1 text-sm text-gray-500">

@@ -177,19 +177,35 @@ export function EventForm({
           />
 
           {/* Event Scope - 50% width like dates */}
-          <div>
-            <EventScopeSelector
-              scope={(watchEventScope || 'church') as EventScope}
-              scopeValue={watchScopeValue || null}
-              churchId={watchChurchId || null}
-              onScopeChange={(scope) => form.setValue('event_scope', scope)}
-              onScopeValueChange={(value) => form.setValue('scope_value', value)}
-              onChurchIdChange={(value) => form.setValue('church_id', value)}
-              countries={countries}
-              districts={districts}
-              churches={churches}
-            />
-          </div>
+          {userRole === 'admin' ? (
+            <FormItem>
+              <FormLabel>Event Scope</FormLabel>
+              <FormControl>
+                <Input
+                  value={`Church: ${churches.find(c => c.id === userChurchId)?.name || 'Your Church'}`}
+                  disabled
+                  className="bg-muted"
+                />
+              </FormControl>
+              <FormDescription>
+                Admin users can only create church-specific events
+              </FormDescription>
+            </FormItem>
+          ) : (
+            <div>
+              <EventScopeSelector
+                scope={(watchEventScope || 'church') as EventScope}
+                scopeValue={watchScopeValue || null}
+                churchId={watchChurchId || null}
+                onScopeChange={(scope) => form.setValue('event_scope', scope)}
+                onScopeValueChange={(value) => form.setValue('scope_value', value)}
+                onChurchIdChange={(value) => form.setValue('church_id', value)}
+                countries={countries}
+                districts={districts}
+                churches={churches}
+              />
+            </div>
+          )}
 
           {/* Start Date */}
           <FormField

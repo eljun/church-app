@@ -57,7 +57,7 @@ export default async function BaptismAnniversariesPage({
             </Link>
           </Button>
           <div>
-            <h1 className="font-display text-3xl font-bold text-primary ">
+            <h1 className="font-display text-3xl  text-primary ">
               Baptism Anniversaries
             </h1>
             <p className="mt-1 text-sm text-gray-500">

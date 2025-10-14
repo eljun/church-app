@@ -46,23 +46,39 @@ interface SidebarProps {
   user: UserData | null
 }
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Members', href: '/members', icon: Users },
-  { name: 'Churches', href: '/churches', icon: Building2, superadminOnly: true },
-  { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
-  { name: 'Events', href: '/events', icon: HeartHandshake },
-  { name: 'Reports', href: '/reports', icon: FileText },
-]
+// Navigation items (will be dynamically modified based on user role)
+const getNavigation = (user: UserData | null) => {
+  const baseNavigation = [
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Members', href: '/members', icon: Users },
+    { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
+    { name: 'Events', href: '/events', icon: HeartHandshake },
+    { name: 'Reports', href: '/reports', icon: FileText },
+  ]
+
+  // Add church navigation based on role
+  if (user?.role === 'superadmin') {
+    baseNavigation.splice(2, 0, {
+      name: 'Churches',
+      href: '/churches',
+      icon: Building2
+    })
+  } else if (user?.role === 'admin' && user?.church_id) {
+    baseNavigation.splice(2, 0, {
+      name: 'My Church',
+      href: `/churches/${user.church_id}`,
+      icon: Building2
+    })
+  }
+
+  return baseNavigation
+}
 
 export function DashboardSidebar({ user }: SidebarProps) {
   const pathname = usePathname()
-  const isSuperadmin = user?.role === 'superadmin'
   const [isCollapsed, setIsCollapsed] = useState(false)
 
-  const filteredNavigation = navigation.filter(
-    item => !item.superadminOnly || isSuperadmin
-  )
+  const navigation = getNavigation(user)
 
   async function handleSignout() {
     await signOut()
@@ -96,7 +112,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
               onError={(e) => {
                 // Fallback to text if image fails to load
                 e.currentTarget.style.display = 'none'
-                e.currentTarget.parentElement!.innerHTML = '<div class="text-white font-bold text-2xl">A</div>'
+                e.currentTarget.parentElement!.innerHTML = '<div class="text-white  text-2xl">A</div>'
               }}
             />
           ) : (
@@ -111,7 +127,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
 
         {/* Navigation */}
         <nav className={`flex-1 py-6 space-y-2 overflow-y-auto ${isCollapsed ? 'px-2' : 'px-4'}`}>
-          {filteredNavigation.map((item) => {
+          {navigation.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
             const Icon = item.icon
 
@@ -124,7 +140,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
                   transition-colors duration-150
                   ${isActive
                     ? 'text-white font-display font-semibold bg-white/10'
-                    : 'text-white font-display hover:text-white font-bold hover:bg-white/10'
+                    : 'text-white font-display hover:text-white  hover:bg-white/10'
                   }
                 `}
               >

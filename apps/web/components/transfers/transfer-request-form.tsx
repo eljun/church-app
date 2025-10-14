@@ -26,6 +26,8 @@ import { ChurchSelect } from '@/components/transfers/church-select'
 interface Church {
   id: string
   name: string
+  field: string
+  district: string
 }
 
 interface Member {
@@ -134,15 +136,15 @@ export function TransferRequestForm({
 
         {/* Current Church (Auto-filled) */}
         {selectedMember && (
-          <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+          <div className="bg-accent/10 border border-accent/30 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-900">Current Church</p>
-                <p className="text-lg font-semibold text-blue-700">
+                <p className="text-sm font-medium text-muted-foreground">Current Church</p>
+                <p className="text-lg font-semibold text-accent">
                   {selectedMember.churches?.name || 'Unknown Church'}
                 </p>
               </div>
-              <ArrowRight className="h-6 w-6 text-blue-400" />
+              <ArrowRight className="h-6 w-6 text-accent" />
             </div>
           </div>
         )}

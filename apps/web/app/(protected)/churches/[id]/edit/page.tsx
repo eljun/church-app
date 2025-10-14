@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getChurchById } from '@/lib/queries/churches'
 import { ChurchForm } from '@/components/churches/church-form'
+import { createClient } from '@/lib/supabase/server'
 
 interface EditChurchPageProps {
   params: Promise<{ id: string }>
@@ -10,6 +11,23 @@ export default async function EditChurchPage({ params }: EditChurchPageProps) {
   const { id } = await params
 
   try {
+    // Check user permissions
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+
+    if (authUser) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role, church_id')
+        .eq('id', authUser.id)
+        .single()
+
+      // Admin users can only edit their own church
+      if (userData?.role === 'admin' && userData?.church_id !== id) {
+        notFound()
+      }
+    }
+
     const church = await getChurchById(id)
 
     // Convert church data to match the form's expected format
@@ -33,7 +51,7 @@ export default async function EditChurchPage({ params }: EditChurchPageProps) {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Page header */}
         <div>
-          <h1 className="font-display text-3xl font-bold text-primary ">Edit Church</h1>
+          <h1 className="font-display text-3xl  text-primary ">Edit Church</h1>
           <p className="mt-1 text-sm text-gray-500">
             Update church information for {church.name}
           </p>

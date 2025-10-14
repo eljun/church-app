@@ -160,7 +160,7 @@ export function ImageGallery({ images, alt = 'Gallery image', className }: Image
                 />
                 {index === 3 && images.length > 5 && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold">+{images.length - 5}</span>
+                    <span className="text-white text-2xl ">+{images.length - 5}</span>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">

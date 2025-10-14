@@ -20,6 +20,8 @@ import {
 interface Church {
   id: string
   name: string
+  field: string
+  district: string
 }
 
 interface ChurchSelectProps {
@@ -70,7 +72,12 @@ export function ChurchSelect({ churches, value, onChange, excludeChurchId }: Chu
                     value === church.id ? 'opacity-100' : 'opacity-0'
                   )}
                 />
-                {church.name}
+                <div className="flex flex-col">
+                  <span className="font-medium">{church.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {church.field} • {church.district}
+                  </span>
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>

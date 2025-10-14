@@ -74,7 +74,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">{card.name}</p>
-                  <p className="mt-2 text-3xl font-bold">
+                  <p className="mt-2 text-3xl ">
                     {card.value.toLocaleString()}
                   </p>
                 </div>

@@ -144,7 +144,24 @@ export async function approveTransferRequest(input: ApproveTransferInput) {
       return { error: 'Transfer request is not pending' }
     }
 
-    // Update transfer request
+    // IMPORTANT: Update member's church FIRST (while transfer is still 'pending')
+    // The RLS policy checks that the transfer status is 'pending'
+    const { data: updateData, error: memberError } = await supabase
+      .from('members')
+      .update({ church_id: transferRequest.to_church_id })
+      .eq('id', transferRequest.member_id)
+      .select()
+
+    if (memberError) {
+      return { error: `Failed to update member church: ${memberError.message}` }
+    }
+
+    // Check if the update actually happened
+    if (!updateData || updateData.length === 0) {
+      return { error: 'Failed to update member church - RLS policy may be blocking the update. Please ensure the migration 005 has been applied.' }
+    }
+
+    // Now update transfer request to 'approved' (after member is already transferred)
     const { error: updateError } = await supabase
       .from('transfer_requests')
       .update({
@@ -156,16 +173,6 @@ export async function approveTransferRequest(input: ApproveTransferInput) {
 
     if (updateError) {
       return { error: updateError.message }
-    }
-
-    // Update member's church
-    const { error: memberError } = await supabase
-      .from('members')
-      .update({ church_id: transferRequest.to_church_id })
-      .eq('id', transferRequest.member_id)
-
-    if (memberError) {
-      return { error: memberError.message }
     }
 
     // Get church names for history

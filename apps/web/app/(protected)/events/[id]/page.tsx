@@ -87,7 +87,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         <div className="bg-white border border-primary/20 p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="space-y-2">
-              <h1 className="font-display text-3xl font-bold text-primary">
+              <h1 className="font-display text-3xl  text-primary">
                 {event.title}
               </h1>
               <div className="flex items-center gap-2">

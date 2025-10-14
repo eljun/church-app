@@ -5,7 +5,7 @@ export default async function NewChurchPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="font-display text-3xl font-bold text-primary ">Add New Church</h1>
+        <h1 className="font-display text-3xl  text-primary ">Add New Church</h1>
         <p className="mt-1 text-sm text-gray-500">
           Create a new church record in the system
         </p>

@@ -32,7 +32,7 @@ export default async function NewEventPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="font-display text-3xl font-bold text-primary">Create New Event</h1>
+        <h1 className="font-display text-3xl  text-primary">Create New Event</h1>
         <p className="mt-1 text-sm text-foreground">
           Add a new event or activity to the calendar
         </p>

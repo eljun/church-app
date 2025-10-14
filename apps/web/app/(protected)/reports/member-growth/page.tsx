@@ -38,7 +38,7 @@ export default async function MemberGrowthPage({ searchParams }: MemberGrowthPag
           </Link>
         </Button>
         <div>
-          <h1 className="font-display text-3xl font-bold text-primary">Member Growth Report</h1>
+          <h1 className="font-display text-3xl  text-primary">Member Growth Report</h1>
           <p className="mt-1 text-sm text-gray-500">
             Track membership statistics and baptism growth trends over time
           </p>

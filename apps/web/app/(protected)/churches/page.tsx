@@ -1,11 +1,13 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { PlusIcon } from 'lucide-react'
 import { getChurches, getFields, getDistricts } from '@/lib/queries/churches'
 import { ChurchesTable } from '@/components/churches/churches-table'
 import { ChurchesFilters } from '@/components/churches/churches-filters'
 import { Button } from '@/components/ui/button'
 import type { SearchChurchesInput } from '@/lib/validations/church'
+import { createClient } from '@/lib/supabase/server'
 
 interface ChurchesPageProps {
   searchParams: Promise<{
@@ -18,6 +20,22 @@ interface ChurchesPageProps {
 }
 
 export default async function ChurchesPage({ searchParams }: ChurchesPageProps) {
+  // Check if user is admin and redirect to their church page
+  const supabase = await createClient()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  if (authUser) {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role, church_id')
+      .eq('id', authUser.id)
+      .single()
+
+    if (userData?.role === 'admin' && userData?.church_id) {
+      redirect(`/churches/${userData.church_id}`)
+    }
+  }
+
   const params = await searchParams
   const page = parseInt(params.page || '1')
   const limit = 50
@@ -47,7 +65,7 @@ export default async function ChurchesPage({ searchParams }: ChurchesPageProps) 
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-primary ">Churches</h1>
+          <h1 className="font-display text-3xl  text-primary ">Churches</h1>
           <p className="mt-1 text-sm text-gray-500">
             Manage churches in the organization ({count.toLocaleString()} total)
           </p>

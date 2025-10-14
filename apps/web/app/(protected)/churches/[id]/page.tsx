@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ImageGallery } from '@/components/ui/image-gallery'
 import { DeleteChurchButton } from '@/components/churches/delete-church-button'
+import { createClient } from '@/lib/supabase/server'
 
 interface ChurchDetailPageProps {
   params: Promise<{ id: string }>
@@ -18,6 +19,23 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
   const { id } = await params
 
   try {
+    // Check user permissions
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+
+    if (authUser) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role, church_id')
+        .eq('id', authUser.id)
+        .single()
+
+      // Admin users can only view their own church
+      if (userData?.role === 'admin' && userData?.church_id !== id) {
+        notFound()
+      }
+    }
+
     // Fetch church data and members count
     const [church, membersData] = await Promise.all([
       getChurchById(id),
@@ -74,15 +92,12 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
         </div>
 
         {/* Church Info Card */}
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-white border p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-display text-3xl font-bold text-primary ">
+              <h1 className="font-display text-3xl  text-primary ">
                 {church.name}
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Church ID: {church.id.slice(0, 8)}...
-              </p>
+              </h1>              
             </div>
             <div className="flex gap-2">
               {getStatusBadge(church.is_active)}
@@ -189,7 +204,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="font-display text-2xl font-bold">{memberCount}</div>
+              <div className="font-display text-2xl ">{memberCount}</div>
               <p className="text-xs text-muted-foreground">
                 Registered in the system
               </p>
@@ -202,7 +217,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="font-display text-2xl font-bold">{church.field}</div>
+              <div className="font-display text-2xl ">{church.field}</div>
               <p className="text-xs text-muted-foreground">
                 Organization field
               </p>
@@ -215,7 +230,7 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="font-display text-2xl font-bold">{church.district}</div>
+              <div className="font-display text-2xl ">{church.district}</div>
               <p className="text-xs text-muted-foreground">
                 Geographic district
               </p>

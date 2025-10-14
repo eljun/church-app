@@ -43,28 +43,41 @@ interface TransferRequest {
   members: {
     id: string
     full_name: string
-  }
+  } | null
   from_church: {
     id: string
     name: string
-  }
+  } | null
   to_church: {
     id: string
     name: string
-  }
+  } | null
 }
 
 interface PendingTransfersTableProps {
   transfers: TransferRequest[]
+  userRole: 'superadmin' | 'admin' | 'member'
+  userChurchId: string | null
 }
 
-export function PendingTransfersTable({ transfers }: PendingTransfersTableProps) {
+export function PendingTransfersTable({ transfers, userRole, userChurchId }: PendingTransfersTableProps) {
   const router = useRouter()
   const [approveDialogOpen, setApproveDialogOpen] = useState(false)
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
   const [transferToProcess, setTransferToProcess] = useState<string | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+
+  // Check if user can approve/reject a transfer
+  // Only superadmin or the receiving church admin can approve
+  const canApproveTransfer = (transfer: TransferRequest) => {
+    // Cannot approve if member or churches are deleted
+    if (!transfer.members || !transfer.from_church || !transfer.to_church) return false
+
+    if (userRole === 'superadmin') return true
+    if (userRole === 'admin' && transfer.to_church.id === userChurchId) return true
+    return false
+  }
 
   const handleApprove = async () => {
     if (!transferToProcess) return
@@ -132,28 +145,40 @@ export function PendingTransfersTable({ transfers }: PendingTransfersTableProps)
             {transfers.map((transfer) => (
               <TableRow key={transfer.id}>
                 <TableCell>
-                  <Link
-                    href={`/members/${transfer.members.id}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {transfer.members.full_name}
-                  </Link>
+                  {transfer.members ? (
+                    <Link
+                      href={`/members/${transfer.members.id}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {transfer.members.full_name}
+                    </Link>
+                  ) : (
+                    <span className="text-sm text-red-600 italic">Member deleted</span>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <Link
-                    href={`/churches/${transfer.from_church.id}`}
-                    className="text-sm text-gray-600 hover:underline"
-                  >
-                    {transfer.from_church.name}
-                  </Link>
+                  {transfer.from_church ? (
+                    <Link
+                      href={`/churches/${transfer.from_church.id}`}
+                      className="text-sm text-gray-600 hover:underline"
+                    >
+                      {transfer.from_church.name}
+                    </Link>
+                  ) : (
+                    <span className="text-sm text-gray-500 italic">N/A</span>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <Link
-                    href={`/churches/${transfer.to_church.id}`}
-                    className="text-sm font-medium text-primary hover:underline"
-                  >
-                    {transfer.to_church.name}
-                  </Link>
+                  {transfer.to_church ? (
+                    <Link
+                      href={`/churches/${transfer.to_church.id}`}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      {transfer.to_church.name}
+                    </Link>
+                  ) : (
+                    <span className="text-sm text-gray-500 italic">N/A</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-600">
@@ -180,28 +205,36 @@ export function PendingTransfersTable({ transfers }: PendingTransfersTableProps)
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => {
-                        setTransferToProcess(transfer.id)
-                        setApproveDialogOpen(true)
-                      }}
-                    >
-                      <Check className="mr-1 h-4 w-4" />
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        setTransferToProcess(transfer.id)
-                        setRejectDialogOpen(true)
-                      }}
-                    >
-                      <X className="mr-1 h-4 w-4" />
-                      Reject
-                    </Button>
+                    {canApproveTransfer(transfer) ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => {
+                            setTransferToProcess(transfer.id)
+                            setApproveDialogOpen(true)
+                          }}
+                        >
+                          <Check className="mr-1 h-4 w-4" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            setTransferToProcess(transfer.id)
+                            setRejectDialogOpen(true)
+                          }}
+                        >
+                          <X className="mr-1 h-4 w-4" />
+                          Reject
+                        </Button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-500 italic">
+                        Awaiting approval
+                      </span>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

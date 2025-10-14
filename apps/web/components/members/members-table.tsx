@@ -54,9 +54,10 @@ interface MembersTableProps {
   currentPage: number
   totalPages: number
   totalCount: number
+  userRole: 'superadmin' | 'admin' | 'member'
 }
 
-export function MembersTable({ members, currentPage, totalPages, totalCount }: MembersTableProps) {
+export function MembersTable({ members, currentPage, totalPages, totalCount, userRole }: MembersTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -175,17 +176,21 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
                             Edit
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => {
-                            setMemberToDelete(member.id)
-                            setDeleteDialogOpen(true)
-                          }}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
+                        {userRole === 'superadmin' && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => {
+                                setMemberToDelete(member.id)
+                                setDeleteDialogOpen(true)
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

@@ -8,7 +8,8 @@
     "type-check": "tsc --noEmit",
     "import-csv": "tsx src/import-csv.ts",
     "analyze-data": "tsx src/analyze-data.ts",
-    "clean-data": "tsx src/clean-data.ts"
+    "clean-data": "tsx src/clean-data.ts",
+    "migrate": "tsx src/run-migration.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",

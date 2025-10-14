@@ -7,6 +7,7 @@ import { getTransferRequests, getTransferHistory } from '@/lib/queries/transfers
 import { PendingTransfersTable } from '@/components/transfers/pending-transfers-table'
 import { TransferHistoryTable } from '@/components/transfers/transfer-history-table'
 import { TransferStats } from '@/components/transfers/transfer-stats'
+import { createClient } from '@/lib/supabase/server'
 
 interface TransfersPageProps {
   searchParams: Promise<{
@@ -18,6 +19,25 @@ interface TransfersPageProps {
 export default async function TransfersPage({ searchParams }: TransfersPageProps) {
   const params = await searchParams
   const activeTab = params.tab || 'pending'
+
+  // Get current user role and church
+  const supabase = await createClient()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  let userRole: 'superadmin' | 'admin' | 'member' = 'member'
+  let userChurchId: string | null = null
+
+  if (authUser) {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role, church_id')
+      .eq('id', authUser.id)
+      .single()
+
+    if (userData) {
+      userRole = userData.role
+      userChurchId = userData.church_id
+    }
+  }
 
   // Fetch data for both tabs
   const [pendingTransfers, allTransfers, historyData] = await Promise.all([
@@ -31,7 +51,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-primary ">Transfer Management</h1>
+          <h1 className="font-display text-3xl  text-primary ">Transfer Management</h1>
           <p className="mt-1 text-sm text-gray-500">
             Manage member transfers between churches
           </p>
@@ -81,7 +101,11 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
 
         <TabsContent value="pending" className="space-y-4">
           <Suspense fallback={<div className="h-96 animate-pulse bg-primary/20" />}>
-            <PendingTransfersTable transfers={pendingTransfers} />
+            <PendingTransfersTable
+              transfers={pendingTransfers}
+              userRole={userRole}
+              userChurchId={userChurchId}
+            />
           </Suspense>
         </TabsContent>
 

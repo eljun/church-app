@@ -21,6 +21,8 @@ import { createTransferRequest } from '@/lib/actions/transfers'
 interface Church {
   id: string
   name: string
+  field: string
+  district: string
 }
 
 interface Member {
@@ -40,6 +42,8 @@ interface BulkTransferFormProps {
 export function BulkTransferForm({
   churches,
   members,
+  userRole,
+  userChurchId,
   preselectedChurchId,
 }: BulkTransferFormProps) {
   const router = useRouter()
@@ -137,28 +141,40 @@ export function BulkTransferForm({
 
   return (
     <div className="space-y-6">
-      {/* Step 1: Select Source Church */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Step 1: Select Source Church</CardTitle>
-          <CardDescription>
-            Choose the church to transfer members from
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChurchSelect
-            churches={churches}
-            value={fromChurchId}
-            onChange={setFromChurchId}
-          />
-        </CardContent>
-      </Card>
+      {/* Step 1: Select Source Church - Only for Superadmin */}
+      {userRole === 'superadmin' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Step 1: Select Source Church</CardTitle>
+            <CardDescription>
+              Choose the church to transfer members from
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChurchSelect
+              churches={churches}
+              value={fromChurchId}
+              onChange={setFromChurchId}
+            />
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Step 2: Select Members */}
+      {/* Info banner for Admin - showing their source church */}
+      {userRole === 'admin' && (
+        <div className="p-4 bg-accent/10 border border-accent/30">
+          <p className="text-sm font-medium text-gray-700">Transferring from:</p>
+          <p className="font-display text-xl font-semibold text-accent mt-1">
+            {churches.find(c => c.id === userChurchId)?.name || 'Your Church'}
+          </p>
+        </div>
+      )}
+
+      {/* Step: Select Members */}
       {fromChurchId && (
         <Card>
           <CardHeader>
-            <CardTitle>Step 2: Select Members</CardTitle>
+            <CardTitle>{userRole === 'admin' ? 'Step 1' : 'Step 2'}: Select Members</CardTitle>
             <CardDescription>
               Choose which members to transfer ({filteredMembers.length} available)
             </CardDescription>
@@ -200,11 +216,11 @@ export function BulkTransferForm({
         </Card>
       )}
 
-      {/* Step 3: Select Destination Church */}
+      {/* Step: Select Destination Church */}
       {selectedCount > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Step 3: Select Destination Church</CardTitle>
+            <CardTitle>{userRole === 'admin' ? 'Step 2' : 'Step 3'}: Select Destination Church</CardTitle>
             <CardDescription>
               Choose where to transfer the {selectedCount} selected member(s)
             </CardDescription>
@@ -220,11 +236,11 @@ export function BulkTransferForm({
         </Card>
       )}
 
-      {/* Step 4: Add Notes */}
+      {/* Step: Add Notes */}
       {toChurchId && (
         <Card>
           <CardHeader>
-            <CardTitle>Step 4: Add Notes (Optional)</CardTitle>
+            <CardTitle>{userRole === 'admin' ? 'Step 3' : 'Step 4'}: Add Notes (Optional)</CardTitle>
             <CardDescription>
               Provide context or reason for these transfers
             </CardDescription>

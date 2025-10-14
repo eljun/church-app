@@ -120,7 +120,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="font-display text-3xl font-bold text-primary">Dashboard</h1>
+        <h1 className="font-display text-3xl  text-primary">Dashboard</h1>
         <p className="mt-1 text-sm text-primary/80">
           Overview of your church management system
         </p>
@@ -306,7 +306,7 @@ export default async function DashboardPage() {
               <CardDescription>Members with birthdays this month</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{upcomingBirthdays.length}</div>
+              <div className="text-3xl ">{upcomingBirthdays.length}</div>
               <Button asChild variant="link" className="px-0 mt-2">
                 <Link href="/reports/birthdays">View all birthdays →</Link>
               </Button>
@@ -322,7 +322,7 @@ export default async function DashboardPage() {
               <CardDescription>Anniversaries this month</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{upcomingAnniversaries.length}</div>
+              <div className="text-3xl ">{upcomingAnniversaries.length}</div>
               <Button asChild variant="link" className="px-0 mt-2">
                 <Link href="/reports/baptism-anniversaries">View all anniversaries →</Link>
               </Button>

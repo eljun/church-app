@@ -50,7 +50,7 @@ export function AgeDistributionChart({ data }: AgeDistributionChartProps) {
           const percentage = total > 0 ? Math.round((item.count / total) * 100) : 0
           return (
             <div key={item.category} className="text-center">
-              <div className="text-2xl font-bold" style={{ color: item.color }}>
+              <div className="text-2xl " style={{ color: item.color }}>
                 {item.count}
               </div>
               <div className="text-sm font-medium text-gray-700">{item.category}</div>

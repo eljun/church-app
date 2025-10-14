@@ -62,7 +62,7 @@ export default async function StatisticsPage({ searchParams }: StatisticsPagePro
             </Link>
           </Button>
           <div>
-            <h1 className="font-display text-3xl font-bold text-primary ">
+            <h1 className="font-display text-3xl  text-primary ">
               Statistics Dashboard
             </h1>
             <p className="mt-1 text-sm text-gray-500">
@@ -251,7 +251,7 @@ export default async function StatisticsPage({ searchParams }: StatisticsPagePro
               <CardDescription>Members with birthdays this month</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{upcomingBirthdays.length}</div>
+              <div className="text-3xl ">{upcomingBirthdays.length}</div>
               <Button asChild variant="link" className="px-0 mt-2">
                 <Link href="/reports/birthdays">View all birthdays →</Link>
               </Button>
@@ -267,7 +267,7 @@ export default async function StatisticsPage({ searchParams }: StatisticsPagePro
               <CardDescription>Anniversaries this month</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{upcomingAnniversaries.length}</div>
+              <div className="text-3xl ">{upcomingAnniversaries.length}</div>
               <Button asChild variant="link" className="px-0 mt-2">
                 <Link href="/reports/baptism-anniversaries">View all anniversaries →</Link>
               </Button>
