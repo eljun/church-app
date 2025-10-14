@@ -185,16 +185,21 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg border border-primary/20 p-6">
+        <div className="bg-white border border-primary/20 p-6">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-3">
+            <Button variant="default" asChild>
+              <Link href={`/events/${id}/registrations`}>
+                <Users className="mr-2 h-4 w-4" />
+                View Registrations
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href={`/events/${id}/edit`}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit Event
               </Link>
             </Button>
-            {/* Add more quick actions as needed */}
           </div>
         </div>
       </div>

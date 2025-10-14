@@ -69,7 +69,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       </div>
 
       {/* Filters */}
-      <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 rounded-lg" />}>
+      <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100" />}>
         <EventsFilters />
       </Suspense>
 
@@ -94,7 +94,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
         {/* List View */}
         <TabsContent value="list" className="space-y-4">
-          <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>
+          <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100" />}>
             <EventsTable
               events={events}
               currentPage={page}
@@ -106,7 +106,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
         {/* Grid View */}
         <TabsContent value="grid" className="space-y-4">
-          <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>
+          <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100" />}>
             {events.length === 0 ? (
               <div className="text-center py-12 bg-white border border-primary/20 rounded-lg">
                 <CalendarDays className="mx-auto h-12 w-12 text-gray-400" />

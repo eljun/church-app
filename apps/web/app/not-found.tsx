@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Home, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 
@@ -20,13 +19,13 @@ export default function NotFound() {
 
         {/* 404 Content */}
         <div className="space-y-4">
-          <h1 className="font-display text-8xl  text-white">
+          <h1 className="font-display text-4xl text-primary">
             404
           </h1>
-          <h2 className="font-display text-3xl font-semibold text-white">
+          <h2 className="font-display text-2xl">
             Page Not Found
           </h2>
-          <p className="text-lg text-white/80 max-w-md mx-auto">
+          <p className="text-lg text-gray-600 max-w-md mx-auto">
             The page you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to access it.
           </p>
         </div>
@@ -36,29 +35,16 @@ export default function NotFound() {
           <Button
             asChild
             size="lg"
-            variant="secondary"
             className="min-w-[200px]"
           >
             <Link href="/">
-              <Home className="mr-2 h-5 w-5" />
               Go to Dashboard
             </Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="min-w-[200px] bg-white/10 text-white border-white/30 hover:bg-white/20"
-          >
-            <Link href="javascript:history.back()">
-              <ArrowLeft className="mr-2 h-5 w-5" />
-              Go Back
-            </Link>
-          </Button>
+          </Button>          
         </div>
 
         {/* Help Text */}
-        <div className="pt-8 text-white/60 text-sm">
+        <div className="pt-8 text-gray-500 text-sm">
           <p>
             If you believe this is an error, please contact your system administrator.
           </p>

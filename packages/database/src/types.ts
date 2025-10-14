@@ -1,6 +1,6 @@
 // Database types for Church App
 
-export type UserRole = 'superadmin' | 'admin' | 'member';
+export type UserRole = 'superadmin' | 'coordinator' | 'admin' | 'member';
 export type PhysicalCondition = 'fit' | 'sickly';
 export type SpiritualCondition = 'active' | 'inactive';
 export type MemberStatus = 'active' | 'transferred_out' | 'resigned' | 'disfellowshipped' | 'deceased';
@@ -9,6 +9,7 @@ export type TransferType = 'transfer_in' | 'transfer_out';
 export type EventType = 'service' | 'baptism' | 'conference' | 'social' | 'other';
 export type ServiceType = 'sabbath_morning' | 'sabbath_afternoon' | 'prayer_meeting' | 'other';
 export type AnnouncementTarget = 'all' | 'church_specific' | 'district_specific' | 'field_specific';
+export type EventRegistrationStatus = 'registered' | 'attended' | 'no_show' | 'confirmed' | 'cancelled';
 
 export interface User {
   id: string;
@@ -129,6 +130,22 @@ export interface Attendance {
   created_at: string;
 }
 
+export interface EventRegistration {
+  id: string;
+  event_id: string;
+  member_id: string;
+  registered_at: string;
+  registered_by: string;
+  status: EventRegistrationStatus;
+  attendance_confirmed_at: string | null;
+  attendance_confirmed_by: string | null;
+  final_confirmed_at: string | null;
+  final_confirmed_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuditLog {
   id: string;
   user_id: string;
@@ -190,6 +207,11 @@ export interface Database {
         Row: AuditLog;
         Insert: Omit<AuditLog, 'id' | 'created_at'>;
         Update: never;
+      };
+      event_registrations: {
+        Row: EventRegistration;
+        Insert: Omit<EventRegistration, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<EventRegistration, 'id' | 'created_at'>>;
       };
     };
   };

@@ -64,7 +64,7 @@
 - `/reports/birthdays` - Birthday Report ✅
 - `/reports/statistics` - Statistics Dashboard ✅
 - `/reports/custom` - Custom Report Builder ✅
-- `/settings` - **TODO: Build this** (Phase 8)
+- `/settings` - **TODO: Build this** (Phase 7)
 
 ## 🎯 Next Phase: Transfer Management
 
@@ -446,15 +446,7 @@ Visit: http://localhost:3000
 - Event calendar view
 - Event announcements
 
-**Phase 7: Announcements & Communications**
-- Create announcements
-- Target by church/district/field
-- Schedule announcements
-- Email notifications
-- Push notifications (future)
-- Announcement archive
-
-**Phase 8: Settings & Administration**
+**Phase 7: Settings & Administration** (Previously Phase 8)
 - User profile management
 - Organization settings
 - Role management
@@ -462,6 +454,14 @@ Visit: http://localhost:3000
 - System configuration
 - Backup/restore
 - User permissions management
+
+**Phase 8: Attendance Tracking** (NEW - Prioritized)
+- Event attendance tracking UI
+- Service attendance forms
+- Attendance reports and analytics
+- Member attendance history
+- Bulk attendance entry
+- Attendance statistics per event/church
 
 **Phase 9: Mobile Optimization**
 - Progressive Web App (PWA)
@@ -501,9 +501,11 @@ Visit: http://localhost:3000
 ---
 
 **Current State:** Phase 6 COMPLETE ✅
-**Next Phase:** Phase 7 - Announcements & Communications
+**Next Phase:** Phase 7 - Settings & Administration
 **Status:** Production ready
 **All Features Working:** Reports, Analytics, Custom Reports, Dashboard, Events & Activities fully functional
+
+**Note:** Original Phase 7 (Announcements & Communications) has been **removed from roadmap** as the Events system already serves this purpose effectively. Members can view and participate in events across all organizational levels, making a separate announcement system redundant. Additionally, most admins in remote areas already use Facebook Messenger/WhatsApp for real-time communication.
 
 ### Latest Updates (2025-10-12):
 
@@ -1059,4 +1061,186 @@ Events Routes
 ✅ Source church admin cannot see transfer approval buttons
 ✅ Destination church admin sees member details in transfers
 ✅ Member church_id updates successfully on approval
+
+---
+
+## 📅 Latest Updates (2025-10-15): Event Registration & Coordinator Role
+
+### Phase 6.6: Event Registration System & Role-Based Attendance Management
+
+**What Was Implemented:**
+
+#### Event Registration & Attendance Tracking
+✅ **Registration Management** - Pre-event member registration by admins
+✅ **Attendance Confirmation** - Post-event attendance marking (attended/no-show)
+✅ **Three-Stage Workflow** - Registration → Attendance → Final Confirmation (locked)
+✅ **Registration Statistics** - Total registered, attended, no-show, attendance rates
+✅ **Search & Filters** - Filter by church, district, status with real-time search
+✅ **Bulk Actions** - Select all pending registrations for quick attendance marking
+✅ **Attendance Finalization** - Superadmins/Coordinators can lock final records
+✅ **Status Preservation** - Finalization locks records without changing attended/no-show status
+
+#### Coordinator Role Implementation
+✅ **New Role Added** - 'coordinator' role between superadmin and admin
+✅ **Event-Focused Access** - Coordinators only see Events in navigation
+✅ **Route Protection** - Middleware redirects coordinators to /events for all other pages
+✅ **Full Event Permissions** - Create, manage, register, confirm, and finalize events
+✅ **Read-Only Access** - Can view members/churches/users data via RLS for registrations
+✅ **Attendance Finalization** - Coordinators can finalize attendance when superadmin is absent
+
+**Database Migrations:**
+- `008_add_coordinator_role.sql` (Part 1) - Add coordinator enum value
+- `008_add_coordinator_role_part2.sql` (Part 2) - Helper functions and RLS policies
+- `008_add_coordinator_role_part2_patch.sql` - Quick fix for missing policies
+
+**New Components Created:**
+```
+components/events/registrations/
+├─ register-members-dialog.tsx      # Add members to event
+├─ registrations-table.tsx          # View registered members with pagination
+├─ attendance-confirmation-form.tsx # Mark attendance + finalize
+└─ attendance-filters.tsx           # Search & filter component
+```
+
+**New Routes:**
+```
+Event Registration Routes
+├─ /events/[id]/registrations  # View & manage event registrations
+└─ /events/[id]/attendance     # Confirm attendance (coordinators/superadmins)
+```
+
+**Files Updated:**
+- `packages/database/src/types.ts` - Added coordinator to UserRole type
+- `apps/web/middleware.ts` - Route protection for coordinators
+- `apps/web/components/dashboard/sidebar.tsx` - Events-only navigation for coordinators
+- `apps/web/lib/actions/event-registrations.ts` - Registration and finalization actions
+- `apps/web/lib/queries/event-registrations.ts` - Fetch registrations with joins
+
+**RLS Policies Added:**
+- Coordinator can read all events
+- Coordinator can create/update any event
+- Coordinator can manage all event registrations
+- Coordinator can read members (for registration display)
+- Coordinator can read churches (for church details)
+- Coordinator can read users (for who registered/confirmed)
+
+#### Coordinator Role Permissions Summary
+
+**What Coordinators CAN Do:**
+- ✅ Access Events page only (sidebar shows only "Events")
+- ✅ Create events (any scope - church/district/field/national)
+- ✅ View all events and registrations
+- ✅ Register members for events
+- ✅ Confirm attendance (mark as attended/no-show)
+- ✅ **Finalize and lock attendance records** (critical when superadmin is absent)
+
+**What Coordinators CANNOT Do:**
+- ❌ Access Dashboard, Members, Churches, Transfers, or Reports pages
+- ❌ Manage churches or members directly
+- ❌ Approve transfer requests
+- ❌ View reports or analytics
+
+**Background RLS Access (Read-Only):**
+- 👁️ Members data (for displaying names in registrations)
+- 👁️ Churches data (for displaying church names)
+- 👁️ Users data (for showing who registered/confirmed)
+
+#### Three-Stage Registration Workflow
+
+**Stage 1: Pre-Event Registration (Admin/Coordinator)**
+- Admin registers members from their church for the event
+- Status: `registered`
+- Can register multiple members at once
+- Can cancel registrations before event
+
+**Stage 2: Post-Event Attendance (Admin/Coordinator)**
+- After event, mark who attended vs no-show
+- Status: `attended` or `no_show`
+- Can update status until finalized
+- Statistics calculate attendance rate
+
+**Stage 3: Final Confirmation (Superadmin/Coordinator)**
+- Lock attendance records permanently
+- Adds `final_confirmed_at` and `final_confirmed_by` timestamps
+- Status remains as `attended` or `no_show` (preserved for reporting)
+- Shows 🔒 icon next to finalized records
+- Cannot modify after finalization
+
+#### Attendance Statistics Display
+- **Total Registered** - All members registered for event
+- **Attended** - Members who attended (confirmed present)
+- **No Show** - Members who registered but didn't attend
+- **Attendance Rate** - Percentage calculation: attended / (attended + no_show)
+- **Finalized** - Count of locked records
+
+#### Search & Filter Features
+- **Real-time Search** - Filter by member name instantly
+- **Church Filter** - Select specific church or view all
+- **District Filter** - Filter by church district
+- **Status Filter** - Filter by registered/attended/no_show/cancelled
+- **Active Filters Display** - Shows count of active filters with clear button
+- **Collapsible Advanced Filters** - Clean UI with expand/collapse
+
+#### Pagination
+- 20 registrations per page
+- Previous/Next navigation
+- Shows "X to Y of Z registrations"
+- Preserves page state during attendance updates
+
+#### Security & Validation
+- Only admins can register members from their church
+- Only superadmins/coordinators can finalize attendance
+- Cannot finalize until attendance is marked (attended/no_show)
+- RLS policies enforce all permissions at database level
+- Middleware enforces route access at application level
+
+#### UI/UX Improvements
+- Status badges with color coding (Pending, Attended, No Show)
+- Icon-only action buttons (UserRoundCheck, UserRoundMinus)
+- Status sorting (registered → attended → no_show → cancelled)
+- Statistics cards matching dashboard design
+- Finalization card in purple for visibility
+- Responsive table layouts
+- Toast notifications for all actions
+
+#### Build Status
+✅ **All builds passing**
+✅ **No TypeScript errors**
+✅ **Migration split into two parts** (PostgreSQL enum safety)
+✅ **Production ready**
+
+### Known Issues & Solutions
+
+**Issue: "Cannot read properties of null" errors**
+- **Cause:** Coordinators needed RLS policies for members, churches, users tables
+- **Solution:** Added three policies in part2_patch.sql
+- **Files:** All error sources resolved with proper RLS access
+
+### Documentation Created
+- `COORDINATOR_ROLE_IMPLEMENTATION.md` - Complete coordinator role documentation
+- Migration instructions (two-step process for enum safety)
+- Troubleshooting guide for common errors
+- Full permissions matrix
+
+---
+
+## 🎯 Next Session Tasks (2025-10-16)
+
+### Guest Registration Feature (NEW!)
+**Priority: High** - Requested for tomorrow's session
+
+**Purpose:** Allow events to accept guest registrations (non-members attending events)
+
+**Placeholder Notes:**
+- Specs and requirements to be discussed in tomorrow's session
+- Will extend event registration system
+- Guest data storage strategy TBD
+- Integration with existing registration workflow
+
+**Considerations to discuss:**
+- Guest information to capture (name, contact, church affiliation?)
+- Should guests be added to members table or separate guest table?
+- Can guests register themselves or only admin-driven?
+- Guest attendance tracking workflow
+- Reporting on guest attendance vs member attendance
 

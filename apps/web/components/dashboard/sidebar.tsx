@@ -35,7 +35,7 @@ import {
 interface UserData {
   id: string
   email: string
-  role: 'superadmin' | 'admin' | 'member'
+  role: 'superadmin' | 'coordinator' | 'admin' | 'member'
   church_id: string | null
   churches?: {
     name: string
@@ -48,6 +48,14 @@ interface SidebarProps {
 
 // Navigation items (will be dynamically modified based on user role)
 const getNavigation = (user: UserData | null) => {
+  // Coordinators only see Events page
+  if (user?.role === 'coordinator') {
+    return [
+      { name: 'Events', href: '/events', icon: HeartHandshake },
+    ]
+  }
+
+  // Standard navigation for other roles
   const baseNavigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Members', href: '/members', icon: Users },
