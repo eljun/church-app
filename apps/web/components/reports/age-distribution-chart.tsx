@@ -64,7 +64,7 @@ export function AgeDistributionChart({ data }: AgeDistributionChartProps) {
       {/* Bar chart */}
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="6 6" />
+          <CartesianGrid strokeDasharray="0 3"/>
           <XAxis
             dataKey="category"
             tick={{ fontSize: 12 }}

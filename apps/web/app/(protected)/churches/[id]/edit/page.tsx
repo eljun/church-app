@@ -40,7 +40,7 @@ export default async function EditChurchPage({ params }: EditChurchPageProps) {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-white border border-primary/20 p-6">
           <ChurchForm mode="edit" initialData={initialData} />
         </div>
       </div>

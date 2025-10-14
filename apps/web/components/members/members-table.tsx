@@ -91,21 +91,13 @@ export function MembersTable({ members, currentPage, totalPages, totalCount }: M
       active: 'secondary',
       transferred_out: 'secondary',
       resigned: 'outline',
-      disfellowshipped: 'inactive',
+      disfellowshipped: 'destructive',
       deceased: 'secondary',
     }
 
     return (
       <Badge variant={variants[status]}>
         {status.replace('_', ' ')}
-      </Badge>
-    )
-  }
-
-  const getSpiritualBadge = (condition: Member['spiritual_condition']) => {
-    return (
-      <Badge variant={condition === 'active' ? 'secondary' : 'inactive'}>
-        {condition}
       </Badge>
     )
   }

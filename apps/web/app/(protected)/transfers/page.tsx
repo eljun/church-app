@@ -80,13 +80,13 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
-          <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>
+          <Suspense fallback={<div className="h-96 animate-pulse bg-primary/20" />}>
             <PendingTransfersTable transfers={pendingTransfers} />
           </Suspense>
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>
+          <Suspense fallback={<div className="h-96 animate-pulse bg-primary/20" />}>
             <TransferHistoryTable history={historyData} />
           </Suspense>
         </TabsContent>

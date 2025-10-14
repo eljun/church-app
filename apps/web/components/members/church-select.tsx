@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input'
 interface Church {
   id: string
   name: string
+  field?: string
+  district?: string
 }
 
 interface ChurchSelectProps {
@@ -22,6 +24,8 @@ interface ChurchSelectProps {
   onValueChange: (value: string) => void
   disabled?: boolean
   placeholder?: string
+  allowEmpty?: boolean
+  showDistrictAndField?: boolean
 }
 
 export function ChurchSelect({
@@ -30,6 +34,8 @@ export function ChurchSelect({
   onValueChange,
   disabled,
   placeholder = 'Select a church',
+  allowEmpty = false,
+  showDistrictAndField = false,
 }: ChurchSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -84,22 +90,48 @@ export function ChurchSelect({
               </div>
             ) : (
               <div className="p-1">
-                {filteredChurches.map((church) => (
+                {allowEmpty && (
                   <button
-                    key={church.id}
-                    onClick={() => handleSelect(church.id)}
+                    onClick={() => handleSelect('')}
                     className={cn(
                       'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground',
-                      value === church.id && 'bg-accent'
+                      !value && 'bg-accent'
                     )}
                   >
                     <Check
                       className={cn(
                         'mr-2 h-4 w-4',
+                        !value ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    <span className="text-muted-foreground italic">None (All churches)</span>
+                  </button>
+                )}
+                {filteredChurches.map((church) => (
+                  <button
+                    key={church.id}
+                    onClick={() => handleSelect(church.id)}
+                    className={cn(
+                      'relative flex w-full cursor-pointer select-none items-start rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground',
+                      value === church.id && 'bg-accent'
+                    )}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4 mt-0.5',
                         value === church.id ? 'opacity-100' : 'opacity-0'
                       )}
                     />
-                    {church.name}
+                    <div className="flex flex-col items-start">
+                      <span>{church.name}</span>
+                      {showDistrictAndField && (church.district || church.field) && (
+                        <span className="text-xs text-muted-foreground">
+                          {church.district && `District: ${church.district}`}
+                          {church.district && church.field && ' • '}
+                          {church.field && `Field: ${church.field}`}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>

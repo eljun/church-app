@@ -79,6 +79,25 @@ export async function getChurchById(id: string) {
 }
 
 /**
+ * Get unique countries (for filters)
+ */
+export async function getCountries() {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('churches')
+    .select('country')
+    .order('country', { ascending: true })
+
+  if (error) throw error
+
+  // Get unique countries, filter out null/undefined
+  const uniqueCountries = [...new Set(data?.map(c => c.country).filter(Boolean))]
+
+  return uniqueCountries
+}
+
+/**
  * Get unique fields (for filters)
  */
 export async function getFields() {

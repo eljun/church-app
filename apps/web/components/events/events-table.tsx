@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { MoreHorizontal, Eye, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Eye, Pencil, Trash2, CalendarDays } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -32,105 +32,166 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { deleteChurch } from '@/lib/actions/churches'
+import { deleteEvent } from '@/lib/actions/events'
 import { toast } from 'sonner'
 
-interface Church {
+interface Event {
   id: string
-  name: string
-  field: string
-  district: string
-  city: string | null
-  province: string | null
-  is_active: boolean
+  title: string
+  description: string | null
+  event_type: 'service' | 'baptism' | 'conference' | 'social' | 'other'
+  start_date: string
+  end_date: string | null
+  location: string | null
+  is_public: boolean
+  churches: {
+    name: string
+  } | null
 }
 
-interface ChurchesTableProps {
-  churches: Church[]
+interface EventsTableProps {
+  events: Event[]
   currentPage: number
   totalPages: number
   totalCount: number
 }
 
-export function ChurchesTable({ churches, currentPage, totalPages, totalCount }: ChurchesTableProps) {
+export function EventsTable({ events, currentPage, totalPages, totalCount }: EventsTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [churchToDelete, setChurchToDelete] = useState<string | null>(null)
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const buildPaginationUrl = (page: number) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('page', page.toString())
-    return `/churches?${params.toString()}`
+    return `/events?${params.toString()}`
   }
 
   const handleDelete = async () => {
-    if (!churchToDelete) return
+    if (!eventToDelete) return
 
     setIsDeleting(true)
-    const result = await deleteChurch(churchToDelete)
+    const result = await deleteEvent(eventToDelete)
     setIsDeleting(false)
 
     if ('error' in result) {
       toast.error(result.error)
     } else {
-      toast.success('Church deleted successfully')
+      toast.success('Event deleted successfully')
       setDeleteDialogOpen(false)
-      setChurchToDelete(null)
+      setEventToDelete(null)
       router.refresh()
     }
   }
 
-  const getStatusBadge = (isActive: boolean) => {
+  const getEventTypeBadge = (type: Event['event_type']) => {
+    const variants: Record<Event['event_type'], { variant: 'default' | 'secondary' | 'destructive' | 'outline', label: string }> = {
+      service: { variant: 'secondary', label: 'Service' },
+      baptism: { variant: 'default', label: 'Baptism' },
+      conference: { variant: 'secondary', label: 'Conference' },
+      social: { variant: 'outline', label: 'Social' },
+      other: { variant: 'outline', label: 'Other' },
+    }
+
     return (
-      <Badge variant={isActive ? 'secondary' : 'inactive'}>
-        {isActive ? 'Active' : 'Inactive'}
+      <Badge variant={variants[type].variant}>
+        {variants[type].label}
       </Badge>
     )
+  }
+
+  const formatDate = (date: string | null) => {
+    if (!date) return 'N/A'
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
+  const formatDateTime = (date: string) => {
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const isUpcoming = (startDate: string) => {
+    return new Date(startDate) > new Date()
+  }
+
+  const calculateDuration = (startDate: string, endDate: string | null) => {
+    if (!endDate) return '1 day'
+
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 // +1 to include both start and end days
+
+    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'}`
   }
 
   return (
     <div className="space-y-4">
       {/* Table */}
-      <div className="border border-primary/15 bg-white">
+      <div className="bg-white border border-primary/20">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Field</TableHead>
-              <TableHead>District</TableHead>
+              <TableHead>Event</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Church</TableHead>
+              <TableHead>Start Date</TableHead>
+              <TableHead>End Date</TableHead>
+              <TableHead>Duration</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {churches.length === 0 ? (
+            {events.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  No churches found
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
+                  No events found
                 </TableCell>
               </TableRow>
             ) : (
-              churches.map((church) => (
-                <TableRow key={church.id} className="hover:bg-gray-50">
+              events.map((event) => (
+                <TableRow key={event.id}>
                   <TableCell className="font-medium">
                     <Link
-                      href={`/churches/${church.id}`}
-                      className="hover:underline"
+                      href={`/events/${event.id}`}
+                      className="hover:underline flex items-center gap-2"
                     >
-                      {church.name}
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                      {event.title}
                     </Link>
                   </TableCell>
-                  <TableCell>{church.field}</TableCell>
-                  <TableCell>{church.district}</TableCell>
+                  <TableCell>{getEventTypeBadge(event.event_type)}</TableCell>
+                  <TableCell>{event.churches?.name || 'All Churches'}</TableCell>
+                  <TableCell>{formatDateTime(event.start_date)}</TableCell>
+                  <TableCell>{formatDate(event.end_date)}</TableCell>
                   <TableCell>
-                    {church.city && church.province
-                      ? `${church.city}, ${church.province}`
-                      : church.city || church.province || 'N/A'}
+                    <Badge variant="outline" className="font-normal">
+                      {calculateDuration(event.start_date, event.end_date)}
+                    </Badge>
                   </TableCell>
-                  <TableCell>{getStatusBadge(church.is_active)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {event.location || 'TBA'}
+                  </TableCell>
+                  <TableCell>
+                    {isUpcoming(event.start_date) ? (
+                      <Badge variant="secondary">Upcoming</Badge>
+                    ) : (
+                      <Badge variant="outline">Past</Badge>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -143,13 +204,13 @@ export function ChurchesTable({ churches, currentPage, totalPages, totalCount }:
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                          <Link href={`/churches/${church.id}`}>
+                          <Link href={`/events/${event.id}`}>
                             <Eye className="mr-2 h-4 w-4" />
                             View
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href={`/churches/${church.id}/edit`}>
+                          <Link href={`/events/${event.id}/edit`}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
                           </Link>
@@ -158,7 +219,7 @@ export function ChurchesTable({ churches, currentPage, totalPages, totalCount }:
                         <DropdownMenuItem
                           className="text-red-600"
                           onClick={() => {
-                            setChurchToDelete(church.id)
+                            setEventToDelete(event.id)
                             setDeleteDialogOpen(true)
                           }}
                         >
@@ -179,7 +240,7 @@ export function ChurchesTable({ churches, currentPage, totalPages, totalCount }:
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {(currentPage - 1) * 50 + 1} to {Math.min(currentPage * 50, totalCount)} of {totalCount} churches
+            Showing {(currentPage - 1) * 50 + 1} to {Math.min(currentPage * 50, totalCount)} of {totalCount} events
           </p>
           <div className="flex gap-2">
             <Button
@@ -208,7 +269,7 @@ export function ChurchesTable({ churches, currentPage, totalPages, totalCount }:
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the church
+              This action cannot be undone. This will permanently delete the event
               from the database.
             </AlertDialogDescription>
           </AlertDialogHeader>

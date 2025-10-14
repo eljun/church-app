@@ -93,7 +93,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
         </div>
 
         {/* Member Info Card */}
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-white border p-6">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="font-display text-3xl font-bold text-primary ">
@@ -198,7 +198,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
 
         {/* Transfer History */}
         {transferHistory.length > 0 && (
-          <div className="bg-white rounded-lg border">
+          <div className="bg-white border">
             <div className="p-6 border-b">
               <h2 className="font-display text-xl font-bold ">
                 Transfer History
@@ -236,7 +236,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
 
         {/* No Transfer History */}
         {transferHistory.length === 0 && (
-          <div className="bg-white rounded-lg border p-6">
+          <div className="bg-white border p-6">
             <div className="text-center text-gray-500">
               <Activity className="mx-auto h-12 w-12 text-gray-300" />
               <h3 className="mt-2 text-sm font-medium ">

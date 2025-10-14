@@ -8,6 +8,14 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 interface ImageUploadProps {
   value: string[]
@@ -26,6 +34,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const supabase = createClient()
 
   const uploadFile = useCallback(async (file: File): Promise<string | null> => {
@@ -88,6 +97,7 @@ export function ImageUpload({
 
       if (uploadedUrls.length > 0) {
         toast.success(`Successfully uploaded ${uploadedUrls.length} image(s)`)
+        setIsModalOpen(false) // Close modal on success
       }
     },
     [value, maxFiles, onChange, uploadFile]
@@ -117,61 +127,83 @@ export function ImageUpload({
 
   return (
     <div className="space-y-4">
-      {/* Upload Area */}
+      {/* Upload Button - Opens Modal */}
       {value.length < maxFiles && (
-        <div
-          {...getRootProps()}
-          className={cn(
-            'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
-            isDragActive
-              ? 'border-primary bg-primary/5'
-              : 'border-gray-300 hover:border-gray-400',
-            uploading && 'opacity-50 cursor-not-allowed'
-          )}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center gap-2">
-            {uploading ? (
-              <>
-                <Loader2 className="h-10 w-10 text-gray-400 animate-spin" />
-                <p className="text-sm text-gray-600">Uploading images...</p>
-              </>
-            ) : (
-              <>
-                <Upload className="h-10 w-10 text-gray-400" />
-                <div className="text-sm text-gray-600">
-                  <p className="font-medium">
-                    {isDragActive
-                      ? 'Drop images here...'
-                      : 'Drag & drop images here, or click to select'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, WEBP up to 10MB ({maxFiles - value.length} remaining)
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" size="sm">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Images ({value.length}/{maxFiles})
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Upload Church Images</DialogTitle>
+              <DialogDescription>
+                Upload images for this church. The first image will be the primary photo.
+              </DialogDescription>
+            </DialogHeader>
 
-      {/* Upload Progress */}
-      {Object.keys(uploadProgress).length > 0 && (
-        <div className="space-y-2">
-          {Object.entries(uploadProgress).map(([fileName, progress]) => (
-            <div key={fileName} className="flex items-center gap-2">
-              <div className="flex-1">
-                <p className="text-xs text-gray-600 mb-1">{fileName}</p>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
+            {/* Modal Dropzone */}
+            <div className="space-y-4">
+              <div
+                {...getRootProps()}
+                className={cn(
+                  'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
+                  isDragActive
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-300 hover:border-gray-400',
+                  uploading && 'opacity-50 cursor-not-allowed'
+                )}
+              >
+                <input {...getInputProps()} />
+                <div className="flex flex-col items-center gap-3">
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                      <p className="text-sm text-gray-600">Uploading images...</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="rounded-full bg-primary/10 p-3">
+                        <Upload className="h-8 w-8 text-primary" />
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p className="font-medium">
+                          {isDragActive
+                            ? 'Drop images here...'
+                            : 'Click to upload or drag and drop'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          PNG, JPG, WEBP up to 10MB ({maxFiles - value.length} remaining)
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
+
+              {/* Upload Progress */}
+              {Object.keys(uploadProgress).length > 0 && (
+                <div className="space-y-2">
+                  {Object.entries(uploadProgress).map(([fileName, progress]) => (
+                    <div key={fileName} className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600 mb-1">{fileName}</p>
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all duration-300"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Image Preview Grid */}
@@ -185,7 +217,7 @@ export function ImageUpload({
               </span>
             )}
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {value.map((url, index) => (
               <div
                 key={url}

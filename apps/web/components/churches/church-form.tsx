@@ -26,7 +26,7 @@ import {
   FormDescription,
   FormField,
   FormItem,
-  FormLabel,
+  FormLabel,  
   FormMessage,
 } from '@/components/ui/form'
 import { toast } from 'sonner'
@@ -294,29 +294,7 @@ export function ChurchForm({ initialData, mode = 'create' }: ChurchFormProps) {
             )}
           />
 
-          {/* Church Images */}
-          <FormField
-            control={form.control}
-            name="images"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Church Images</FormLabel>
-                <FormControl>
-                  <ImageUpload
-                    value={field.value || []}
-                    onChange={field.onChange}
-                    maxFiles={5}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Upload up to 5 images. The first image will be the primary photo displayed throughout the app.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Active Status */}
+          {/* Active Status - BEFORE Image Upload */}
           <FormField
             control={form.control}
             name="is_active"
@@ -339,6 +317,29 @@ export function ChurchForm({ initialData, mode = 'create' }: ChurchFormProps) {
               </FormItem>
             )}
           />
+
+          {/* Church Images */}
+          <FormField
+            control={form.control}
+            name="images"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Church Images</FormLabel>
+                <FormControl>
+                  <ImageUpload
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    maxFiles={5}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Upload up to 5 images. The first image will be the primary photo displayed throughout the app.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
         </div>
 
         {/* Form Actions */}

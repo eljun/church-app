@@ -37,7 +37,7 @@ export default async function EditMemberPage({ params }: EditMemberPageProps) {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-white border p-6">
           <MemberForm
             churches={churches}
             userRole={userData?.role || 'admin'}

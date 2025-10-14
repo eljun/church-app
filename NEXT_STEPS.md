@@ -500,10 +500,10 @@ Visit: http://localhost:3000
 
 ---
 
-**Current State:** Phase 5 COMPLETE ✅ (with major enhancements)
-**Next Phase:** Phase 6 - Events & Activities
-**Status:** Production ready (requires database migration for gender field)
-**All Features Working:** Reports, Analytics, Custom Reports, Dashboard fully functional
+**Current State:** Phase 6 COMPLETE ✅
+**Next Phase:** Phase 7 - Announcements & Communications
+**Status:** Production ready
+**All Features Working:** Reports, Analytics, Custom Reports, Dashboard, Events & Activities fully functional
 
 ### Latest Updates (2025-10-12):
 
@@ -862,6 +862,7 @@ Sidebar Component
 │  ├─ Members
 │  ├─ Churches (superadmin only)
 │  ├─ Transfers
+│  ├─ Events (NEW!)
 │  └─ Reports
 └─ User Profile Dropdown (footer)
    ├─ Avatar with initial
@@ -870,4 +871,138 @@ Sidebar Component
    ├─ Settings link
    └─ Sign out button (red)
 ```
+
+---
+
+## ✅ Phase 6 Complete: Events & Activities (2025-10-14)
+
+### What Was Implemented
+
+**Event Management System** - Complete CRUD operations for church events
+
+#### Core Features:
+✅ **Event Creation & Editing**
+- Event form with date/time picker
+- Multiple event types (Service, Baptism, Conference, Social, Other)
+- Church-specific or organization-wide events
+- Optional end date for multi-day events
+- Location and image URL support
+- Public/private visibility settings
+
+✅ **Event Listing & Views**
+- Table view with sortable columns
+- Grid view with event cards
+- Advanced filters (type, visibility, time period)
+- Search by event title
+- Pagination support
+- Upcoming vs. past event indicators
+
+✅ **Event Detail Page**
+- Full event information display
+- Event image display
+- Date, time, location details
+- Church association
+- Creator information
+- Quick action buttons
+
+✅ **Role-Based Permissions**
+- Admins limited to their church events
+- Superadmins can create organization-wide events
+- Event creators can delete their own events
+- Proper RLS policies enforced
+
+#### Technical Implementation:
+
+**New Files Created:**
+```
+lib/
+├─ validations/event.ts          # Zod schemas
+├─ queries/events.ts              # Data fetching
+└─ actions/events.ts              # CRUD operations
+
+components/events/
+├─ event-form.tsx                 # Create/edit form
+├─ event-card.tsx                 # Grid view card
+├─ events-table.tsx               # List view table
+└─ events-filters.tsx             # Search & filters
+
+app/(protected)/events/
+├─ page.tsx                       # Main events page
+├─ new/page.tsx                   # Create event
+├─ [id]/page.tsx                  # Event detail
+└─ [id]/edit/page.tsx            # Edit event
+```
+
+#### Database Integration:
+- Uses existing `events` table from schema
+- Foreign key relations with churches and users
+- Support for recurring events (foundation laid)
+- Attendance tracking ready (future phase)
+
+#### UI/UX Features:
+- Date & time picker with calendar component
+- Image URL support (with plans for upload)
+- Responsive grid/list view toggle
+- Advanced filtering with collapsible panel
+- Color-coded event type badges
+- "Upcoming" and "Past" event indicators
+
+### What's Next (Phase 7):
+**Announcements & Communications**
+- Create and manage announcements
+- Target by church/district/field
+- Schedule future announcements
+- Archive functionality
+
+### Routes Added:
+```
+Events Routes
+├─ /events                  # List all events (table/grid view)
+├─ /events/new              # Create new event
+├─ /events/[id]             # View event details
+└─ /events/[id]/edit        # Edit event
+```
+
+### Build Status:
+✅ **All builds passing**
+✅ **No TypeScript errors**
+✅ **Linting clean** (warnings only)
+✅ **Production ready**
+
+### Latest Updates (2025-10-14):
+
+#### Phase 6 Enhancements - Events UI Polish
+✅ **Hierarchical Event System** - Events at National/Field/District/Church levels
+✅ **Multi-District Support** - Checkbox selection for district-level events
+✅ **Event Duration Display** - Duration column shows event length (5 days, 1 day, etc.)
+✅ **Scope Badges** - Grid view shows organizational level and selected scopes
+✅ **Form Layout Consistency** - Event Type and Scope now 50% width like dates
+✅ **Church Labels Enhanced** - District and Field shown in church selector
+✅ **Checkbox Position Fix** - Moved before image upload to prevent overflow
+✅ **Single Image Upload** - Events use same ImageUpload component as Churches
+✅ **All Lint Warnings Fixed** - Clean build with no source file warnings
+
+**Files Updated:**
+- `event-form.tsx` - Consistent field widths, checkbox position
+- `event-scope-selector.tsx` - Multi-district checkbox selection
+- `church-select.tsx` - District/field labels
+- `events-table.tsx` - Duration column
+- `event-card.tsx` - Scope badges
+- `events/[id]/page.tsx` - Image placeholder icon
+- `image-upload.tsx` - Unified component for both events and churches
+
+**Technical Fixes:**
+- Horizontal overflow issue resolved (checkbox field order)
+- Removed unused imports across all files
+- Fixed TypeScript lint warnings
+- Removed deprecated event-defaults system
+- Unified image upload component
+
+### Future Enhancements (Optional):
+- Calendar view integration
+- Event registration system
+- Attendance tracking
+- Recurring events UI
+- Event reminders/notifications
+- Multi-image gallery (like church images)
 

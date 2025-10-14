@@ -13,6 +13,7 @@ import {
   LogOut,
   ChevronUp,
   ChevronLeft,
+  HeartHandshake,
   ChevronRight
 } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
@@ -21,7 +22,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -51,6 +51,7 @@ const navigation = [
   { name: 'Members', href: '/members', icon: Users },
   { name: 'Churches', href: '/churches', icon: Building2, superadminOnly: true },
   { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
+  { name: 'Events', href: '/events', icon: HeartHandshake },
   { name: 'Reports', href: '/reports', icon: FileText },
 ]
 
@@ -75,7 +76,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-20 z-50 h-6 w-6 rounded-sm bg-accent hover:bg-accent/90 text-white shadow-md"
+          className="absolute -right-3 top-20 z-50 h-6 w-6 bg-accent hover:bg-accent/90 text-white shadow-md"
         >
           {isCollapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -119,7 +120,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
                 key={item.name}
                 href={item.href}
                 className={`
-                  flex items-center ${isCollapsed ? 'justify-center p-3' : 'p-4'} text-sm font-medium rounded-lg
+                  flex items-center ${isCollapsed ? 'justify-center p-3' : 'p-4'} text-sm font-medium 
                   transition-colors duration-150
                   ${isActive
                     ? 'text-white font-display font-semibold bg-white/10'

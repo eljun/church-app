@@ -108,7 +108,7 @@ export function PendingTransfersTable({ transfers }: PendingTransfersTableProps)
 
   if (transfers.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
+      <div className="border border-primary/20 bg-white p-8 text-center">
         <p className="text-gray-500">No pending transfer requests</p>
       </div>
     )
@@ -116,7 +116,7 @@ export function PendingTransfersTable({ transfers }: PendingTransfersTableProps)
 
   return (
     <>
-      <div className="rounded-lg border border-gray-200 bg-white">
+      <div className="border border-primary/20 bg-white">
         <Table>
           <TableHeader>
             <TableRow>
