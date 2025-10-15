@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Phone, Mail, MapPin, Calendar, User, Building2, MoreVertical, Plus, RefreshCw, UserPlus, UserCheck, Pencil } from 'lucide-react'
+import { ArrowLeft, Calendar } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getVisitorById } from '@/lib/queries/visitors'
 import { getVisitorActivities } from '@/lib/queries/visitor-activities'
@@ -8,22 +8,9 @@ import { getVisitorAttendanceHistory } from '@/lib/queries/attendance'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { VisitorDetailCard } from '@/components/visitors/visitor-detail-card'
 import { FollowUpActivityLog } from '@/components/visitors/follow-up-activity-log'
-import { UpdateFollowUpStatusDialog } from '@/components/visitors/update-follow-up-status-dialog'
-import { AssignVisitorDialog } from '@/components/visitors/assign-visitor-dialog'
-import { ConvertToMemberDialog } from '@/components/visitors/convert-to-member-dialog'
-import { AddActivityDialog } from '@/components/visitors/add-activity-dialog'
-import { EditVisitorDialog } from '@/components/visitors/edit-visitor-dialog'
+import { VisitorActionsMenu } from '@/components/visitors/visitor-actions-menu'
 
 interface VisitorDetailPageProps {
   params: Promise<{ id: string }>
@@ -95,65 +82,11 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
 
           {/* Action Menu - Hidden for converted visitors */}
           {!isConverted && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  Actions
-                  <MoreVertical className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Visitor Actions</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <EditVisitorDialog
-                  visitor={visitor}
-                  trigger={
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit Profile
-                    </DropdownMenuItem>
-                  }
-                />
-                <AddActivityDialog
-                  visitorId={id}
-                  trigger={
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Activity
-                    </DropdownMenuItem>
-                  }
-                />
-                <UpdateFollowUpStatusDialog
-                  visitor={visitor}
-                  trigger={
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Update Status
-                    </DropdownMenuItem>
-                  }
-                />
-                <AssignVisitorDialog
-                  visitor={visitor}
-                  currentUser={currentUser}
-                  trigger={
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Assign to User
-                    </DropdownMenuItem>
-                  }
-                />
-                <DropdownMenuSeparator />
-                <ConvertToMemberDialog
-                  visitor={visitor}
-                  trigger={
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <UserCheck className="mr-2 h-4 w-4" />
-                      Convert to Member
-                    </DropdownMenuItem>
-                  }
-                />
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <VisitorActionsMenu
+              visitor={visitor}
+              currentUser={currentUser}
+              visitorId={id}
+            />
           )}
         </div>
 
