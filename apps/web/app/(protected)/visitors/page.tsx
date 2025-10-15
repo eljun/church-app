@@ -1,11 +1,7 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getVisitors } from '@/lib/queries/visitors'
 import { getChurches } from '@/lib/queries/churches'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { VisitorListTable } from '@/components/visitors/visitor-list-table'
 import { RegisterVisitorDialog } from '@/components/events/registrations/register-visitor-dialog'
 
@@ -60,20 +56,10 @@ export default async function VisitorsPage() {
       </div>
 
       {/* Visitors Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Visitors</CardTitle>
-          <CardDescription>
-            Search and filter visitors, update follow-up status, and track conversions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <VisitorListTable
-            visitors={visitorsData.data || []}
-            currentUser={currentUser}
-          />
-        </CardContent>
-      </Card>
+      <VisitorListTable
+        visitors={visitorsData.data || []}
+        currentUser={currentUser}
+      />
     </div>
   )
 }
