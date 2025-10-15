@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatisticsCard } from '@/components/reports/statistics-card'
 import { RegisterMembersDialog } from '@/components/events/registrations/register-members-dialog'
+import { RegisterVisitorDialog } from '@/components/events/registrations/register-visitor-dialog'
 import { RegistrationsTable } from '@/components/events/registrations/registrations-table'
 
 interface EventRegistrationsPageProps {
@@ -42,6 +43,13 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
       return null
     }
 
+    // Fetch all churches for visitor church association
+    const { data: churches } = await supabase
+      .from('churches')
+      .select('id, name, district, field')
+      .eq('is_active', true)
+      .order('name')
+
     const [event, { data: registrations, count }, stats, availableMembers] = await Promise.all([
       getEventById(id),
       getEventRegistrations(id, { limit, offset }),
@@ -70,10 +78,17 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
             <p className="text-muted-foreground">{event.title}</p>
           </div>
           {currentUser.role !== 'member' && (
-            <RegisterMembersDialog
-              eventId={id}
-              availableMembers={availableMembers}
-            />
+            <div className="flex gap-2">
+              <RegisterMembersDialog
+                eventId={id}
+                availableMembers={availableMembers}
+              />
+              <RegisterVisitorDialog
+                eventId={id}
+                churches={churches || []}
+                defaultChurchId={currentUser.role === 'admin' ? currentUser.church_id || undefined : undefined}
+              />
+            </div>
           )}
         </div>
 
@@ -117,9 +132,9 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
 
         {/* Section Title */}
         <div>
-          <h2 className="text-lg font-semibold text-primary">Registered Members</h2>
+          <h2 className="text-lg font-semibold text-primary">Registered Attendees</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Members registered for this event ({count.toLocaleString()} total)
+            Members and visitors registered for this event ({count.toLocaleString()} total)
           </p>
         </div>
 

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { EventRegistration } from '@church-app/database'
 
-// Extended type with joined data
+// Extended type with joined data (supports both members and visitors)
 export interface EventRegistrationWithDetails extends EventRegistration {
   members: {
     id: string
@@ -13,7 +13,20 @@ export interface EventRegistrationWithDetails extends EventRegistration {
       district: string
       field: string
     }
-  }
+  } | null
+  visitors: {
+    id: string
+    full_name: string
+    phone: string | null
+    visitor_type: string
+    is_baptized: boolean
+    associated_church: {
+      id: string
+      name: string
+      district: string
+      field: string
+    } | null
+  } | null
   registered_by_user: {
     id: string
     email: string
@@ -46,7 +59,7 @@ export async function getEventRegistrations(
     throw new Error(`Failed to count event registrations: ${countError.message}`)
   }
 
-  // Get paginated data
+  // Get paginated data (supports both members and visitors)
   const { data, error } = await supabase
     .from('event_registrations')
     .select(`
@@ -56,6 +69,19 @@ export async function getEventRegistrations(
         full_name,
         church_id,
         churches:church_id (
+          id,
+          name,
+          district,
+          field
+        )
+      ),
+      visitors:visitor_id (
+        id,
+        full_name,
+        phone,
+        visitor_type,
+        is_baptized,
+        associated_church:associated_church_id (
           id,
           name,
           district,
@@ -129,6 +155,19 @@ export async function getRegistrationById(registrationId: string) {
         full_name,
         church_id,
         churches:church_id (
+          id,
+          name,
+          district,
+          field
+        )
+      ),
+      visitors:visitor_id (
+        id,
+        full_name,
+        phone,
+        visitor_type,
+        is_baptized,
+        associated_church:associated_church_id (
           id,
           name,
           district,
@@ -264,6 +303,19 @@ export async function getAllEventRegistrations(eventId: string) {
         full_name,
         church_id,
         churches:church_id (
+          id,
+          name,
+          district,
+          field
+        )
+      ),
+      visitors:visitor_id (
+        id,
+        full_name,
+        phone,
+        visitor_type,
+        is_baptized,
+        associated_church:associated_church_id (
           id,
           name,
           district,

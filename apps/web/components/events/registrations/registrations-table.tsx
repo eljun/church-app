@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Trash2, X } from 'lucide-react'
+import { Trash2, X, User, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -132,7 +132,8 @@ export function RegistrationsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Member Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Name</TableHead>
               <TableHead>Church</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Registered At</TableHead>
@@ -141,28 +142,58 @@ export function RegistrationsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {registrations.map((registration) => (
-              <TableRow key={registration.id}>
-                <TableCell className="font-medium">
-                  {registration.members.full_name}
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm">
-                    <div>{registration.members.churches.name}</div>
-                    <div className="text-muted-foreground text-xs">
-                      {registration.members.churches.district} · {registration.members.churches.field}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {getStatusBadge(registration.status)}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {formatDate(registration.registered_at)}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {registration.registered_by_user.email}
-                </TableCell>
+            {registrations.map((registration) => {
+              const isMember = !!registration.member_id
+              const isVisitor = !!registration.visitor_id
+              const attendee = isMember ? registration.members : registration.visitors
+              const church = isMember
+                ? registration.members?.churches
+                : registration.visitors?.associated_church
+
+              return (
+                <TableRow key={registration.id}>
+                  <TableCell>
+                    {isMember ? (
+                      <Badge variant="outline" className="gap-1">
+                        <Users className="h-3 w-3" />
+                        Member
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="gap-1">
+                        <User className="h-3 w-3" />
+                        Visitor
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {attendee?.full_name || 'N/A'}
+                    {isVisitor && registration.visitors?.phone && (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {registration.visitors.phone}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {church ? (
+                      <div className="text-sm">
+                        <div>{church.name}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {church.district} · {church.field}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No church</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {getStatusBadge(registration.status)}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDate(registration.registered_at)}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {registration.registered_by_user.email}
+                  </TableCell>
                 {userRole !== 'member' && (
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -190,8 +221,9 @@ export function RegistrationsTable({
                     </div>
                   </TableCell>
                 )}
-              </TableRow>
-            ))}
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </div>

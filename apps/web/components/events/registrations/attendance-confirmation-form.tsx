@@ -41,16 +41,17 @@ export function AttendanceConfirmationForm({
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const router = useRouter()
 
-  // Extract unique churches and districts from registrations
+  // Extract unique churches and districts from registrations (both members and visitors)
   const { churches, districts } = useMemo(() => {
     const churchSet = new Map<string, string>()
     const districtSet = new Set<string>()
 
     registrations.forEach(reg => {
-      if (reg.members.churches) {
-        churchSet.set(reg.members.churches.id, reg.members.churches.name)
-        if (reg.members.churches.district) {
-          districtSet.add(reg.members.churches.district)
+      const church = reg.member_id ? reg.members?.churches : reg.visitors?.associated_church
+      if (church) {
+        churchSet.set(church.id, church.name)
+        if (church.district) {
+          districtSet.add(church.district)
         }
       }
     })
@@ -61,15 +62,18 @@ export function AttendanceConfirmationForm({
     }
   }, [registrations])
 
-  // Filter and sort registrations based on search and filters
+  // Filter and sort registrations based on search and filters (both members and visitors)
   const filteredRegistrations = useMemo(() => {
     const filtered = registrations.filter(reg => {
+      const attendee = reg.member_id ? reg.members : reg.visitors
+      const church = reg.member_id ? reg.members?.churches : reg.visitors?.associated_church
+
       const matchesSearch = searchQuery === '' ||
-        reg.members.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+        (attendee?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase())
       const matchesChurch = filterChurch === 'all' ||
-        reg.members.churches.id === filterChurch
+        church?.id === filterChurch
       const matchesDistrict = filterDistrict === 'all' ||
-        reg.members.churches.district === filterDistrict
+        church?.district === filterDistrict
       const matchesStatus = filterStatus === 'all' ||
         reg.status === filterStatus
       return matchesSearch && matchesChurch && matchesDistrict && matchesStatus
@@ -382,7 +386,8 @@ export function AttendanceConfirmationForm({
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">Select</TableHead>
-                <TableHead>Member Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Church</TableHead>
                 <TableHead>District</TableHead>
                 <TableHead>Status</TableHead>
@@ -390,25 +395,35 @@ export function AttendanceConfirmationForm({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRegistrations.map((registration) => (
-                <TableRow key={registration.id}>
-                  <TableCell>
-                    {registration.status === 'registered' && (
-                      <Checkbox
-                        checked={selectedRegistrations.includes(registration.id)}
-                        onCheckedChange={() => handleToggleRegistration(registration.id)}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {registration.members.full_name}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {registration.members.churches.name}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {registration.members.churches.district}
-                  </TableCell>
+              {filteredRegistrations.map((registration) => {
+                const isMember = !!registration.member_id
+                const attendee = isMember ? registration.members : registration.visitors
+                const church = isMember ? registration.members?.churches : registration.visitors?.associated_church
+
+                return (
+                  <TableRow key={registration.id}>
+                    <TableCell>
+                      {registration.status === 'registered' && (
+                        <Checkbox
+                          checked={selectedRegistrations.includes(registration.id)}
+                          onCheckedChange={() => handleToggleRegistration(registration.id)}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={isMember ? 'outline' : 'secondary'} className="text-xs">
+                        {isMember ? 'Member' : 'Visitor'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {attendee?.full_name || 'N/A'}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {church?.name || 'N/A'}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {church?.district || 'N/A'}
+                    </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(registration.status)}
@@ -443,8 +458,9 @@ export function AttendanceConfirmationForm({
                       </div>
                     )}
                   </TableCell>
-                </TableRow>
-              ))}
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </div>

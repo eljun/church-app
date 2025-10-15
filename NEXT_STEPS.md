@@ -1224,23 +1224,156 @@ Event Registration Routes
 
 ---
 
-## 🎯 Next Session Tasks (2025-10-16)
+## ✅ Phase 6.7: Visitor/Guest Registration System (2025-10-15) - COMPLETE
 
-### Guest Registration Feature (NEW!)
-**Priority: High** - Requested for tomorrow's session
+### What Was Implemented
 
-**Purpose:** Allow events to accept guest registrations (non-members attending events)
+**Comprehensive Visitor/Guest Tracking System** - Full visitor management for events and future weekly attendance
 
-**Placeholder Notes:**
-- Specs and requirements to be discussed in tomorrow's session
-- Will extend event registration system
-- Guest data storage strategy TBD
-- Integration with existing registration workflow
+#### Core Features:
+✅ **Visitor Table Created** - Separate table for guests/visitors
+✅ **Event Registration Support** - Register visitors for events alongside members
+✅ **Attendance Tracking Enhanced** - Updated attendance table to support both members and visitors
+✅ **Child Tracking** - Link children to parent members or visitors
+✅ **International Support** - Support visitors from any country
+✅ **Church Association** - Associate visitors with churches for follow-up
+✅ **Emergency Contacts** - Required for children, optional for adults
+✅ **Baptism Status Tracking** - Track baptized/unbaptized visitors
+✅ **Follow-Up System** - Backend ready for visitor follow-up workflow
 
-**Considerations to discuss:**
-- Guest information to capture (name, contact, church affiliation?)
-- Should guests be added to members table or separate guest table?
-- Can guests register themselves or only admin-driven?
-- Guest attendance tracking workflow
-- Reporting on guest attendance vs member attendance
+#### Database Migrations Created:
+1. **`009_create_visitors_table.sql`** - Complete visitors table with all fields
+2. **`010_update_event_registrations_for_visitors.sql`** - Updated event registrations to support visitors
+3. **`011_update_attendance_for_visitors.sql`** - Enhanced attendance table (replaced weekly_attendance)
+
+**Key Design Decision:**
+- ✅ Enhanced existing `attendance` table instead of creating duplicate `weekly_attendance`
+- ✅ Single source of truth for all attendance (events + weekly services)
+- ✅ Backwards compatible with existing attendance records
+
+#### Backend Implementation:
+- **Validation Schemas** (`lib/validations/visitor.ts`) - 6 Zod schemas
+- **Query Functions** (`lib/queries/visitors.ts`) - 10 query functions
+- **Server Actions** (`lib/actions/visitors.ts`) - 8 server actions
+- **Updated Event Queries** - Event registration queries now join visitors table
+- **TypeScript Types** - Complete type definitions for Visitor, updated EventRegistration and Attendance
+
+#### UI Components:
+1. **RegisterVisitorDialog** - Comprehensive visitor registration form with:
+   - Basic info (name, birthday with year dropdown, gender)
+   - Contact info (phone, email, address, city, province, country dropdown)
+   - Auto-calculated visitor type from age (child <12, youth 12-17, adult 18+)
+   - Emergency contact (optional for all ages)
+   - Church association with searchable ChurchSelect component
+   - Referral source tracking
+   - Notes fields
+   - **Countries dropdown** - 58 countries, Philippines first, alphabetically sorted, searchable
+   - **Baptism status** - Hidden in UI but database fields remain
+
+2. **Updated RegistrationsTable** - Now displays both members and visitors with:
+   - Type column (Member/Visitor badges)
+   - Visitor phone display
+   - Church association or "No church"
+   - Proper handling of nullable fields
+
+3. **Updated AttendanceConfirmationForm** - Attendance tracking for visitors:
+   - Type column in attendance table
+   - Filter by member or visitor
+   - Bulk confirmation for both types
+   - Finalize attendance for both types
+
+4. **Updated Registrations Page** - Added visitor registration button next to member registration
+
+#### Visitor Fields Captured:
+- **Personal**: Full name, birthday, age, gender
+- **Contact**: Phone (required), email, address, city, province, country
+- **Baptism**: Is baptized?, baptism date, church name, country
+- **Association**: Church for follow-up, association reason
+- **Emergency**: Contact name, phone, relationship (required for children)
+- **Type**: Adult, youth, or child
+- **Child Linking**: Parent member ID or parent visitor ID
+- **Follow-up**: Status, notes, assigned user
+- **Additional**: Referral source, first visit date, notes
+
+#### RLS Policies:
+- **Superadmin**: Full access to all visitors
+- **Admin**: Manage visitors associated with their church
+- **Coordinator**: View all, create/update for event registration
+
+#### Use Cases Supported:
+1. ✅ Register adult visitor for event
+2. ✅ Register child visitor with emergency contact
+3. ✅ Register baptized visitor from another country
+4. ✅ Register visitor without church affiliation
+5. ✅ Associate visitor with nearby church for follow-up
+6. ✅ Track visitor attendance at events
+7. ✅ Finalize visitor attendance records
+8. ✅ Filter registrations by member or visitor type
+
+### Files Created (10):
+1. `packages/database/migrations/009_create_visitors_table.sql`
+2. `packages/database/migrations/010_update_event_registrations_for_visitors.sql`
+3. `packages/database/migrations/011_update_attendance_for_visitors.sql`
+4. `apps/web/lib/validations/visitor.ts`
+5. `apps/web/lib/queries/visitors.ts`
+6. `apps/web/lib/actions/visitors.ts`
+7. `apps/web/lib/data/countries.ts`
+8. `apps/web/components/events/registrations/register-visitor-dialog.tsx`
+9. `VISITOR_REGISTRATION_IMPLEMENTATION.md`
+10. `ATTENDANCE_TABLE_FIX.md`
+
+### Files Modified (6):
+1. `packages/database/src/types.ts`
+2. `apps/web/lib/queries/event-registrations.ts`
+3. `apps/web/app/(protected)/events/[id]/registrations/page.tsx`
+4. `apps/web/components/events/registrations/registrations-table.tsx`
+5. `apps/web/components/events/registrations/attendance-confirmation-form.tsx`
+6. `apps/web/components/members/church-select.tsx` - Fixed scroll issue with Command component
+
+#### UI/UX Enhancements:
+✅ **ChurchSelect Component Fixed** - Replaced manual popover implementation with Command component for proper scroll handling
+✅ **Countries Dropdown** - Searchable dropdown with 58 countries, Philippines first, alphabetically sorted
+✅ **Birthday Picker Enhanced** - Year dropdown (1900-current year) matching member form pattern
+✅ **Auto-Type Calculation** - Visitor type calculated from age instead of manual selection
+✅ **Baptism Fields Hidden** - Simplified UI while retaining database fields for future use
+
+### Build Status:
+✅ **Implementation complete**
+✅ **ChurchSelect scrolling fixed** - Mouse wheel now works properly
+✅ **Ready for database migration application**
+✅ **Ready for testing**
+
+### Documentation Created:
+- `VISITOR_REGISTRATION_IMPLEMENTATION.md` - Complete implementation guide
+- `ATTENDANCE_TABLE_FIX.md` - Explanation of attendance table enhancement
+
+### Technical Fixes Applied:
+**ChurchSelect Scroll Issue:**
+- **Problem**: Mouse wheel scrolling not working in church dropdown
+- **Root Cause**: Manual popover implementation with basic div scrolling doesn't handle pointer events properly
+- **Solution**: Refactored to use Command component (cmdk library) designed for searchable dropdowns
+- **Changes**:
+  - Replaced Input + manual filtering with CommandInput (built-in search)
+  - Replaced div scrolling with CommandList (proper scroll event handling)
+  - Replaced button items with CommandItem (keyboard navigation + mouse wheel support)
+  - Fixed PopoverContent width to 400px for consistent rendering
+- **File**: `apps/web/components/members/church-select.tsx`
+
+---
+
+## 🎯 Next Steps
+
+### Immediate: Apply Migrations & Test
+1. Apply 3 database migrations in order
+2. Test visitor registration flow end-to-end
+3. Test attendance confirmation with visitors
+4. Verify RLS policies working correctly
+
+### Future Phase 8: Complete Attendance System
+- [ ] Weekly service attendance UI forms
+- [ ] Bulk attendance entry for services
+- [ ] Attendance reports and analytics
+- [ ] Visitor follow-up dashboard
+- [ ] Visitor-to-member conversion workflow UI
+- [ ] Visitor engagement tracking
 

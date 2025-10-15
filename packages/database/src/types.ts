@@ -10,6 +10,9 @@ export type EventType = 'service' | 'baptism' | 'conference' | 'social' | 'other
 export type ServiceType = 'sabbath_morning' | 'sabbath_afternoon' | 'prayer_meeting' | 'other';
 export type AnnouncementTarget = 'all' | 'church_specific' | 'district_specific' | 'field_specific';
 export type EventRegistrationStatus = 'registered' | 'attended' | 'no_show' | 'confirmed' | 'cancelled';
+export type VisitorType = 'adult' | 'youth' | 'child';
+export type FollowUpStatus = 'pending' | 'contacted' | 'interested' | 'not_interested' | 'converted';
+export type ReferralSource = 'member_invitation' | 'online' | 'walk_in' | 'social_media' | 'other';
 
 export interface User {
   id: string;
@@ -121,19 +124,58 @@ export interface Announcement {
 
 export interface Attendance {
   id: string;
-  member_id: string;
+  member_id: string | null;
+  visitor_id: string | null;
   church_id: string;
   event_id: string | null;
   attendance_date: string;
   service_type: ServiceType;
+  attended: boolean;
   notes: string | null;
+  recorded_by: string | null;
   created_at: string;
+}
+
+export interface Visitor {
+  id: string;
+  full_name: string;
+  birthday: string | null;
+  age: number | null;
+  gender: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  province: string | null;
+  country: string;
+  is_baptized: boolean;
+  date_of_baptism: string | null;
+  baptized_at_church: string | null;
+  baptized_at_country: string | null;
+  associated_church_id: string | null;
+  association_reason: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  relationship: string | null;
+  visitor_type: VisitorType;
+  is_accompanied_child: boolean;
+  accompanied_by_member_id: string | null;
+  accompanied_by_visitor_id: string | null;
+  notes: string | null;
+  referral_source: ReferralSource | null;
+  first_visit_date: string | null;
+  follow_up_status: FollowUpStatus;
+  follow_up_notes: string | null;
+  assigned_to_user_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface EventRegistration {
   id: string;
   event_id: string;
-  member_id: string;
+  member_id: string | null;
+  visitor_id: string | null;
   registered_at: string;
   registered_by: string;
   status: EventRegistrationStatus;
@@ -212,6 +254,11 @@ export interface Database {
         Row: EventRegistration;
         Insert: Omit<EventRegistration, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<EventRegistration, 'id' | 'created_at'>>;
+      };
+      visitors: {
+        Row: Visitor;
+        Insert: Omit<Visitor, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Visitor, 'id' | 'created_at'>>;
       };
     };
   };
