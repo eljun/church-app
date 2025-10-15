@@ -34,9 +34,10 @@ interface Activity {
 interface FollowUpActivityLogProps {
   activities: Activity[]
   visitorId: string
+  isConverted?: boolean
 }
 
-export function FollowUpActivityLog({ activities, visitorId }: FollowUpActivityLogProps) {
+export function FollowUpActivityLog({ activities, visitorId, isConverted = false }: FollowUpActivityLogProps) {
   const router = useRouter()
 
   // Get icon for activity type
@@ -104,7 +105,10 @@ export function FollowUpActivityLog({ activities, visitorId }: FollowUpActivityL
       <CardHeader>
         <CardTitle>Activity Log</CardTitle>
         <CardDescription>
-          Follow-up activities and interactions
+          {isConverted
+            ? 'Historical follow-up activities (read-only)'
+            : 'Follow-up activities and interactions'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -138,28 +142,30 @@ export function FollowUpActivityLog({ activities, visitorId }: FollowUpActivityL
                       <h4 className="font-medium text-sm">{activity.title}</h4>
                     </div>
 
-                    {/* Actions Menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {!activity.is_completed && (
-                          <DropdownMenuItem onClick={() => handleComplete(activity.id)}>
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Mark Complete
+                    {/* Actions Menu - Hidden for converted visitors */}
+                    {!isConverted && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {!activity.is_completed && (
+                            <DropdownMenuItem onClick={() => handleComplete(activity.id)}>
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Mark Complete
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(activity.id)}
+                            className="text-destructive"
+                          >
+                            Delete
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(activity.id)}
-                          className="text-destructive"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
 
                   {/* Activity Type Badge */}

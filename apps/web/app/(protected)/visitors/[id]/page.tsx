@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Phone, Mail, MapPin, Calendar, User, Building2 } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, MapPin, Calendar, User, Building2, MoreVertical, Plus, RefreshCw, UserPlus, UserCheck, Pencil } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getVisitorById } from '@/lib/queries/visitors'
 import { getVisitorActivities } from '@/lib/queries/visitor-activities'
@@ -9,12 +9,21 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { VisitorDetailCard } from '@/components/visitors/visitor-detail-card'
 import { FollowUpActivityLog } from '@/components/visitors/follow-up-activity-log'
 import { UpdateFollowUpStatusDialog } from '@/components/visitors/update-follow-up-status-dialog'
 import { AssignVisitorDialog } from '@/components/visitors/assign-visitor-dialog'
 import { ConvertToMemberDialog } from '@/components/visitors/convert-to-member-dialog'
 import { AddActivityDialog } from '@/components/visitors/add-activity-dialog'
+import { EditVisitorDialog } from '@/components/visitors/edit-visitor-dialog'
 
 interface VisitorDetailPageProps {
   params: Promise<{ id: string }>
@@ -55,6 +64,9 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
     // Get attendance history
     const attendanceHistory = await getVisitorAttendanceHistory(id)
 
+    // Check if visitor is converted
+    const isConverted = visitor.follow_up_status === 'converted'
+
     return (
       <div className="space-y-6">
         {/* Header */}
@@ -67,20 +79,82 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
               </Link>
             </Button>
             <div>
-              <h1 className="font-display text-3xl text-primary">{visitor.full_name}</h1>
-              <p className="text-sm text-muted-foreground">Visitor Details & Follow-up</p>
+              <div className="flex items-center gap-3">
+                <h1 className="font-display text-3xl text-primary">{visitor.full_name}</h1>
+                {isConverted && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                    Converted to Member
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {isConverted ? 'Visitor Record (Read-only)' : 'Visitor Details & Follow-up'}
+              </p>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            <AddActivityDialog visitorId={id} />
-            <UpdateFollowUpStatusDialog visitor={visitor} />
-            <AssignVisitorDialog visitor={visitor} currentUser={currentUser} />
-            {visitor.follow_up_status !== 'converted' && (
-              <ConvertToMemberDialog visitor={visitor} />
-            )}
-          </div>
+          {/* Action Menu - Hidden for converted visitors */}
+          {!isConverted && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  Actions
+                  <MoreVertical className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Visitor Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <EditVisitorDialog
+                  visitor={visitor}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit Profile
+                    </DropdownMenuItem>
+                  }
+                />
+                <AddActivityDialog
+                  visitorId={id}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Activity
+                    </DropdownMenuItem>
+                  }
+                />
+                <UpdateFollowUpStatusDialog
+                  visitor={visitor}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Update Status
+                    </DropdownMenuItem>
+                  }
+                />
+                <AssignVisitorDialog
+                  visitor={visitor}
+                  currentUser={currentUser}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Assign to User
+                    </DropdownMenuItem>
+                  }
+                />
+                <DropdownMenuSeparator />
+                <ConvertToMemberDialog
+                  visitor={visitor}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      Convert to Member
+                    </DropdownMenuItem>
+                  }
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Main Content */}
@@ -138,6 +212,7 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
             <FollowUpActivityLog
               activities={activities}
               visitorId={id}
+              isConverted={isConverted}
             />
           </div>
         </div>

@@ -408,6 +408,22 @@ export async function convertVisitorToMember(input: {
       return { error: 'Unauthorized' }
     }
 
+    // Get user role and church
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role, church_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!userData) {
+      return { error: 'User not found' }
+    }
+
+    // Only admin and superadmin can convert visitors
+    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      return { error: 'You do not have permission to convert visitors to members' }
+    }
+
     // Get visitor data
     const { data: visitor, error: visitorError } = await supabase
       .from('visitors')
@@ -419,6 +435,38 @@ export async function convertVisitorToMember(input: {
       return { error: 'Visitor not found' }
     }
 
+    // For admins, verify the visitor is associated with their church
+    if (userData.role === 'admin') {
+      if (visitor.associated_church_id !== userData.church_id) {
+        return { error: 'You can only convert visitors associated with your church' }
+      }
+      // Verify the church_id matches their church
+      if (input.church_id !== userData.church_id) {
+        return { error: 'You can only add members to your own church' }
+      }
+    }
+
+    // Validate required fields for member conversion
+    if (!visitor.birthday) {
+      return { error: 'Visitor must have a birthday before conversion. Please update the visitor record first.' }
+    }
+
+    if (!visitor.gender) {
+      return { error: 'Visitor must have a gender before conversion. Please update the visitor record first.' }
+    }
+
+    // Calculate age from birthday if not provided
+    let age = visitor.age || 0
+    if (visitor.birthday && (!visitor.age || visitor.age === 0)) {
+      const birthDate = new Date(visitor.birthday)
+      const today = new Date()
+      age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+    }
+
     // Create member record
     const { data: member, error: memberError } = await supabase
       .from('members')
@@ -428,13 +476,13 @@ export async function convertVisitorToMember(input: {
           sp: input.sp || null,
           full_name: visitor.full_name,
           birthday: visitor.birthday,
-          age: visitor.age || 0,
+          age: age,
           date_of_baptism: visitor.date_of_baptism,
           baptized_by: input.baptized_by || visitor.baptized_at_church || null,
           physical_condition: 'fit',
           spiritual_condition: 'active',
           status: 'active',
-          gender: visitor.gender || null,
+          gender: visitor.gender,
         },
       ])
       .select()

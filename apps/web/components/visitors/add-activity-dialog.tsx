@@ -32,9 +32,10 @@ import { cn } from '@/lib/utils'
 
 interface AddActivityDialogProps {
   visitorId: string
+  trigger?: React.ReactNode
 }
 
-export function AddActivityDialog({ visitorId }: AddActivityDialogProps) {
+export function AddActivityDialog({ visitorId, trigger }: AddActivityDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -80,10 +81,12 @@ export function AddActivityDialog({ visitorId }: AddActivityDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Activity
-        </Button>
+        {trigger || (
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Activity
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

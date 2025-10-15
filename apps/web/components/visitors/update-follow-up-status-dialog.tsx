@@ -27,9 +27,10 @@ import { updateFollowUpStatus } from '@/lib/actions/visitors'
 
 interface UpdateFollowUpStatusDialogProps {
   visitor: any
+  trigger?: React.ReactNode
 }
 
-export function UpdateFollowUpStatusDialog({ visitor }: UpdateFollowUpStatusDialogProps) {
+export function UpdateFollowUpStatusDialog({ visitor, trigger }: UpdateFollowUpStatusDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -59,10 +60,12 @@ export function UpdateFollowUpStatusDialog({ visitor }: UpdateFollowUpStatusDial
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Update Status
-        </Button>
+        {trigger || (
+          <Button variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Update Status
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

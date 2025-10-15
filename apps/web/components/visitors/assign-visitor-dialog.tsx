@@ -28,15 +28,16 @@ import { createClient } from '@/lib/supabase/client'
 interface AssignVisitorDialogProps {
   visitor: any
   currentUser: any
+  trigger?: React.ReactNode
 }
 
-export function AssignVisitorDialog({ visitor, currentUser }: AssignVisitorDialogProps) {
+export function AssignVisitorDialog({ visitor, currentUser, trigger }: AssignVisitorDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
   const [users, setUsers] = useState<any[]>([])
-  const [selectedUserId, setSelectedUserId] = useState(visitor.assigned_to_user_id || '')
+  const [selectedUserId, setSelectedUserId] = useState(visitor.assigned_to_user_id || 'unassigned')
 
   // Load users from the church (for admin) or all users (for superadmin)
   useEffect(() => {
@@ -65,7 +66,7 @@ export function AssignVisitorDialog({ visitor, currentUser }: AssignVisitorDialo
     startTransition(async () => {
       const result = await updateVisitor({
         id: visitor.id,
-        assigned_to_user_id: selectedUserId || null,
+        assigned_to_user_id: selectedUserId === 'unassigned' ? null : selectedUserId,
       })
 
       if (result.error) {
@@ -85,10 +86,12 @@ export function AssignVisitorDialog({ visitor, currentUser }: AssignVisitorDialo
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Assign
-        </Button>
+        {trigger || (
+          <Button variant="outline">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Assign
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -107,7 +110,7 @@ export function AssignVisitorDialog({ visitor, currentUser }: AssignVisitorDialo
                 <SelectValue placeholder="Select a user" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
                 {users.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.email} ({user.role})
@@ -124,7 +127,7 @@ export function AssignVisitorDialog({ visitor, currentUser }: AssignVisitorDialo
           </Button>
           <Button onClick={handleSubmit} disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {selectedUserId ? 'Assign' : 'Unassign'}
+            {selectedUserId === 'unassigned' ? 'Unassign' : 'Assign'}
           </Button>
         </DialogFooter>
       </DialogContent>

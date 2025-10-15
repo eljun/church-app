@@ -24,9 +24,10 @@ import { cn } from '@/lib/utils'
 
 interface ConvertToMemberDialogProps {
   visitor: any
+  trigger?: React.ReactNode
 }
 
-export function ConvertToMemberDialog({ visitor }: ConvertToMemberDialogProps) {
+export function ConvertToMemberDialog({ visitor, trigger }: ConvertToMemberDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -40,11 +41,17 @@ export function ConvertToMemberDialog({ visitor }: ConvertToMemberDialogProps) {
       return
     }
 
+    if (!visitor.associated_church_id) {
+      toast.error('Visitor must be associated with a church before conversion')
+      return
+    }
+
     startTransition(async () => {
       const result = await convertVisitorToMember({
         visitor_id: visitor.id,
-        baptism_date: format(baptismDate, 'yyyy-MM-dd'),
-        baptized_by: baptizedBy || null,
+        church_id: visitor.associated_church_id,
+        sp: format(baptismDate, 'yyyy-MM-dd'),
+        baptized_by: baptizedBy || undefined,
       })
 
       if (result.error) {
@@ -65,10 +72,12 @@ export function ConvertToMemberDialog({ visitor }: ConvertToMemberDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <UserCheck className="mr-2 h-4 w-4" />
-          Convert to Member
-        </Button>
+        {trigger || (
+          <Button>
+            <UserCheck className="mr-2 h-4 w-4" />
+            Convert to Member
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
