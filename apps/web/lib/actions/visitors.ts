@@ -519,3 +519,36 @@ export async function convertVisitorToMember(input: {
     return { error: 'Failed to convert visitor to member' }
   }
 }
+
+/**
+ * Fetch visitors for client components (attendance, etc.)
+ */
+export async function fetchVisitorsForAttendance(churchId: string) {
+  try {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { error: 'Unauthorized' }
+    }
+
+    // Fetch visitors associated with the church
+    const { data, error } = await supabase
+      .from('visitors')
+      .select('*')
+      .eq('associated_church_id', churchId)
+      .order('full_name', { ascending: true })
+      .limit(1000)
+
+    if (error) {
+      return { error: error.message }
+    }
+
+    return { data: data || [] }
+  } catch (error) {
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: 'Failed to fetch visitors' }
+  }
+}

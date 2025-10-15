@@ -17,8 +17,8 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { recordBulkAttendance } from '@/lib/actions/attendance'
-import { getMembers } from '@/lib/queries/members'
-import { getVisitors } from '@/lib/queries/visitors'
+import { fetchMembersForAttendance } from '@/lib/actions/members'
+import { fetchVisitorsForAttendance } from '@/lib/actions/visitors'
 import { RegisterVisitorDialog } from '@/components/events/registrations/register-visitor-dialog'
 
 interface QuickAttendanceFormProps {
@@ -52,21 +52,22 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
       setIsLoading(true)
       try {
         // Load active members
-        const membersData = await getMembers({
-          limit: 1000,
-          offset: 0,
-          church_id: selectedChurchId,
-          status: 'active',
-        })
-        setMembers(membersData.data || [])
+        const membersResult = await fetchMembersForAttendance(selectedChurchId)
+        if (membersResult.error) {
+          console.error('Error loading members:', membersResult.error)
+          toast.error(`Failed to load members: ${membersResult.error}`)
+        } else {
+          setMembers(membersResult.data || [])
+        }
 
         // Load visitors associated with this church
-        const visitorsData = await getVisitors({
-          limit: 1000,
-          offset: 0,
-          church_id: selectedChurchId,
-        })
-        setVisitors(visitorsData.data || [])
+        const visitorsResult = await fetchVisitorsForAttendance(selectedChurchId)
+        if (visitorsResult.error) {
+          console.error('Error loading visitors:', visitorsResult.error)
+          toast.error(`Failed to load visitors: ${visitorsResult.error}`)
+        } else {
+          setVisitors(visitorsResult.data || [])
+        }
       } catch (error) {
         console.error('Error loading attendees:', error)
         toast.error('Failed to load members and visitors')

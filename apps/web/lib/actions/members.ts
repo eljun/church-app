@@ -298,3 +298,37 @@ export async function bulkImportMembers(members: CreateMemberInput[]) {
     return { error: 'Failed to import members' }
   }
 }
+
+/**
+ * Fetch members for client components (attendance, etc.)
+ */
+export async function fetchMembersForAttendance(churchId: string) {
+  try {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { error: 'Unauthorized' }
+    }
+
+    // Fetch active members for the church
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .eq('church_id', churchId)
+      .eq('status', 'active')
+      .order('full_name', { ascending: true })
+      .limit(1000)
+
+    if (error) {
+      return { error: error.message }
+    }
+
+    return { data: data || [] }
+  } catch (error) {
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: 'Failed to fetch members' }
+  }
+}
