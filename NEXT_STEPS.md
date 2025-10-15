@@ -1505,7 +1505,7 @@ Event Registration Routes
 
 ### Goal: Organized Sidebar & New User Roles
 
-#### Current Focus: Sidebar Reorganization (Phase 9.1)
+#### ✅ Phase 9.1 Complete: Sidebar Reorganization
 **Objective:** Group related pages into collapsible sections for better organization and scalability
 
 **Navigation Groups by Role:**
@@ -1515,15 +1515,39 @@ Event Registration Routes
 📊 Dashboard
 👥 People Management (collapsible)
   ├─ Members
-  ├─ Visitors (NEW)
+  ├─ Visitors ✓
   └─ Transfers
 🏛️ Organization (collapsible)
   ├─ Churches
   └─ Events
 📈 Analytics & Reports (collapsible)
-  ├─ Attendance (NEW)
+  ├─ Attendance ✓
   └─ Reports
 ⚙️ Settings
+```
+
+**Pastor (District/Field):**
+```
+📊 Dashboard
+🏛️ My District (collapsible)
+  ├─ Churches
+  ├─ Members
+  └─ Visitors
+📅 Events
+📈 Analytics (collapsible)
+  ├─ Attendance
+  └─ Reports
+```
+
+**Bible Worker:**
+```
+📊 Dashboard
+👥 My Members (collapsible)
+  ├─ Members
+  └─ Visitors
+📅 Events
+📊 Reports (collapsible)
+  └─ Activity Reports
 ```
 
 **Admin (Church Secretary):**
@@ -1531,11 +1555,11 @@ Event Registration Routes
 📊 Dashboard
 👥 My Church (collapsible)
   ├─ Members
-  ├─ Visitors (NEW)
+  ├─ Visitors ✓
   └─ Transfers
 📅 Events
 📈 Analytics (collapsible)
-  ├─ Attendance (NEW)
+  ├─ Attendance ✓
   └─ Reports
 ⚙️ Settings
 ```
@@ -1547,55 +1571,59 @@ Event Registration Routes
 ⚙️ Settings
 ```
 
-#### Sidebar Implementation Tasks (Phase 9.1):
+#### Sidebar Implementation Tasks (Phase 9.1): ✅ COMPLETE
 - [x] Planning complete
-- [ ] Add shadcn Accordion component for collapsible groups
-- [ ] Create NavigationGroup component with collapse/expand
-- [ ] Implement role-based group generation function
-- [ ] Add Visitors navigation link (UserRound icon)
-- [ ] Add Attendance navigation link (ClipboardCheck icon)
-- [ ] Add localStorage for expansion state persistence
-- [ ] Update sidebar styling for grouped navigation
-- [ ] Test with all current roles (superadmin, admin, coordinator)
-- [ ] Update NEXT_STEPS.md
+- [x] Add shadcn Accordion component for collapsible groups
+- [x] Implement role-based group generation function
+- [x] Add Visitors navigation link (UserRound icon)
+- [x] Add Attendance navigation link (ClipboardCheck icon)
+- [x] Update sidebar styling for grouped navigation
+- [x] Test with all current roles (superadmin, admin, coordinator)
+- [x] Added navigation for new roles (pastor, bibleworker)
+- [x] Fixed all TypeScript and lint errors
+- [x] Update NEXT_STEPS.md
 
-#### New Roles Planning (Phase 9.2 - Future):
+#### ✅ Phase 9.2 Complete: Database & Role Preparation
 
-**Pastor Role:**
-- **Access Scope**: District or Field churches (wider than single church admin)
-- **Permissions**:
-  - View/manage members in assigned district/field (read-only)
-  - Follow-up with visitors in assigned area
-  - Create missionary activity reports
-  - View events in assigned area
-- **UI Features**:
-  - District/Field selector dropdown
-  - Missionary reports dashboard
-  - Visitor follow-up focused interface
+**✅ Completed:**
+- [x] Created migration 013 (013_add_pastor_bibleworker_roles.sql)
+- [x] Added role enum values: 'pastor' (after coordinator), 'bibleworker' (after pastor)
+- [x] Added columns to users table:
+  - district_id TEXT (for pastors)
+  - field_id TEXT (for pastors)
+  - assigned_member_ids UUID[] (for bibleworkers)
+- [x] Created indexes for performance
+- [x] Added check constraints (pastors must have district OR field, bibleworkers must have assignments)
+- [x] Created helper functions:
+  - is_pastor(), is_bibleworker()
+  - get_pastor_district(), get_pastor_field()
+  - is_member_assigned_to_bibleworker(UUID)
+  - has_elevated_privileges()
+- [x] Added comprehensive RLS policies for all tables:
+  - Churches: Pastor read/update in district/field
+  - Members: Pastor read/update in district, Bibleworker read/update assigned
+  - Events: Pastor create/read/update in district/field
+  - Event Registrations: Pastor full access, Bibleworker view assigned
+  - Visitors: Pastor full access in district, Bibleworker view/update assigned
+  - Attendance: Pastor full access in district/field
+  - Visitor Activities: Bibleworker manage for assigned visitors
+- [x] Updated TypeScript types (UserRole + User interface with new fields)
+- [x] Updated sidebar navigation with Pastor and Bibleworker roles
 
-**Bible Worker Role:**
-- **Access Scope**: Field churches (read-only access)
-- **Permissions**:
-  - View members assigned to them (read-only)
-  - Create missionary activity reports
-  - View churches in field (read-only)
-  - View events in field (read-only)
-- **UI Features**:
-  - Simple navigation (fewer items)
-  - Missionary reports module
-  - Assigned members dashboard
+**Pastor Role - District/Field Level Access:**
+- Access all churches in assigned district OR field
+- Full CRUD on members, visitors, events, attendance
+- Can create field/district/church-scoped events
+- Generate reports for entire district/field
+- More powerful than church admin, less than coordinator
 
-**Database Schema Updates Needed (Phase 9.2):**
-```sql
--- Migration 013: Add pastor and bible worker roles
-ALTER TYPE user_role ADD VALUE 'pastor';
-ALTER TYPE user_role ADD VALUE 'bibleworker';
-
--- Add assignment fields
-ALTER TABLE users ADD COLUMN district_id UUID;
-ALTER TABLE users ADD COLUMN field_id UUID;
-ALTER TABLE users ADD COLUMN assigned_member_ids UUID[];
-```
+**Bibleworker Role - Member-Level Access:**
+- Access only assigned members (most restrictive)
+- Read/update assigned members and visitors
+- Create and manage follow-up activities
+- View event registrations for assigned members
+- Generate activity reports
+- Focused on personal ministry and follow-up
 
 #### Future Modules (Phase 9.3+):
 - [ ] User Management Interface (/settings/users) - Assign pastors/bible workers

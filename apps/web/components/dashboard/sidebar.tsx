@@ -44,8 +44,11 @@ import {
 interface UserData {
   id: string
   email: string
-  role: 'superadmin' | 'coordinator' | 'admin' | 'member'
+  role: 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'admin' | 'member'
   church_id: string | null
+  district_id?: string | null
+  field_id?: string | null
+  assigned_member_ids?: string[]
   churches?: {
     name: string
   } | null
@@ -110,6 +113,49 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       items: [
         { name: 'Attendance', href: '/attendance', icon: ClipboardCheck },
         { name: 'Reports', href: '/reports', icon: FileText },
+      ]
+    })
+  }
+
+  // Pastor: District/Field Management
+  else if (user?.role === 'pastor') {
+    groups.push({
+      title: 'My District',
+      items: [
+        { name: 'Churches', href: '/churches', icon: Building2 },
+        { name: 'Members', href: '/members', icon: Users },
+        { name: 'Visitors', href: '/visitors', icon: UserRound },
+      ]
+    })
+
+    // Events as top-level for pastor
+    topLevel.push({ name: 'Events', href: '/events', icon: HeartHandshake })
+
+    groups.push({
+      title: 'Analytics',
+      items: [
+        { name: 'Attendance', href: '/attendance', icon: ClipboardCheck },
+        { name: 'Reports', href: '/reports', icon: FileText },
+      ]
+    })
+  }
+
+  // Bibleworker: Assigned Members Management
+  else if (user?.role === 'bibleworker') {
+    groups.push({
+      title: 'My Members',
+      items: [
+        { name: 'Members', href: '/members', icon: Users },
+        { name: 'Visitors', href: '/visitors', icon: UserRound },
+      ]
+    })
+
+    topLevel.push({ name: 'Events', href: '/events', icon: HeartHandshake })
+
+    groups.push({
+      title: 'Reports',
+      items: [
+        { name: 'Activity Reports', href: '/reports', icon: FileText },
       ]
     })
   }
