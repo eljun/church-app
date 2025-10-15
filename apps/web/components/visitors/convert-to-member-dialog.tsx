@@ -50,7 +50,7 @@ export function ConvertToMemberDialog({ visitor, trigger }: ConvertToMemberDialo
       const result = await convertVisitorToMember({
         visitor_id: visitor.id,
         church_id: visitor.associated_church_id,
-        sp: format(baptismDate, 'yyyy-MM-dd'),
+        baptism_date: format(baptismDate, 'yyyy-MM-dd'),
         baptized_by: baptizedBy || undefined,
       })
 

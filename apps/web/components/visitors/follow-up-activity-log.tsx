@@ -1,7 +1,6 @@
 'use client'
 
 import { Phone, Home, Book, Mail, MessageSquare, Calendar, MoreVertical, CheckCircle2, Circle } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -101,30 +100,32 @@ export function FollowUpActivityLog({ activities, visitorId, isConverted = false
   })
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Activity Log</CardTitle>
-        <CardDescription>
+    <div className="space-y-4">
+      {/* Header */}
+      <div>
+        <h3 className="font-semibold text-lg">Activity Log</h3>
+        <p className="text-sm text-muted-foreground">
           {isConverted
             ? 'Historical follow-up activities (read-only)'
             : 'Follow-up activities and interactions'
           }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {sortedActivities.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No activities yet. Click "Add Activity" to create one.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {sortedActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className={`relative border rounded-lg p-4 ${
-                  activity.is_completed ? 'bg-muted/50' : 'bg-background'
-                }`}
-              >
+        </p>
+      </div>
+
+      {/* Activities List */}
+      {sortedActivities.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-8">
+          No activities yet. Click "Add Activity" to create one.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {sortedActivities.map((activity) => (
+            <div
+              key={activity.id}
+              className={`relative border p-4 ${
+                activity.is_completed ? 'bg-muted/50' : 'bg-background'
+              }`}
+            >
                 {/* Completion Status Icon */}
                 <div className="absolute top-4 left-4">
                   {activity.is_completed ? (
@@ -182,7 +183,7 @@ export function FollowUpActivityLog({ activities, visitorId, isConverted = false
 
                   {/* Outcome (if completed) */}
                   {activity.is_completed && activity.outcome && (
-                    <div className="mt-2 p-2 bg-background rounded border">
+                    <div className="mt-2 p-2 bg-background border">
                       <p className="text-xs font-medium text-muted-foreground">Outcome:</p>
                       <p className="text-sm">{activity.outcome}</p>
                     </div>
@@ -223,9 +224,8 @@ export function FollowUpActivityLog({ activities, visitorId, isConverted = false
                 </div>
               </div>
             ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   )
 }

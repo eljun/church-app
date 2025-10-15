@@ -56,30 +56,14 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
 
     return (
       <div className="space-y-6">
-        {/* Header */}
+        {/* Back Button */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/visitors">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Visitors
-              </Link>
-            </Button>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="font-display text-3xl text-primary">{visitor.full_name}</h1>
-                {isConverted && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                    Converted to Member
-                  </Badge>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {isConverted ? 'Visitor Record (Read-only)' : 'Visitor Details & Follow-up'}
-              </p>
-            </div>
-          </div>
-
+          <Button variant="ghost" asChild>
+            <Link href="/visitors">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Visitors
+            </Link>
+          </Button>
           {/* Action Menu - Hidden for converted visitors */}
           {!isConverted && (
             <VisitorActionsMenu
@@ -88,6 +72,21 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
               visitorId={id}
             />
           )}
+        </div>
+
+        {/* Header */}
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-3xl text-primary">{visitor.full_name}</h1>
+            {isConverted && (
+              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                Converted to Member
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isConverted ? 'Visitor Record (Read-only)' : 'Visitor Details & Follow-up'}
+          </p>
         </div>
 
         {/* Main Content */}

@@ -394,7 +394,7 @@ export async function updateFollowUpStatus(input: UpdateFollowUpStatusInput) {
 export async function convertVisitorToMember(input: {
   visitor_id: string
   church_id: string
-  sp?: string
+  baptism_date?: string
   baptized_by?: string
 }) {
   try {
@@ -473,11 +473,11 @@ export async function convertVisitorToMember(input: {
       .insert([
         {
           church_id: input.church_id,
-          sp: input.sp || null,
+          sp: null, // SP (Spiritual Plan) field - to be filled later
           full_name: visitor.full_name,
           birthday: visitor.birthday,
           age: age,
-          date_of_baptism: visitor.date_of_baptism,
+          date_of_baptism: input.baptism_date || visitor.date_of_baptism || null,
           baptized_by: input.baptized_by || visitor.baptized_at_church || null,
           physical_condition: 'fit',
           spiritual_condition: 'active',
