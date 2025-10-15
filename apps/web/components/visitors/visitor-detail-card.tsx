@@ -1,13 +1,14 @@
 'use client'
 
 import { Phone, Mail, MapPin, Calendar, User, Building2, Users } from 'lucide-react'
+import type { Visitor } from '@church-app/database'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { formatDistanceToNow } from 'date-fns'
 
 interface VisitorDetailCardProps {
-  visitor: any
+  visitor: Visitor
 }
 
 export function VisitorDetailCard({ visitor }: VisitorDetailCardProps) {
@@ -141,7 +142,7 @@ export function VisitorDetailCard({ visitor }: VisitorDetailCardProps) {
         )}
 
         {/* Church Association */}
-        {visitor.associated_church && (
+        {visitor.associated_church_id && (
           <>
             <Separator />
             <div>
@@ -151,9 +152,9 @@ export function VisitorDetailCard({ visitor }: VisitorDetailCardProps) {
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <div className="text-sm">
-                  <p className="font-medium">{visitor.associated_church.name}</p>
+                  <p className="font-medium">Church ID: {visitor.associated_church_id}</p>
                   <p className="text-xs text-muted-foreground">
-                    {visitor.associated_church.district} • {visitor.associated_church.field}
+                    {visitor.association_reason || 'Not specified'}
                   </p>
                 </div>
               </div>
@@ -162,7 +163,7 @@ export function VisitorDetailCard({ visitor }: VisitorDetailCardProps) {
         )}
 
         {/* Assigned User */}
-        {visitor.assigned_to && (
+        {visitor.assigned_to_user_id && (
           <>
             <Separator />
             <div>
@@ -171,7 +172,7 @@ export function VisitorDetailCard({ visitor }: VisitorDetailCardProps) {
               </p>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm">{visitor.assigned_to.email}</p>
+                <p className="text-sm">User ID: {visitor.assigned_to_user_id}</p>
               </div>
             </div>
           </>

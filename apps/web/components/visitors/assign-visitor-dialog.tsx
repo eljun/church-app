@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, Loader2 } from 'lucide-react'
+import type { Visitor, User } from '@church-app/database'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -26,8 +27,8 @@ import { updateVisitor } from '@/lib/actions/visitors'
 import { createClient } from '@/lib/supabase/client'
 
 interface AssignVisitorDialogProps {
-  visitor: any
-  currentUser: any
+  visitor: Visitor
+  currentUser: User
   trigger?: React.ReactNode
 }
 
@@ -36,7 +37,7 @@ export function AssignVisitorDialog({ visitor, currentUser, trigger }: AssignVis
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
-  const [users, setUsers] = useState<any[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [selectedUserId, setSelectedUserId] = useState(visitor.assigned_to_user_id || 'unassigned')
 
   // Load users from the church (for admin) or all users (for superadmin)
@@ -46,7 +47,7 @@ export function AssignVisitorDialog({ visitor, currentUser, trigger }: AssignVis
 
       let query = supabase
         .from('users')
-        .select('id, email, role')
+        .select('*')
         .in('role', ['admin', 'superadmin'])
 
       if (currentUser.role === 'admin' && currentUser.church_id) {

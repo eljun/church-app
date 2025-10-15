@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserCheck, Loader2, CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
+import type { Visitor } from '@church-app/database'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,7 +24,7 @@ import { convertVisitorToMember } from '@/lib/actions/visitors'
 import { cn } from '@/lib/utils'
 
 interface ConvertToMemberDialogProps {
-  visitor: any
+  visitor: Visitor
   trigger?: React.ReactNode
 }
 
@@ -49,7 +50,7 @@ export function ConvertToMemberDialog({ visitor, trigger }: ConvertToMemberDialo
     startTransition(async () => {
       const result = await convertVisitorToMember({
         visitor_id: visitor.id,
-        church_id: visitor.associated_church_id,
+        church_id: visitor.associated_church_id!,
         baptism_date: format(baptismDate, 'yyyy-MM-dd'),
         baptized_by: baptizedBy || undefined,
       })
@@ -84,17 +85,17 @@ export function ConvertToMemberDialog({ visitor, trigger }: ConvertToMemberDialo
           <DialogTitle>Convert Visitor to Member</DialogTitle>
           <DialogDescription>
             Convert {visitor.full_name} to a church member. This will create a new member
-            record using the visitor's information.
+            record using the visitor&apos;s information.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Church Info */}
-          {visitor.associated_church && (
+          {visitor.associated_church_id && (
             <div className="p-3 bg-muted rounded-lg">
               <p className="text-sm font-medium">Church</p>
               <p className="text-sm text-muted-foreground">
-                {visitor.associated_church.name}
+                Associated Church ID: {visitor.associated_church_id}
               </p>
             </div>
           )}

@@ -33,6 +33,8 @@ export default async function VisitorsPage() {
   // Get visitors based on role
   const churchId = currentUser.role === 'admin' ? currentUser.church_id : undefined
   const visitorsData = await getVisitors({
+    limit: 1000, // Get all visitors for now (can add pagination later)
+    offset: 0,
     church_id: churchId || undefined,
   })
 
@@ -58,7 +60,6 @@ export default async function VisitorsPage() {
       {/* Visitors Table */}
       <VisitorListTable
         visitors={visitorsData.data || []}
-        currentUser={currentUser}
       />
     </div>
   )

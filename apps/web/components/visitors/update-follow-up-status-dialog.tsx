@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { RefreshCw, Loader2 } from 'lucide-react'
+import type { Visitor } from '@church-app/database'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -26,7 +27,7 @@ import { toast } from 'sonner'
 import { updateFollowUpStatus } from '@/lib/actions/visitors'
 
 interface UpdateFollowUpStatusDialogProps {
-  visitor: any
+  visitor: Visitor
   trigger?: React.ReactNode
 }
 
@@ -38,11 +39,15 @@ export function UpdateFollowUpStatusDialog({ visitor, trigger }: UpdateFollowUpS
   const [status, setStatus] = useState(visitor.follow_up_status)
   const [notes, setNotes] = useState('')
 
+  const handleStatusChange = (value: string) => {
+    setStatus(value as 'pending' | 'contacted' | 'interested' | 'not_interested' | 'converted')
+  }
+
   const handleSubmit = () => {
     startTransition(async () => {
       const result = await updateFollowUpStatus({
         visitor_id: visitor.id,
-        follow_up_status: status as any,
+        follow_up_status: status as 'pending' | 'contacted' | 'interested' | 'not_interested' | 'converted',
         follow_up_notes: notes || null,
       })
 
@@ -79,7 +84,7 @@ export function UpdateFollowUpStatusDialog({ visitor, trigger }: UpdateFollowUpS
           {/* Status Selection */}
           <div className="space-y-2">
             <Label htmlFor="status">Follow-up Status</Label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger id="status">
                 <SelectValue />
               </SelectTrigger>

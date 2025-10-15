@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon, CheckCircle2, Users, User, Search } from 'lucide-react'
-import type { User as UserType, Church } from '@church-app/database'
+import type { User as UserType, Church, Member, Visitor } from '@church-app/database'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -32,8 +32,8 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
   const [selectedChurchId, setSelectedChurchId] = useState<string>(
     currentUser.role === 'admin' ? currentUser.church_id || '' : ''
   )
-  const [members, setMembers] = useState<any[]>([])
-  const [visitors, setVisitors] = useState<any[]>([])
+  const [members, setMembers] = useState<Member[]>([])
+  const [visitors, setVisitors] = useState<Visitor[]>([])
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set())
   const [selectedVisitorIds, setSelectedVisitorIds] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
@@ -53,6 +53,8 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
       try {
         // Load active members
         const membersData = await getMembers({
+          limit: 1000,
+          offset: 0,
           church_id: selectedChurchId,
           status: 'active',
         })
@@ -60,23 +62,21 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
 
         // Load visitors associated with this church
         const visitorsData = await getVisitors({
+          limit: 1000,
+          offset: 0,
           church_id: selectedChurchId,
         })
         setVisitors(visitorsData.data || [])
       } catch (error) {
         console.error('Error loading attendees:', error)
-        toast({
-          title: 'Error',
-          description: 'Failed to load members and visitors',
-          variant: 'destructive',
-        })
+        toast.error('Failed to load members and visitors')
       } finally {
         setIsLoading(false)
       }
     }
 
     loadAttendees()
-  }, [selectedChurchId, toast])
+  }, [selectedChurchId])
 
   // Filter members and visitors by search query
   const filteredMembers = useMemo(() => {
@@ -132,20 +132,12 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
   // Handle form submission
   const handleSubmit = async () => {
     if (!selectedChurchId) {
-      toast({
-        title: 'Error',
-        description: 'Please select a church',
-        variant: 'destructive',
-      })
+      toast.error('Please select a church')
       return
     }
 
     if (selectedMemberIds.size === 0 && selectedVisitorIds.size === 0) {
-      toast({
-        title: 'Error',
-        description: 'Please select at least one person',
-        variant: 'destructive',
-      })
+      toast.error('Please select at least one person')
       return
     }
 
@@ -154,33 +146,22 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
       const result = await recordBulkAttendance({
         church_id: selectedChurchId,
         attendance_date: format(date, 'yyyy-MM-dd'),
-        service_type: serviceType as any,
+        service_type: serviceType as 'sabbath_morning' | 'sabbath_afternoon' | 'prayer_meeting' | 'other',
         member_ids: Array.from(selectedMemberIds),
         visitor_ids: Array.from(selectedVisitorIds),
       })
 
       if (result.error) {
-        toast({
-          title: 'Error',
-          description: result.error,
-          variant: 'destructive',
-        })
+        toast.error(result.error)
       } else {
-        toast({
-          title: 'Success',
-          description: result.message || 'Attendance recorded successfully',
-        })
+        toast.success(result.message || 'Attendance recorded successfully')
         // Clear selections
         setSelectedMemberIds(new Set())
         setSelectedVisitorIds(new Set())
       }
     } catch (error) {
       console.error('Error recording attendance:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to record attendance',
-        variant: 'destructive',
-      })
+      toast.error('Failed to record attendance')
     } finally {
       setIsSubmitting(false)
     }
@@ -364,10 +345,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
                   defaultChurchId={selectedChurchId}
                   onSuccess={(visitor) => {
                     setVisitors([visitor, ...visitors])
-                    toast({
-                      title: 'Success',
-                      description: 'Visitor added successfully',
-                    })
+                    toast.success('Visitor added successfully')
                   }}
                 />
               </div>
@@ -379,7 +357,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
                   </p>
                 ) : filteredVisitors.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No visitors found. Click "Register Visitor" to add one.
+                    No visitors found. Click &quot;Register Visitor&quot; to add one.
                   </p>
                 ) : (
                   filteredVisitors.map((visitor) => (

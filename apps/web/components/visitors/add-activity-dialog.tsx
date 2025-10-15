@@ -61,8 +61,9 @@ export function AddActivityDialog({ visitorId, trigger }: AddActivityDialogProps
     startTransition(async () => {
       const result = await createVisitorActivity({
         visitor_id: visitorId,
-        activity_type: activityType as any,
+        activity_type: activityType as 'phone_call' | 'home_visit' | 'bible_study' | 'follow_up_email' | 'text_message' | 'scheduled_visit' | 'other',
         title: title.trim(),
+        is_completed: false,
         notes: notes.trim() || null,
         scheduled_date: scheduledDate ? scheduledDate.toISOString() : null,
       })

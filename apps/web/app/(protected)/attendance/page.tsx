@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getChurches } from '@/lib/queries/churches'
 import { QuickAttendanceForm } from '@/components/attendance/quick-attendance-form'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata = {
   title: 'Weekly Attendance',

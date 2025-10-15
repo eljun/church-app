@@ -14,7 +14,10 @@ import {
   ChevronUp,
   ChevronLeft,
   HeartHandshake,
-  ChevronRight
+  ChevronRight,
+  UserRound,
+  ClipboardCheck,
+  type LucideIcon
 } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
 import Image from 'next/image'
@@ -32,6 +35,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 interface UserData {
   id: string
   email: string
@@ -46,50 +55,106 @@ interface SidebarProps {
   user: UserData | null
 }
 
-// Navigation items (will be dynamically modified based on user role)
-const getNavigation = (user: UserData | null) => {
-  // Coordinators only see Events page
+// Navigation items - grouped by category
+interface NavGroup {
+  title: string
+  items: NavItem[]
+}
+
+interface NavItem {
+  name: string
+  href: string
+  icon: LucideIcon
+}
+
+const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], groups: NavGroup[] } => {
+  // Coordinators only see Events (no grouping needed)
   if (user?.role === 'coordinator') {
-    return [
-      { name: 'Events', href: '/events', icon: HeartHandshake },
-    ]
+    return {
+      topLevel: [
+        { name: 'Events', href: '/events', icon: HeartHandshake },
+        { name: 'Reports', href: '/reports', icon: FileText },
+      ],
+      groups: []
+    }
   }
 
-  // Standard navigation for other roles
-  const baseNavigation = [
+  // Dashboard is always top-level
+  const topLevel: NavItem[] = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Members', href: '/members', icon: Users },
-    { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
-    { name: 'Events', href: '/events', icon: HeartHandshake },
-    { name: 'Reports', href: '/reports', icon: FileText },
   ]
 
-  // Add church navigation based on role
+  const groups: NavGroup[] = []
+
+  // Superadmin: People Management group
   if (user?.role === 'superadmin') {
-    baseNavigation.splice(2, 0, {
-      name: 'Churches',
-      href: '/churches',
-      icon: Building2
+    groups.push({
+      title: 'People Management',
+      items: [
+        { name: 'Members', href: '/members', icon: Users },
+        { name: 'Visitors', href: '/visitors', icon: UserRound },
+        { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
+      ]
     })
-  } else if (user?.role === 'admin' && user?.church_id) {
-    baseNavigation.splice(2, 0, {
-      name: 'My Church',
-      href: `/churches/${user.church_id}`,
-      icon: Building2
+
+    groups.push({
+      title: 'Organization',
+      items: [
+        { name: 'Churches', href: '/churches', icon: Building2 },
+        { name: 'Events', href: '/events', icon: HeartHandshake },
+      ]
+    })
+
+    groups.push({
+      title: 'Analytics & Reports',
+      items: [
+        { name: 'Attendance', href: '/attendance', icon: ClipboardCheck },
+        { name: 'Reports', href: '/reports', icon: FileText },
+      ]
     })
   }
 
-  return baseNavigation
+  // Admin: My Church group
+  else if (user?.role === 'admin') {
+    groups.push({
+      title: 'My Church',
+      items: [
+        { name: 'Members', href: '/members', icon: Users },
+        { name: 'Visitors', href: '/visitors', icon: UserRound },
+        { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
+      ]
+    })
+
+    // Events as top-level for admin
+    topLevel.push({ name: 'Events', href: '/events', icon: HeartHandshake })
+
+    groups.push({
+      title: 'Analytics',
+      items: [
+        { name: 'Attendance', href: '/attendance', icon: ClipboardCheck },
+        { name: 'Reports', href: '/reports', icon: FileText },
+      ]
+    })
+  }
+
+  return { topLevel, groups }
 }
 
 export function DashboardSidebar({ user }: SidebarProps) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
-  const navigation = getNavigation(user)
+  const { topLevel, groups } = getGroupedNavigation(user)
 
   async function handleSignout() {
     await signOut()
+  }
+
+  const isItemActive = (href: string) => {
+    if (href === '/') {
+      return pathname === href
+    }
+    return pathname === href || pathname.startsWith(href + '/')
   }
 
   return (
@@ -134,44 +199,117 @@ export function DashboardSidebar({ user }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className={`flex-1 py-6 space-y-2 overflow-y-auto ${isCollapsed ? 'px-2' : 'px-4'}`}>
-          {navigation.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            const Icon = item.icon
+        <nav className={`flex-1 py-6 overflow-y-auto ${isCollapsed ? 'px-2' : 'px-4'}`}>
+          <div className="space-y-2">
+            {/* Top-level items */}
+            {topLevel.map((item) => {
+              const isActive = isItemActive(item.href)
+              const Icon = item.icon
 
-            const linkContent = (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`
-                  flex items-center ${isCollapsed ? 'justify-center p-3' : 'p-4'} text-sm font-medium 
-                  transition-colors duration-150
-                  ${isActive
-                    ? 'text-white font-display font-semibold bg-white/10'
-                    : 'text-white font-display hover:text-white  hover:bg-white/10'
-                  }
-                `}
-              >
-                <Icon className={`${isCollapsed ? 'w-5 h-5' : 'w-5 h-5 mr-3 -mt-1'} ${isActive ? 'text-white' : 'text-white/60'}`} />
-                {!isCollapsed && <span>{item.name}</span>}
-              </Link>
-            )
-
-            if (isCollapsed) {
-              return (
-                <Tooltip key={item.name}>
-                  <TooltipTrigger asChild>
-                    {linkContent}
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="font-semibold">
-                    {item.name}
-                  </TooltipContent>
-                </Tooltip>
+              const linkContent = (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`
+                    flex items-center ${isCollapsed ? 'justify-center p-3' : 'p-4'} text-sm font-medium
+                    transition-colors duration-150
+                    ${isActive
+                      ? 'text-white font-display font-semibold bg-white/10'
+                      : 'text-white font-display hover:text-white hover:bg-white/10'
+                    }
+                  `}
+                >
+                  <Icon className={`${isCollapsed ? 'w-5 h-5' : 'w-5 h-5 mr-3 -mt-1'} ${isActive ? 'text-white' : 'text-white/60'}`} />
+                  {!isCollapsed && <span>{item.name}</span>}
+                </Link>
               )
-            }
 
-            return linkContent
-          })}
+              if (isCollapsed) {
+                return (
+                  <Tooltip key={item.name}>
+                    <TooltipTrigger asChild>
+                      {linkContent}
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-semibold">
+                      {item.name}
+                    </TooltipContent>
+                  </Tooltip>
+                )
+              }
+
+              return linkContent
+            })}
+
+            {/* Grouped items */}
+            {!isCollapsed && groups.length > 0 && (
+              <Accordion type="multiple" defaultValue={groups.map((_, i) => `group-${i}`)} className="space-y-1">
+                {groups.map((group, groupIndex) => (
+                  <AccordionItem key={`group-${groupIndex}`} value={`group-${groupIndex}`} className="border-0">
+                    <AccordionTrigger className="py-2 px-4 hover:no-underline hover:bg-white/10 text-white font-display text-sm font-medium">
+                      {group.title}
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-0">
+                      {group.items.map((item) => {
+                        const isActive = isItemActive(item.href)
+                        const Icon = item.icon
+
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className={`
+                              flex items-center pl-4 pr-4 py-3 text-sm font-medium
+                              transition-colors duration-150
+                              ${isActive
+                                ? 'text-white font-display font-semibold bg-white/10'
+                                : 'text-white font-display hover:text-white hover:bg-white/10'
+                              }
+                            `}
+                          >
+                            <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-white' : 'text-white/80'}`} />
+                            <span>{item.name}</span>
+                          </Link>
+                        )
+                      })}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+
+            {/* Collapsed view - show all items without grouping */}
+            {isCollapsed && groups.length > 0 && (
+              <>
+                {groups.flatMap(group => group.items).map((item) => {
+                  const isActive = isItemActive(item.href)
+                  const Icon = item.icon
+
+                  return (
+                    <Tooltip key={item.name}>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={item.href}
+                          className={`
+                            flex items-center justify-center p-3 text-sm font-medium
+                            transition-colors duration-150
+                            ${isActive
+                              ? 'text-white font-display font-semibold bg-white/10'
+                              : 'text-white font-display hover:text-white hover:bg-white/10'
+                            }
+                          `}
+                        >
+                          <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="font-semibold">
+                        {item.name}
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                })}
+              </>
+            )}
+          </div>
         </nav>
 
         {/* User Profile - Footer */}

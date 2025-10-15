@@ -1,6 +1,7 @@
 'use client'
 
 import { MoreVertical, Plus, RefreshCw, UserPlus, UserCheck, Pencil } from 'lucide-react'
+import type { Visitor, User } from '@church-app/database'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,8 +18,8 @@ import { AssignVisitorDialog } from '@/components/visitors/assign-visitor-dialog
 import { ConvertToMemberDialog } from '@/components/visitors/convert-to-member-dialog'
 
 interface VisitorActionsMenuProps {
-  visitor: any
-  currentUser: any
+  visitor: Visitor
+  currentUser: User
   visitorId: string
 }
 

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { ActivityType } from '@church-app/database'
+import type { ActivityType, Visitor } from '@church-app/database'
 
 /**
  * Get all activities for a specific visitor
@@ -67,7 +67,7 @@ export async function getUpcomingFollowUps(userId?: string, churchId?: string) {
   // If churchId is provided, filter visitors by church
   if (churchId && data) {
     return data.filter(activity => {
-      const visitor = activity.visitor as any
+      const visitor = activity.visitor as Visitor | null
       return visitor?.associated_church_id === churchId
     })
   }
@@ -160,7 +160,7 @@ export async function getActivityStats(userId?: string, churchId?: string) {
   // Filter by church if provided
   if (churchId && activities) {
     activities = activities.filter(activity => {
-      const visitor = activity.visitor as any
+      const visitor = activity.visitor as Visitor | null
       return visitor?.associated_church_id === churchId
     })
   }
@@ -236,7 +236,7 @@ export async function getRecentActivities(limit = 10, churchId?: string) {
   // Filter by church if provided
   if (churchId && data) {
     return data.filter(activity => {
-      const visitor = activity.visitor as any
+      const visitor = activity.visitor as Visitor | null
       return visitor?.associated_church_id === churchId
     })
   }
@@ -286,7 +286,7 @@ export async function getOverdueFollowUps(userId?: string, churchId?: string) {
   // Filter by church if provided
   if (churchId && data) {
     return data.filter(activity => {
-      const visitor = activity.visitor as any
+      const visitor = activity.visitor as Visitor | null
       return visitor?.associated_church_id === churchId
     })
   }

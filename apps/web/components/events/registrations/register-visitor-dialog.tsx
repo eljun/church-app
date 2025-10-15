@@ -35,19 +35,13 @@ import { createAndRegisterVisitor, createVisitor } from '@/lib/actions/visitors'
 import { ChurchSelect } from '@/components/members/church-select'
 import { countries } from '@/lib/data/countries'
 import { cn } from '@/lib/utils'
-
-interface Church {
-  id: string
-  name: string
-  district: string
-  field: string
-}
+import type { Church, Visitor } from '@church-app/database'
 
 interface RegisterVisitorDialogProps {
   eventId: string | null // Null when used for attendance (no event registration)
   churches: Church[]
   defaultChurchId?: string // For admins, their church is pre-selected
-  onSuccess?: (visitor: any) => void // Callback after visitor is created
+  onSuccess?: (visitor: Visitor) => void // Callback after visitor is created
 }
 
 export function RegisterVisitorDialog({
@@ -161,7 +155,7 @@ export function RegisterVisitorDialog({
         notes: notes || null,
         referral_source: (referralSource as 'member_invitation' | 'online' | 'walk_in' | 'social_media' | 'other' | null) || null,
         first_visit_date: format(new Date(), 'yyyy-MM-dd'),
-        follow_up_status: 'pending',
+        follow_up_status: 'pending' as 'pending' | 'contacted' | 'interested' | 'not_interested' | 'converted',
         follow_up_notes: null,
         assigned_to_user_id: null,
       }

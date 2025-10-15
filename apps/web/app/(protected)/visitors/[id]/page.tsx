@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Calendar } from 'lucide-react'
+import type { Church } from '@church-app/database'
 import { createClient } from '@/lib/supabase/server'
 import { getVisitorById } from '@/lib/queries/visitors'
 import { getVisitorActivities } from '@/lib/queries/visitor-activities'
@@ -58,7 +59,7 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
       <div className="space-y-6">
         {/* Back Button */}
         <div className="flex items-center justify-between">
-          <Button variant="ghost" asChild>
+          <Button variant="outline" asChild>
             <Link href="/visitors">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Visitors
@@ -128,7 +129,7 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
                         </div>
                         {record.churches && (
                           <Badge variant="outline">
-                            {(record.churches as any).name}
+                            {(record.churches as Church).name}
                           </Badge>
                         )}
                       </div>
@@ -143,7 +144,6 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
           <div>
             <FollowUpActivityLog
               activities={activities}
-              visitorId={id}
               isConverted={isConverted}
             />
           </div>

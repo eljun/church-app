@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Loader2, CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
+import type { Visitor } from '@church-app/database'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -31,7 +32,7 @@ import { updateVisitor } from '@/lib/actions/visitors'
 import { cn } from '@/lib/utils'
 
 interface EditVisitorDialogProps {
-  visitor: any
+  visitor: Visitor
   trigger?: React.ReactNode
 }
 
@@ -99,7 +100,7 @@ export function EditVisitorDialog({ visitor, trigger }: EditVisitorDialogProps) 
         else visitorType = 'adult'
       }
 
-      const updateData: any = {
+      const updateData = {
         id: visitor.id,
         full_name: fullName.trim(),
         phone: phone.trim(),
@@ -108,17 +109,14 @@ export function EditVisitorDialog({ visitor, trigger }: EditVisitorDialogProps) 
         city: city.trim() || null,
         province: province.trim() || null,
         notes: notes.trim() || null,
-      }
-
-      // Only include birthday/age/gender if they've been set
-      if (birthday) {
-        updateData.birthday = format(birthday, 'yyyy-MM-dd')
-        updateData.age = age
-        updateData.visitor_type = visitorType
-      }
-
-      if (gender !== 'not_specified') {
-        updateData.gender = gender
+        ...(birthday && {
+          birthday: format(birthday, 'yyyy-MM-dd'),
+          age,
+          visitor_type: visitorType,
+        }),
+        ...(gender !== 'not_specified' && {
+          gender: gender as 'male' | 'female' | 'other',
+        }),
       }
 
       const result = await updateVisitor(updateData)

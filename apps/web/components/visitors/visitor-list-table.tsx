@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Search, Phone, Mail, MapPin, Eye, UserCheck, Clock } from 'lucide-react'
-import type { User } from '@church-app/database'
+import { Search, Phone, Mail, Eye, Clock } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -38,10 +37,9 @@ interface Visitor {
 
 interface VisitorListTableProps {
   visitors: Visitor[]
-  currentUser: User
 }
 
-export function VisitorListTable({ visitors, currentUser }: VisitorListTableProps) {
+export function VisitorListTable({ visitors }: VisitorListTableProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')

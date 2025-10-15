@@ -1361,7 +1361,7 @@ Event Registration Routes
 
 ---
 
-## ✅ Phase 8: Weekly Attendance & Visitor Follow-up System (2025-10-15) - IN PROGRESS
+## ✅ Phase 8: Weekly Attendance & Visitor Follow-up System (2025-10-15) - COMPLETE
 
 ### What Was Implemented
 
@@ -1373,6 +1373,11 @@ Event Registration Routes
 ✅ **Visitor Detail Pages** - Complete visitor profiles with activity tracking
 ✅ **Follow-up Workflow** - Status updates, assignments, and conversion tracking
 ✅ **Activity Logging** - Track all visitor interactions and follow-ups
+✅ **Edit Visitor Profile** - Update visitor information including required fields
+✅ **Visitor Conversion** - Convert visitors to members with validation
+✅ **Read-Only Mode** - Converted visitors become historical records
+✅ **Actions Dropdown** - Clean UI with grouped actions
+✅ **Activity Log Redesign** - Plain edge design matching branding
 
 #### Database Migrations Created:
 1. **`012_create_visitor_activities_table.sql`** - Tracks follow-up activities and interactions
@@ -1462,11 +1467,20 @@ Event Registration Routes
 1. `packages/database/src/types.ts` - Added ActivityType and VisitorActivity interface
 2. `apps/web/components/events/registrations/register-visitor-dialog.tsx` - Support for standalone visitor creation
 
+### UI/UX Improvements (Phase 8):
+✅ **Back Button Positioning** - Consistent with other detail pages
+✅ **Activity Log Styling** - Removed card wrapper, plain edges, no rounded corners
+✅ **Baptism Date Fix** - Properly saves to members.date_of_baptism on conversion
+✅ **Validation Messages** - Clear guidance for required fields before conversion
+✅ **Client Component Separation** - Proper server/client component architecture
+✅ **Edit Visitor Profile** - Complete edit dialog for updating visitor information
+✅ **Actions Dropdown Menu** - Organized actions in collapsible dropdown
+
 ### Build Status:
-⚠️ **Build issue (pre-existing)** - Next.js build has a pre-existing error with `next/headers` that existed before Phase 8 work
-✅ **Development mode works** - All features functional in dev mode
-✅ **Ready for migration application** - Database migration ready
-✅ **Ready for testing** - All UI components complete
+✅ **All builds passing** - Next.js 15 dynamic import issue resolved
+✅ **All features tested** - Weekly attendance and visitor management fully functional
+✅ **Database migrations applied** - All 12 migrations successfully deployed
+✅ **Production ready** - Zero errors, clean deployment
 
 ### Key Features:
 
@@ -1487,23 +1501,140 @@ Event Registration Routes
 
 ---
 
-## 🎯 Next Steps
+## 🎯 Phase 9: Role-Based Access & Sidebar Navigation (2025-10-15) - IN PROGRESS
 
-### Immediate: Apply Migration & Test Phase 8
-1. Apply database migration: `012_create_visitor_activities_table.sql`
-2. Test weekly attendance flow end-to-end
-3. Test visitor management and follow-up workflow
-4. Verify visitor conversion to member works
+### Goal: Organized Sidebar & New User Roles
 
-### Remaining Phase 8 Work:
+#### Current Focus: Sidebar Reorganization (Phase 9.1)
+**Objective:** Group related pages into collapsible sections for better organization and scalability
+
+**Navigation Groups by Role:**
+
+**Superadmin:**
+```
+📊 Dashboard
+👥 People Management (collapsible)
+  ├─ Members
+  ├─ Visitors (NEW)
+  └─ Transfers
+🏛️ Organization (collapsible)
+  ├─ Churches
+  └─ Events
+📈 Analytics & Reports (collapsible)
+  ├─ Attendance (NEW)
+  └─ Reports
+⚙️ Settings
+```
+
+**Admin (Church Secretary):**
+```
+📊 Dashboard
+👥 My Church (collapsible)
+  ├─ Members
+  ├─ Visitors (NEW)
+  └─ Transfers
+📅 Events
+📈 Analytics (collapsible)
+  ├─ Attendance (NEW)
+  └─ Reports
+⚙️ Settings
+```
+
+**Coordinator (Events Only):**
+```
+📅 Events
+📊 Reports
+⚙️ Settings
+```
+
+#### Sidebar Implementation Tasks (Phase 9.1):
+- [x] Planning complete
+- [ ] Add shadcn Accordion component for collapsible groups
+- [ ] Create NavigationGroup component with collapse/expand
+- [ ] Implement role-based group generation function
+- [ ] Add Visitors navigation link (UserRound icon)
+- [ ] Add Attendance navigation link (ClipboardCheck icon)
+- [ ] Add localStorage for expansion state persistence
+- [ ] Update sidebar styling for grouped navigation
+- [ ] Test with all current roles (superadmin, admin, coordinator)
+- [ ] Update NEXT_STEPS.md
+
+#### New Roles Planning (Phase 9.2 - Future):
+
+**Pastor Role:**
+- **Access Scope**: District or Field churches (wider than single church admin)
+- **Permissions**:
+  - View/manage members in assigned district/field (read-only)
+  - Follow-up with visitors in assigned area
+  - Create missionary activity reports
+  - View events in assigned area
+- **UI Features**:
+  - District/Field selector dropdown
+  - Missionary reports dashboard
+  - Visitor follow-up focused interface
+
+**Bible Worker Role:**
+- **Access Scope**: Field churches (read-only access)
+- **Permissions**:
+  - View members assigned to them (read-only)
+  - Create missionary activity reports
+  - View churches in field (read-only)
+  - View events in field (read-only)
+- **UI Features**:
+  - Simple navigation (fewer items)
+  - Missionary reports module
+  - Assigned members dashboard
+
+**Database Schema Updates Needed (Phase 9.2):**
+```sql
+-- Migration 013: Add pastor and bible worker roles
+ALTER TYPE user_role ADD VALUE 'pastor';
+ALTER TYPE user_role ADD VALUE 'bibleworker';
+
+-- Add assignment fields
+ALTER TABLE users ADD COLUMN district_id UUID;
+ALTER TABLE users ADD COLUMN field_id UUID;
+ALTER TABLE users ADD COLUMN assigned_member_ids UUID[];
+```
+
+#### Future Modules (Phase 9.3+):
+- [ ] User Management Interface (/settings/users) - Assign pastors/bible workers
+- [ ] Missionary Reports Module (/missionary-reports) - Daily/weekly activity logging
+- [ ] District/Field Assignment UI - Manage pastor/bible worker territories
+- [ ] Read-only Access Views - Special views for Bible Workers
+- [ ] Pastor Activity Dashboard - Overview of district/field activities
+
+---
+
+## 🎯 Next Immediate Steps
+
+### Phase 9.1: Sidebar Reorganization (Current Session - 30-45 min)
+1. ✅ Update NEXT_STEPS.md with Phase 8 completion
+2. Install shadcn Accordion component
+3. Create collapsible NavigationGroup component
+4. Update sidebar with role-based grouped navigation
+5. Add Visitors and Attendance links with icons
+6. Test expansion/collapse behavior
+7. Add localStorage for state persistence
+8. Test with all roles
+
+### Phase 9.2: Database & Role Preparation (Next Session)
+1. Create migration 013 for new role enum values
+2. Add district_id, field_id, assigned_member_ids to users table
+3. Update TypeScript types for new roles
+4. Add RLS policies for pastor and bible worker roles
+5. Test role-based filtering logic
+
+### Phase 9.3: User Management Interface (Future)
+1. Create /settings/users page (superadmin only)
+2. User creation form with role selection
+3. District/Field assignment dropdowns for pastors
+4. Member assignment interface for bible workers
+5. Missionary reports module planning
+
+### Remaining Phase 8 Enhancements (Optional - Future):
 - [ ] Attendance report pages (/reports/attendance)
 - [ ] Weekly attendance trend analysis
 - [ ] Visitor engagement metrics dashboard
 - [ ] Absent members alert system
-
-### Future Phase 9: Reports & Analytics Enhancement
-- [ ] Advanced attendance reports
-- [ ] Visitor conversion funnel analytics
-- [ ] Member engagement scoring
-- [ ] Predictive analytics for at-risk members
 

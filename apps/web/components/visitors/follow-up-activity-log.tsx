@@ -32,11 +32,10 @@ interface Activity {
 
 interface FollowUpActivityLogProps {
   activities: Activity[]
-  visitorId: string
   isConverted?: boolean
 }
 
-export function FollowUpActivityLog({ activities, visitorId, isConverted = false }: FollowUpActivityLogProps) {
+export function FollowUpActivityLog({ activities, isConverted = false }: FollowUpActivityLogProps) {
   const router = useRouter()
 
   // Get icon for activity type
@@ -115,7 +114,7 @@ export function FollowUpActivityLog({ activities, visitorId, isConverted = false
       {/* Activities List */}
       {sortedActivities.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">
-          No activities yet. Click "Add Activity" to create one.
+          No activities yet. Click &quot;Add Activity&quot; to create one.
         </p>
       ) : (
         <div className="space-y-3">

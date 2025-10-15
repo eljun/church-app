@@ -46,7 +46,7 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
     // Fetch all churches for visitor church association
     const { data: churches } = await supabase
       .from('churches')
-      .select('id, name, district, field')
+      .select('*')
       .eq('is_active', true)
       .order('name')
 
