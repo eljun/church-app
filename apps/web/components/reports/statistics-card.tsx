@@ -20,10 +20,10 @@ export function StatisticsCard({
   trend,
 }: StatisticsCardProps) {
   return (
-    <Card>
+    <Card className="bg-white">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <span className="rounded-sm p-2 bg-accent/20 border border-accent/30">{Icon && <Icon className="h-5 w-5 text-accent" />}</span>
+        <span className="p-2 bg-accent/20 border border-accent/30">{Icon && <Icon className="h-5 w-5 text-accent" />}</span>
       </CardHeader>
       <CardContent>
         <div className="text-4xl font-display text-primary">{value}</div>

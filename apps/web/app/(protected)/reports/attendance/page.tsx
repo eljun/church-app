@@ -1,13 +1,16 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { format, subDays, startOfMonth, endOfMonth } from 'date-fns'
+import { format, subDays } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { getChurches } from '@/lib/queries/churches'
 import { getAttendanceByChurch, getAttendanceStats, getAttendanceSummaryByService, getAbsentMembers } from '@/lib/queries/attendance'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CalendarDays, Users, TrendingUp, AlertCircle, Building2 } from 'lucide-react'
+import { AlertCircle, Building2, Users, TrendingUp, CalendarDays, Church } from 'lucide-react'
 import { ChurchFilterSelect } from '@/components/reports/church-filter-select'
+import { DateFilterSelect, type DateRange } from '@/components/reports/date-filter-select'
+import { StatisticsCard } from '@/components/reports/statistics-card'
+import { getDateRange } from '@/lib/utils/date-ranges'
 
 export const metadata = {
   title: 'Attendance Reports',
@@ -15,11 +18,11 @@ export const metadata = {
 }
 
 interface AttendanceReportPageProps {
-  searchParams: Promise<{ church?: string }>
+  searchParams: Promise<{ church?: string; range?: DateRange }>
 }
 
 export default async function AttendanceReportPage({ searchParams }: AttendanceReportPageProps) {
-  const { church: selectedChurchId } = await searchParams
+  const { church: selectedChurchId, range: selectedRange = 'month' } = await searchParams
   const supabase = await createClient()
 
   // Get current user
@@ -64,13 +67,17 @@ export default async function AttendanceReportPage({ searchParams }: AttendanceR
           </p>
         </div>
 
-        {/* Church Filter - Only show if not admin or if superadmin/coordinator/pastor */}
-        {currentUser.role !== 'admin' && availableChurches.length > 1 && (
-          <ChurchFilterSelect
-            churches={availableChurches}
-            selectedChurchId={churchToShow?.id}
-          />
-        )}
+        {/* Filters */}
+        <div className="flex items-end gap-4">
+          <DateFilterSelect selectedRange={selectedRange} />
+          {/* Church Filter - Only show if not admin or if superadmin/coordinator/pastor */}
+          {currentUser.role !== 'admin' && availableChurches.length > 1 && (
+            <ChurchFilterSelect
+              churches={availableChurches}
+              selectedChurchId={churchToShow?.id}
+            />
+          )}
+        </div>
       </div>
 
       {/* Overall Statistics */}
@@ -79,6 +86,7 @@ export default async function AttendanceReportPage({ searchParams }: AttendanceR
           <ChurchAttendanceReport
             church={churchToShow}
             currentUserRole={currentUser.role}
+            dateRange={selectedRange}
           />
         </Suspense>
       ) : (
@@ -99,28 +107,25 @@ export default async function AttendanceReportPage({ searchParams }: AttendanceR
 
 async function ChurchAttendanceReport({
   church,
-  currentUserRole
+  currentUserRole,
+  dateRange,
 }: {
   church: { id: string; name: string; district: string; field: string }
   currentUserRole: string
+  dateRange: DateRange
 }) {
-  // Get date range (last 30 days)
-  const endDate = format(new Date(), 'yyyy-MM-dd')
-  const startDate = format(subDays(new Date(), 30), 'yyyy-MM-dd')
-
-  // Get current month range
-  const monthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd')
-  const monthEnd = format(endOfMonth(new Date()), 'yyyy-MM-dd')
+  // Get date range based on selection
+  const { startDate, endDate, label: dateLabel, daysCount } = getDateRange(dateRange)
 
   // Fetch data in parallel
   const [stats, serviceBreakdown, absentMembers, recentAttendance] = await Promise.all([
-    getAttendanceStats(church.id, monthStart, monthEnd),
-    getAttendanceSummaryByService(church.id, monthStart, monthEnd),
+    getAttendanceStats(church.id, startDate, endDate),
+    getAttendanceSummaryByService(church.id, startDate, endDate),
     getAbsentMembers(church.id, 30),
     getAttendanceByChurch(church.id, startDate, endDate)
   ])
 
-  // Calculate weekly average (last 4 weeks)
+  // Calculate weekly average
   const weeklyAttendance = new Map<string, number>()
   recentAttendance.forEach(record => {
     if (record.attended) {
@@ -149,7 +154,7 @@ async function ChurchAttendanceReport({
               </CardDescription>
             </div>
             <Badge variant="outline" className="text-base px-3 py-1">
-              {format(new Date(), 'MMMM yyyy')}
+              {dateLabel}
             </Badge>
           </div>
         </CardHeader>
@@ -157,95 +162,63 @@ async function ChurchAttendanceReport({
 
       {/* Statistics Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Total Attendance This Month */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Users className="h-5 w-5" />
-                <span className="text-sm font-medium">Total This Month</span>
-              </div>
-              <p className="text-4xl font-bold">{stats.totalAttendance}</p>
-              <p className="text-sm text-muted-foreground">
-                {stats.memberCount} members • {stats.visitorCount} visitors
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatisticsCard
+          title={`Total ${dateRange === 'week' ? 'This Week' : dateRange === 'month' ? 'This Month' : dateRange === 'quarter' ? 'This Quarter' : 'This Year'}`}
+          value={stats.totalAttendance}
+          description={`${stats.memberCount} members • ${stats.visitorCount} visitors`}
+          icon={Users}
+        />
 
-        {/* Average Attendance */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <TrendingUp className="h-5 w-5" />
-                <span className="text-sm font-medium">Average per Service</span>
-              </div>
-              <p className="text-4xl font-bold">{stats.averageAttendance}</p>
-              <p className="text-sm text-muted-foreground">
-                Based on {stats.totalServices} services
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatisticsCard
+          title="Average per Service"
+          value={stats.averageAttendance}
+          description={`Based on ${stats.totalServices} services`}
+          icon={TrendingUp}
+        />
 
-        {/* Weekly Average (Last 30 days) */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <CalendarDays className="h-5 w-5" />
-                <span className="text-sm font-medium">Weekly Average</span>
-              </div>
-              <p className="text-4xl font-bold">{weeklyAverage}</p>
-              <p className="text-sm text-muted-foreground">
-                Last 30 days
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatisticsCard
+          title={`${dateRange === 'week' ? 'Daily' : 'Weekly'} Average`}
+          value={weeklyAverage}
+          description={`Last ${daysCount} days`}
+          icon={CalendarDays}
+        />
 
-        {/* Absent Members */}
-        <Card className={absentMembers.length > 0 ? 'border-orange-200 bg-orange-50' : ''}>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <AlertCircle className="h-5 w-5 text-orange-500" />
-                <span className="text-sm font-medium">Absent 30+ Days</span>
-              </div>
-              <p className="text-4xl font-bold text-orange-600">{absentMembers.length}</p>
-              <p className="text-sm text-muted-foreground">
-                Members needing follow-up
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatisticsCard
+          title="Absent 30+ Days"
+          value={absentMembers.length}
+          description="Members needing follow-up"
+          icon={AlertCircle}
+        />
       </div>
 
       {/* Service Type Breakdown */}
       <Card>
         <CardHeader>
           <CardTitle>Attendance by Service Type</CardTitle>
-          <CardDescription>This month's breakdown</CardDescription>
+          <CardDescription>{dateLabel} breakdown</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border p-4 bg-accent/50">
-              <p className="text-sm text-muted-foreground mb-2">Sabbath Morning</p>
-              <p className="text-3xl font-semibold">{serviceBreakdown.sabbath_morning}</p>
-            </div>
-            <div className="rounded-lg border p-4 bg-accent/50">
-              <p className="text-sm text-muted-foreground mb-2">Sabbath Afternoon</p>
-              <p className="text-3xl font-semibold">{serviceBreakdown.sabbath_afternoon}</p>
-            </div>
-            <div className="rounded-lg border p-4 bg-accent/50">
-              <p className="text-sm text-muted-foreground mb-2">Prayer Meeting</p>
-              <p className="text-3xl font-semibold">{serviceBreakdown.prayer_meeting}</p>
-            </div>
-            <div className="rounded-lg border p-4 bg-accent/50">
-              <p className="text-sm text-muted-foreground mb-2">Other Services</p>
-              <p className="text-3xl font-semibold">{serviceBreakdown.other}</p>
-            </div>
+            <StatisticsCard
+              title="Sabbath Morning"
+              value={serviceBreakdown.sabbath_morning}
+              icon={Church}
+            />
+            <StatisticsCard
+              title="Sabbath Afternoon"
+              value={serviceBreakdown.sabbath_afternoon}
+              icon={Church}
+            />
+            <StatisticsCard
+              title="Prayer Meeting"
+              value={serviceBreakdown.prayer_meeting}
+              icon={Church}
+            />
+            <StatisticsCard
+              title="Other Services"
+              value={serviceBreakdown.other}
+              icon={Church}
+            />
           </div>
         </CardContent>
       </Card>
@@ -263,7 +236,7 @@ async function ChurchAttendanceReport({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border divide-y max-h-96 overflow-y-auto">
+            <div className="border divide-y max-h-96 overflow-y-auto">
               {absentMembers.slice(0, 20).map((member) => (
                 <div key={member.id} className="p-4 flex items-center justify-between hover:bg-accent transition-colors">
                   <div>
@@ -293,7 +266,7 @@ async function ChurchAttendanceReport({
           <CardContent className="py-12">
             <div className="text-center space-y-2">
               <CalendarDays className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="text-lg font-medium text-muted-foreground">No attendance records for this month</p>
+              <p className="text-lg font-medium text-muted-foreground">No attendance records for this period</p>
               <p className="text-sm text-muted-foreground">Start recording attendance to see reports</p>
             </div>
           </CardContent>
@@ -309,8 +282,8 @@ function ChurchReportSkeleton() {
       <Card>
         <CardHeader>
           <div className="animate-pulse space-y-2">
-            <div className="h-8 w-64 bg-gray-200 rounded" />
-            <div className="h-4 w-48 bg-gray-200 rounded" />
+            <div className="h-8 w-64 bg-gray-200" />
+            <div className="h-4 w-48 bg-gray-200" />
           </div>
         </CardHeader>
       </Card>
@@ -320,9 +293,9 @@ function ChurchReportSkeleton() {
           <Card key={i}>
             <CardContent className="pt-6">
               <div className="animate-pulse space-y-2">
-                <div className="h-4 w-32 bg-gray-200 rounded" />
-                <div className="h-10 w-20 bg-gray-200 rounded" />
-                <div className="h-3 w-40 bg-gray-200 rounded" />
+                <div className="h-4 w-32 bg-gray-200" />
+                <div className="h-10 w-20 bg-gray-200" />
+                <div className="h-3 w-40 bg-gray-200" />
               </div>
             </CardContent>
           </Card>
