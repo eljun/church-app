@@ -80,6 +80,7 @@ export async function createUser(input: CreateUserInput) {
         church_id: validatedInput.church_id,
         district_id: validatedInput.district_id,
         field_id: validatedInput.field_id,
+        assigned_church_ids: validatedInput.assigned_church_ids,
         assigned_member_ids: validatedInput.assigned_member_ids,
       })
       .eq('id', authData.user.id)
@@ -123,6 +124,9 @@ export async function updateUser(input: UpdateUserInput) {
     if (validatedInput.church_id !== undefined) updateData.church_id = validatedInput.church_id
     if (validatedInput.district_id !== undefined) updateData.district_id = validatedInput.district_id
     if (validatedInput.field_id !== undefined) updateData.field_id = validatedInput.field_id
+    if (validatedInput.assigned_church_ids !== undefined) {
+      updateData.assigned_church_ids = validatedInput.assigned_church_ids
+    }
     if (validatedInput.assigned_member_ids !== undefined) {
       updateData.assigned_member_ids = validatedInput.assigned_member_ids
     }
@@ -233,5 +237,42 @@ export async function resetUserPassword(userId: string, newPassword: string) {
       return { error: error.message }
     }
     return { error: 'Failed to reset password' }
+  }
+}
+
+/**
+ * Get assignable members (wrapper for client-side calls)
+ */
+export async function getAssignableMembersAction(churchId?: string) {
+  try {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { error: 'Unauthorized', data: [] }
+    }
+
+    let query = supabase
+      .from('members')
+      .select('id, full_name, church_id, churches:church_id(name)')
+      .eq('status', 'active')
+      .order('full_name', { ascending: true })
+
+    if (churchId) {
+      query = query.eq('church_id', churchId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      return { error: error.message, data: [] }
+    }
+
+    return { data: data || [], error: null }
+  } catch (error) {
+    if (error instanceof Error) {
+      return { error: error.message, data: [] }
+    }
+    return { error: 'Failed to fetch members', data: [] }
   }
 }

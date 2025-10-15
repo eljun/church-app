@@ -22,6 +22,7 @@ export interface User {
   church_id: string | null;
   district_id: string | null; // For pastors - district they oversee
   field_id: string | null; // For pastors - field they oversee
+  assigned_church_ids: string[]; // For pastors - specific churches they oversee
   assigned_member_ids: string[]; // For bibleworkers - members they support
   created_at: string;
   updated_at: string;

@@ -1646,19 +1646,129 @@ Event Registration Routes
 7. Add localStorage for state persistence
 8. Test with all roles
 
-### Phase 9.2: Database & Role Preparation (Next Session)
-1. Create migration 013 for new role enum values
-2. Add district_id, field_id, assigned_member_ids to users table
-3. Update TypeScript types for new roles
-4. Add RLS policies for pastor and bible worker roles
-5. Test role-based filtering logic
+### ✅ Phase 9.2: Database & Role Preparation - COMPLETE
+1. ✅ Create migration 013 for new role enum values
+2. ✅ Add district_id, field_id, assigned_member_ids to users table
+3. ✅ Update TypeScript types for new roles
+4. ✅ Add RLS policies for pastor and bible worker roles
+5. ✅ Test role-based filtering logic
 
-### Phase 9.3: User Management Interface (Future)
-1. Create /settings/users page (superadmin only)
-2. User creation form with role selection
-3. District/Field assignment dropdowns for pastors
-4. Member assignment interface for bible workers
-5. Missionary reports module planning
+### ✅ Phase 9.3: User Management Interface - COMPLETE (2025-10-15)
+1. ✅ Create /settings/users page (superadmin only)
+2. ✅ User creation form with role selection
+3. ✅ District/Field assignment dropdowns for pastors
+4. ✅ Member assignment interface for bible workers
+5. ✅ Users table with edit, delete, and reset password actions
+6. ✅ Role-based statistics dashboard
+7. ✅ Pagination and filtering support
+8. ✅ **Enhanced Pastor/Bibleworker Assignments** - Multi-church assignments with improved validation
+
+**What Was Implemented:**
+
+#### User Management Interface (`/settings/users`)
+✅ **User List Table** - Paginated table showing all users with role badges
+✅ **User Statistics Dashboard** - Card-based stats showing user counts by role
+✅ **Create User Dialog** - Form to create new users with:
+  - Email and password input
+  - Role selection dropdown (superadmin, coordinator, pastor, bibleworker, admin, member)
+  - **Admin**: Church assignment (required)
+  - **Pastor**: Multi-church assignment (required) + optional district/field for broader oversight
+  - **Bibleworker**: Multi-church assignment (required) - work across multiple areas
+  - Member role (basic access)
+✅ **Edit User Dialog** - Update user information and role assignments
+✅ **Reset Password Dialog** - Superadmin can reset any user's password
+✅ **Delete User Functionality** - Remove users from the system
+✅ **Role-Based Validation** - Enforces role-specific assignment requirements:
+  - Admins must have a church assigned
+  - **Pastors must have at least one church assigned** (district/field optional)
+  - **Bibleworkers must have at least one church assigned** (no member assignment)
+
+**Components Created:**
+```
+components/settings/users/
+├─ users-table.tsx                    # User list table with actions dropdown
+├─ create-user-dialog.tsx             # Create new user form
+├─ edit-user-dialog.tsx               # Edit existing user
+├─ delete-user-dialog.tsx             # Delete confirmation
+├─ reset-password-dialog.tsx          # Password reset form
+├─ member-multi-select.tsx            # Member assignment selector (still available for future use)
+└─ church-multi-select.tsx            # NEW: Multi-church selector for pastors/bibleworkers
+```
+
+**Backend Implementation:**
+- `lib/validations/user.ts` - Enhanced with additional schemas:
+  - changePasswordSchema
+  - assignPastorTerritorySchema
+  - assignMembersSchema
+  - **Enhanced validation**: Both pastor and bibleworker require `assigned_church_ids.length > 0`
+- `lib/queries/users.ts` - Already had all required queries:
+  - getUsers() - Paginated user list with filters
+  - getUserById() - Single user details
+  - getAssignableMembers() - Members for future use
+  - getUserStats() - Role-based statistics
+- `lib/actions/users.ts` - Updated actions to support church assignments:
+  - createUser() - Create user with auth and church/role assignments
+  - updateUser() - Update user details and church assignments
+  - deleteUser() - Remove user from system
+  - resetUserPassword() - Change user password
+  - **getAssignableMembersAction()** - NEW: Server action for client-side member fetching
+
+**Database Changes:**
+- `packages/database/migrations/014_add_pastor_church_assignments.sql`:
+  - Added `assigned_church_ids UUID[]` column to users table
+  - Created GIN index for efficient array lookups: `idx_users_assigned_church_ids`
+  - Created helper function `is_pastor_of_church(user_id UUID, church_id UUID)`
+  - Ready for RLS policy extensions
+
+**TypeScript Types Updated:**
+- `packages/database/src/types.ts`:
+  - Added `assigned_church_ids: string[]` to User interface
+  - Supports pastor multi-church assignments
+
+**Pastor Assignment UI Changes:**
+- ✅ **Multi-church assignment** (required) - select multiple churches
+- ✅ **District dropdown** (optional) - for broader district oversight
+- ✅ **Field dropdown** (optional) - for broader field oversight
+- ✅ Churches shown FIRST as primary requirement
+- ✅ District/Field below as optional enhancement
+- ✅ Form field order prevents scroll bugs
+
+**Bibleworker Assignment UI Changes:**
+- ✅ **Multi-church assignment** (required) - work across multiple churches
+- ✅ **Removed member assignment** - they work dynamically across areas
+- ✅ Simplified UI focused on church territories
+- ✅ Description: "Bible workers can work across multiple churches and areas"
+
+**Admin Assignment UI Fix:**
+- ✅ **Church selector moved BEFORE description text** - prevents scroll bug
+- ✅ Church selector no longer the last field in form
+- ✅ Mouse wheel scrolling works properly
+
+**Technical Fixes Applied:**
+- **Church Selector Scroll Bug**: Moved church field before description text to prevent position-related scroll issues
+- **Member Dropdown "No Members Found"**: Created `getAssignableMembersAction()` server action wrapper for client component calls
+- **Validation Logic**: Changed from member assignments to church assignments for bibleworkers
+- **Form Field Order**: Consistent ordering across all role sections to prevent UI bugs
+
+**Key Features:**
+- All operations restricted to superadmin users only
+- Server-side authorization checks on all actions
+- Proper validation with Zod schemas
+- Toast notifications for user feedback
+- Role-based conditional form fields
+- Pagination support for large user lists
+- Statistics showing user distribution by role
+- Multi-church assignment support for pastors and bibleworkers
+
+**Build Status:**
+✅ **All builds passing**
+✅ **No TypeScript errors**
+✅ **No source code linting errors**
+✅ **Production ready**
+✅ **Database migration 014 created**
+
+### Phase 9.4: Additional Features (Future)
+1. Missionary reports module planning
 
 ### Remaining Phase 8 Enhancements (Optional - Future):
 - [ ] Attendance report pages (/reports/attendance)

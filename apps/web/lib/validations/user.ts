@@ -24,6 +24,7 @@ export const createUserSchema = z.object({
   church_id: z.string().uuid().nullable(),
   district_id: z.string().nullable(),
   field_id: z.string().nullable(),
+  assigned_church_ids: z.array(z.string().uuid()).default([]),
   assigned_member_ids: z.array(z.string().uuid()).default([]),
 }).refine(
   (data) => {
@@ -39,27 +40,27 @@ export const createUserSchema = z.object({
   }
 ).refine(
   (data) => {
-    // Pastor should have either district_id or field_id
-    if (data.role === 'pastor' && !data.district_id && !data.field_id) {
+    // Pastor should have at least one church assigned
+    if (data.role === 'pastor' && data.assigned_church_ids.length === 0) {
       return false
     }
     return true
   },
   {
-    message: 'Pastor must be assigned to a district or field',
-    path: ['district_id'],
+    message: 'Pastor must be assigned to at least one church',
+    path: ['assigned_church_ids'],
   }
 ).refine(
   (data) => {
-    // Bibleworker should have assigned members
-    if (data.role === 'bibleworker' && data.assigned_member_ids.length === 0) {
+    // Bibleworker should have at least one church assigned
+    if (data.role === 'bibleworker' && data.assigned_church_ids.length === 0) {
       return false
     }
     return true
   },
   {
-    message: 'Bibleworker must be assigned to at least one member',
-    path: ['assigned_member_ids'],
+    message: 'Bible worker must be assigned to at least one church',
+    path: ['assigned_church_ids'],
   }
 )
 
@@ -75,6 +76,7 @@ export const updateUserSchema = z.object({
   church_id: z.string().uuid().nullable().optional(),
   district_id: z.string().nullable().optional(),
   field_id: z.string().nullable().optional(),
+  assigned_church_ids: z.array(z.string().uuid()).optional(),
   assigned_member_ids: z.array(z.string().uuid()).optional(),
 }).refine(
   (data) => {
@@ -113,3 +115,39 @@ export const searchUsersSchema = z.object({
 })
 
 export type SearchUsersInput = z.infer<typeof searchUsersSchema>
+
+/**
+ * Change password schema
+ */
+export const changePasswordSchema = z.object({
+  user_id: z.string().uuid(),
+  new_password: z.string().min(8, 'Password must be at least 8 characters'),
+})
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
+
+/**
+ * Assign territory to pastor
+ */
+export const assignPastorTerritorySchema = z.object({
+  user_id: z.string().uuid(),
+  district_id: z.string().nullable().optional(),
+  field_id: z.string().nullable().optional(),
+}).refine((data) => {
+  return data.district_id || data.field_id
+}, {
+  message: 'Must assign either a district or field',
+  path: ['district_id']
+})
+
+export type AssignPastorTerritoryInput = z.infer<typeof assignPastorTerritorySchema>
+
+/**
+ * Assign members to bibleworker
+ */
+export const assignMembersSchema = z.object({
+  user_id: z.string().uuid(),
+  member_ids: z.array(z.string().uuid()).min(1, 'Must assign at least one member'),
+})
+
+export type AssignMembersInput = z.infer<typeof assignMembersSchema>

@@ -25,7 +25,7 @@ import {
 import { toast } from 'sonner'
 import { createUser } from '@/lib/actions/users'
 import { ChurchSelect } from '@/components/members/church-select'
-import { MemberMultiSelect } from './member-multi-select'
+import { ChurchMultiSelect } from './church-multi-select'
 import type { UserRole } from '@/lib/validations/user'
 
 interface CreateUserDialogProps {
@@ -45,6 +45,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
   const [districtId, setDistrictId] = useState('')
   const [fieldId, setFieldId] = useState('')
   const [assignedMemberIds, setAssignedMemberIds] = useState<string[]>([])
+  const [assignedChurchIds, setAssignedChurchIds] = useState<string[]>([])
 
   const resetForm = () => {
     setEmail('')
@@ -54,6 +55,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
     setDistrictId('')
     setFieldId('')
     setAssignedMemberIds([])
+    setAssignedChurchIds([])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,13 +77,13 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
       return
     }
 
-    if (role === 'pastor' && !districtId && !fieldId) {
-      toast.error('Pastor must be assigned to a district or field')
+    if (role === 'pastor' && assignedChurchIds.length === 0) {
+      toast.error('Pastor must be assigned to at least one church')
       return
     }
 
-    if (role === 'bibleworker' && assignedMemberIds.length === 0) {
-      toast.error('Bibleworker must be assigned to at least one member')
+    if (role === 'bibleworker' && assignedChurchIds.length === 0) {
+      toast.error('Bible worker must be assigned to at least one church')
       return
     }
 
@@ -94,6 +96,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
         district_id: districtId || null,
         field_id: fieldId || null,
         assigned_member_ids: assignedMemberIds,
+        assigned_church_ids: assignedChurchIds,
       })
 
       if (result.error) {
@@ -165,7 +168,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="member">Member - Personal access only</SelectItem>
-                  <SelectItem value="bibleworker">Bible Worker - Assigned members</SelectItem>
+                  <SelectItem value="bibleworker">Bible Worker - Church assignments</SelectItem>
                   <SelectItem value="admin">Admin - Church management</SelectItem>
                   <SelectItem value="pastor">Pastor - District/Field oversight</SelectItem>
                   <SelectItem value="coordinator">Coordinator - Event coordination</SelectItem>
@@ -187,10 +190,10 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                   onValueChange={setChurchId}
                   showDistrictAndField
                 />
-                <p className="text-xs text-muted-foreground">
-                  Admin users manage a specific church
-                </p>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Admin users manage a specific church
+              </p>
             </div>
           )}
 
@@ -198,7 +201,15 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
             <div className="space-y-4 border-t pt-4">
               <h4 className="text-sm font-medium">Pastor Assignment</h4>
               <div className="grid gap-2">
-                <Label htmlFor="district">District</Label>
+                <Label htmlFor="churches">Assigned Churches *</Label>
+                <ChurchMultiSelect
+                  churches={churches}
+                  selectedIds={assignedChurchIds}
+                  onChange={setAssignedChurchIds}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="district">District (Optional)</Label>
                 <Select value={districtId} onValueChange={setDistrictId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select district" />
@@ -213,7 +224,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="field">Field</Label>
+                <Label htmlFor="field">Field (Optional)</Label>
                 <Select value={fieldId} onValueChange={setFieldId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select field" />
@@ -228,7 +239,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                 </Select>
               </div>
               <p className="text-xs text-muted-foreground">
-                Pastor must be assigned to at least a district or field
+                Assign specific churches, or optionally add district/field for broader oversight
               </p>
             </div>
           )}
@@ -237,21 +248,16 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
             <div className="space-y-4 border-t pt-4">
               <h4 className="text-sm font-medium">Bible Worker Assignment</h4>
               <div className="grid gap-2">
-                <Label>Assigned Members *</Label>
-                <MemberMultiSelect
-                  churchId={churchId}
-                  selectedIds={assignedMemberIds}
-                  onChange={setAssignedMemberIds}
+                <Label htmlFor="churches">Assigned Churches *</Label>
+                <ChurchMultiSelect
+                  churches={churches}
+                  selectedIds={assignedChurchIds}
+                  onChange={setAssignedChurchIds}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Select members this bible worker will support ({assignedMemberIds.length} selected)
-                </p>
               </div>
-              {assignedMemberIds.length === 0 && (
-                <p className="text-xs text-orange-600">
-                  At least one member must be assigned
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Bible workers can work across multiple churches and areas
+              </p>
             </div>
           )}
 

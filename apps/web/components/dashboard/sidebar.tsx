@@ -291,7 +291,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
               <Accordion type="multiple" defaultValue={groups.map((_, i) => `group-${i}`)} className="space-y-1">
                 {groups.map((group, groupIndex) => (
                   <AccordionItem key={`group-${groupIndex}`} value={`group-${groupIndex}`} className="border-0">
-                    <AccordionTrigger className="py-2 px-4 hover:no-underline hover:bg-white/10 text-white font-display text-sm font-medium">
+                    <AccordionTrigger className="py-4 px-4 hover:no-underline hover:bg-white/10 text-white font-display text-sm font-medium rounded-none">
                       {group.title}
                     </AccordionTrigger>
                     <AccordionContent className="pb-0">

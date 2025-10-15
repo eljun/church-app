@@ -18,7 +18,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
-import { getAssignableMembers } from '@/lib/queries/users'
+import { getAssignableMembersAction } from '@/lib/actions/users'
 
 interface Member {
   id: string
@@ -46,25 +46,31 @@ export function MemberMultiSelect({
     const fetchMembers = async () => {
       setLoading(true)
       try {
-        const data = await getAssignableMembers(churchId)
-        // Transform the data to match Member interface
-        const transformedData: Member[] = data.map((item) => {
-          // Handle the church relationship which can be an object or array
-          const churchData = item.churches as { name: string } | { name: string }[] | null
-          const church = churchData && Array.isArray(churchData)
-            ? churchData[0]
-            : churchData
+        const result = await getAssignableMembersAction(churchId)
+        if (result.error) {
+          console.error('Failed to fetch members:', result.error)
+          setMembers([])
+        } else {
+          // Transform the data to match Member interface
+          const transformedData: Member[] = result.data.map((item) => {
+            // Handle the church relationship which can be an object or array
+            const churchData = item.churches as { name: string } | { name: string }[] | null
+            const church = churchData && Array.isArray(churchData)
+              ? churchData[0]
+              : churchData
 
-          return {
-            id: item.id,
-            full_name: item.full_name,
-            church_id: item.church_id,
-            churches: church
-          }
-        })
-        setMembers(transformedData)
+            return {
+              id: item.id,
+              full_name: item.full_name,
+              church_id: item.church_id,
+              churches: church
+            }
+          })
+          setMembers(transformedData)
+        }
       } catch (error) {
         console.error('Failed to fetch members:', error)
+        setMembers([])
       } finally {
         setLoading(false)
       }
