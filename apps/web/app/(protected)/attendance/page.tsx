@@ -34,7 +34,7 @@ export default async function AttendancePage() {
     redirect('/')
   }
 
-  const churches = await getChurches()
+  const churchesData = await getChurches()
 
   return (
     <div className="space-y-6">
@@ -49,7 +49,7 @@ export default async function AttendancePage() {
       {/* Quick Attendance Form */}
       <QuickAttendanceForm
         currentUser={currentUser}
-        churches={churches || []}
+        churches={churchesData?.data || []}
       />
     </div>
   )

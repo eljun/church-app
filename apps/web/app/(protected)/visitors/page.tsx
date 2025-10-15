@@ -40,7 +40,7 @@ export default async function VisitorsPage() {
     church_id: churchId || undefined,
   })
 
-  const churches = await getChurches()
+  const churchesData = await getChurches()
 
   return (
     <div className="space-y-6">
@@ -54,7 +54,7 @@ export default async function VisitorsPage() {
         </div>
         <RegisterVisitorDialog
           eventId={null}
-          churches={churches || []}
+          churches={churchesData?.data || []}
           defaultChurchId={currentUser.role === 'admin' ? currentUser.church_id || undefined : undefined}
         />
       </div>
