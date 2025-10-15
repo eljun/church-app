@@ -6,14 +6,20 @@ import { getChurches } from '@/lib/queries/churches'
 import { getAttendanceByChurch, getAttendanceStats, getAttendanceSummaryByService, getAbsentMembers } from '@/lib/queries/attendance'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CalendarDays, Users, TrendingUp, AlertCircle } from 'lucide-react'
+import { CalendarDays, Users, TrendingUp, AlertCircle, Building2 } from 'lucide-react'
+import { ChurchFilterSelect } from '@/components/reports/church-filter-select'
 
 export const metadata = {
   title: 'Attendance Reports',
   description: 'View attendance statistics and trends',
 }
 
-export default async function AttendanceReportPage() {
+interface AttendanceReportPageProps {
+  searchParams: Promise<{ church?: string }>
+}
+
+export default async function AttendanceReportPage({ searchParams }: AttendanceReportPageProps) {
+  const { church: selectedChurchId } = await searchParams
   const supabase = await createClient()
 
   // Get current user
@@ -34,47 +40,70 @@ export default async function AttendanceReportPage() {
   }
 
   // Get churches based on role
-  const churchesData = await getChurches()
-  const churches = churchesData?.data || []
+  const churchesData = await getChurches({ limit: 1000, offset: 0 })
+  const allChurches = churchesData?.data || []
 
   // For admin, filter to their church only
-  const filteredChurches = currentUser.role === 'admin' && currentUser.church_id
-    ? churches.filter(c => c.id === currentUser.church_id)
-    : churches
+  const availableChurches = currentUser.role === 'admin' && currentUser.church_id
+    ? allChurches.filter(c => c.id === currentUser.church_id)
+    : allChurches
+
+  // Determine which church to show
+  const churchToShow = selectedChurchId
+    ? availableChurches.find(c => c.id === selectedChurchId)
+    : availableChurches[0]
 
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="font-display text-3xl text-primary">Attendance Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          View attendance statistics and identify trends
-        </p>
-      </div>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-display text-3xl text-primary">Attendance Reports</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            View attendance statistics and identify trends
+          </p>
+        </div>
 
-      {/* Reports by church */}
-      <div className="space-y-6">
-        {filteredChurches.map((church) => (
-          <Suspense key={church.id} fallback={<ChurchReportSkeleton />}>
-            <ChurchAttendanceReport church={church} />
-          </Suspense>
-        ))}
-
-        {filteredChurches.length === 0 && (
-          <Card>
-            <CardContent className="py-8">
-              <p className="text-center text-muted-foreground">
-                No churches available for attendance reports
-              </p>
-            </CardContent>
-          </Card>
+        {/* Church Filter - Only show if not admin or if superadmin/coordinator/pastor */}
+        {currentUser.role !== 'admin' && availableChurches.length > 1 && (
+          <ChurchFilterSelect
+            churches={availableChurches}
+            selectedChurchId={churchToShow?.id}
+          />
         )}
       </div>
+
+      {/* Overall Statistics */}
+      {churchToShow ? (
+        <Suspense fallback={<ChurchReportSkeleton />}>
+          <ChurchAttendanceReport
+            church={churchToShow}
+            currentUserRole={currentUser.role}
+          />
+        </Suspense>
+      ) : (
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center space-y-2">
+              <Building2 className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="text-muted-foreground">
+                No churches available for attendance reports
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
 
-async function ChurchAttendanceReport({ church }: { church: { id: string; name: string; district: string; field: string } }) {
+async function ChurchAttendanceReport({
+  church,
+  currentUserRole
+}: {
+  church: { id: string; name: string; district: string; field: string }
+  currentUserRole: string
+}) {
   // Get date range (last 30 days)
   const endDate = format(new Date(), 'yyyy-MM-dd')
   const startDate = format(subDays(new Date(), 30), 'yyyy-MM-dd')
@@ -105,158 +134,200 @@ async function ChurchAttendanceReport({ church }: { church: { id: string; name: 
     : 0
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-xl">{church.name}</CardTitle>
+    <div className="space-y-6">
+      {/* Church Header */}
+      <Card className="border-primary/50 bg-primary/5">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Building2 className="h-6 w-6 text-primary" />
+                {church.name}
+              </CardTitle>
+              <CardDescription className="text-base mt-1">
+                {church.district} • {church.field}
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="text-base px-3 py-1">
+              {format(new Date(), 'MMMM yyyy')}
+            </Badge>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Statistics Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Total Attendance This Month */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-5 w-5" />
+                <span className="text-sm font-medium">Total This Month</span>
+              </div>
+              <p className="text-4xl font-bold">{stats.totalAttendance}</p>
+              <p className="text-sm text-muted-foreground">
+                {stats.memberCount} members • {stats.visitorCount} visitors
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Average Attendance */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <TrendingUp className="h-5 w-5" />
+                <span className="text-sm font-medium">Average per Service</span>
+              </div>
+              <p className="text-4xl font-bold">{stats.averageAttendance}</p>
+              <p className="text-sm text-muted-foreground">
+                Based on {stats.totalServices} services
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Weekly Average (Last 30 days) */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <CalendarDays className="h-5 w-5" />
+                <span className="text-sm font-medium">Weekly Average</span>
+              </div>
+              <p className="text-4xl font-bold">{weeklyAverage}</p>
+              <p className="text-sm text-muted-foreground">
+                Last 30 days
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Absent Members */}
+        <Card className={absentMembers.length > 0 ? 'border-orange-200 bg-orange-50' : ''}>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+                <span className="text-sm font-medium">Absent 30+ Days</span>
+              </div>
+              <p className="text-4xl font-bold text-orange-600">{absentMembers.length}</p>
+              <p className="text-sm text-muted-foreground">
+                Members needing follow-up
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Service Type Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Attendance by Service Type</CardTitle>
+          <CardDescription>This month's breakdown</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border p-4 bg-accent/50">
+              <p className="text-sm text-muted-foreground mb-2">Sabbath Morning</p>
+              <p className="text-3xl font-semibold">{serviceBreakdown.sabbath_morning}</p>
+            </div>
+            <div className="rounded-lg border p-4 bg-accent/50">
+              <p className="text-sm text-muted-foreground mb-2">Sabbath Afternoon</p>
+              <p className="text-3xl font-semibold">{serviceBreakdown.sabbath_afternoon}</p>
+            </div>
+            <div className="rounded-lg border p-4 bg-accent/50">
+              <p className="text-sm text-muted-foreground mb-2">Prayer Meeting</p>
+              <p className="text-3xl font-semibold">{serviceBreakdown.prayer_meeting}</p>
+            </div>
+            <div className="rounded-lg border p-4 bg-accent/50">
+              <p className="text-sm text-muted-foreground mb-2">Other Services</p>
+              <p className="text-3xl font-semibold">{serviceBreakdown.other}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Absent Members List */}
+      {absentMembers.length > 0 && (
+        <Card className="border-orange-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-600">
+              <AlertCircle className="h-5 w-5" />
+              Members Needing Follow-up
+            </CardTitle>
             <CardDescription>
-              {church.district} • {church.field}
+              {absentMembers.length} member{absentMembers.length !== 1 ? 's' : ''} haven't attended in 30+ days
             </CardDescription>
-          </div>
-          <Badge variant="outline">{format(new Date(), 'MMMM yyyy')}</Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Statistics Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {/* Total Attendance This Month */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span className="text-sm font-medium">Total This Month</span>
-            </div>
-            <p className="text-3xl font-bold">{stats.totalAttendance}</p>
-            <p className="text-xs text-muted-foreground">
-              {stats.memberCount} members • {stats.visitorCount} visitors
-            </p>
-          </div>
-
-          {/* Average Attendance */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <TrendingUp className="h-4 w-4" />
-              <span className="text-sm font-medium">Average per Service</span>
-            </div>
-            <p className="text-3xl font-bold">{stats.averageAttendance}</p>
-            <p className="text-xs text-muted-foreground">
-              Based on {stats.totalServices} services
-            </p>
-          </div>
-
-          {/* Weekly Average (Last 30 days) */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <CalendarDays className="h-4 w-4" />
-              <span className="text-sm font-medium">Weekly Average</span>
-            </div>
-            <p className="text-3xl font-bold">{weeklyAverage}</p>
-            <p className="text-xs text-muted-foreground">
-              Last 30 days
-            </p>
-          </div>
-
-          {/* Absent Members */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <AlertCircle className="h-4 w-4 text-orange-500" />
-              <span className="text-sm font-medium">Absent 30+ Days</span>
-            </div>
-            <p className="text-3xl font-bold text-orange-500">{absentMembers.length}</p>
-            <p className="text-xs text-muted-foreground">
-              Members needing follow-up
-            </p>
-          </div>
-        </div>
-
-        {/* Service Type Breakdown */}
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">
-            Attendance by Service Type (This Month)
-          </h3>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground mb-1">Sabbath Morning</p>
-              <p className="text-2xl font-semibold">{serviceBreakdown.sabbath_morning}</p>
-            </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground mb-1">Sabbath Afternoon</p>
-              <p className="text-2xl font-semibold">{serviceBreakdown.sabbath_afternoon}</p>
-            </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground mb-1">Prayer Meeting</p>
-              <p className="text-2xl font-semibold">{serviceBreakdown.prayer_meeting}</p>
-            </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground mb-1">Other Services</p>
-              <p className="text-2xl font-semibold">{serviceBreakdown.other}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Absent Members List */}
-        {absentMembers.length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">
-              Members Needing Follow-up ({absentMembers.length})
-            </h3>
-            <div className="rounded-lg border divide-y max-h-64 overflow-y-auto">
-              {absentMembers.slice(0, 10).map((member) => (
-                <div key={member.id} className="p-3 flex items-center justify-between hover:bg-accent">
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border divide-y max-h-96 overflow-y-auto">
+              {absentMembers.slice(0, 20).map((member) => (
+                <div key={member.id} className="p-4 flex items-center justify-between hover:bg-accent transition-colors">
                   <div>
-                    <p className="text-sm font-medium">{member.full_name}</p>
+                    <p className="font-medium">{member.full_name}</p>
                     {member.sp && (
-                      <p className="text-xs text-muted-foreground">SP: {member.sp}</p>
+                      <p className="text-sm text-muted-foreground">SP: {member.sp}</p>
                     )}
                   </div>
-                  <Badge variant="outline" className="text-orange-500 border-orange-200">
+                  <Badge variant="outline" className="text-orange-600 border-orange-300">
                     Absent 30+ days
                   </Badge>
                 </div>
               ))}
-              {absentMembers.length > 10 && (
-                <div className="p-3 text-center text-sm text-muted-foreground">
-                  + {absentMembers.length - 10} more members
+              {absentMembers.length > 20 && (
+                <div className="p-4 text-center text-sm text-muted-foreground bg-muted">
+                  + {absentMembers.length - 20} more members
                 </div>
               )}
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* No data message */}
-        {stats.totalAttendance === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No attendance records for this month</p>
-            <p className="text-sm mt-1">Start recording attendance to see reports</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {/* No data message */}
+      {stats.totalAttendance === 0 && (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center space-y-2">
+              <CalendarDays className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="text-lg font-medium text-muted-foreground">No attendance records for this month</p>
+              <p className="text-sm text-muted-foreground">Start recording attendance to see reports</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }
 
 function ChurchReportSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <div className="animate-pulse space-y-2">
-          <div className="h-6 w-48 bg-gray-200 rounded" />
-          <div className="h-4 w-32 bg-gray-200 rounded" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="animate-pulse space-y-2">
-                <div className="h-4 w-24 bg-gray-200 rounded" />
-                <div className="h-8 w-16 bg-gray-200 rounded" />
-                <div className="h-3 w-32 bg-gray-200 rounded" />
-              </div>
-            ))}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="animate-pulse space-y-2">
+            <div className="h-8 w-64 bg-gray-200 rounded" />
+            <div className="h-4 w-48 bg-gray-200 rounded" />
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardContent className="pt-6">
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 w-32 bg-gray-200 rounded" />
+                <div className="h-10 w-20 bg-gray-200 rounded" />
+                <div className="h-3 w-40 bg-gray-200 rounded" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   )
 }
