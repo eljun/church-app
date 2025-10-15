@@ -1361,19 +1361,149 @@ Event Registration Routes
 
 ---
 
+## ✅ Phase 8: Weekly Attendance & Visitor Follow-up System (2025-10-15) - IN PROGRESS
+
+### What Was Implemented
+
+**Weekly Service Attendance & Comprehensive Visitor Management** - Full system for tracking weekly attendance and managing visitor follow-ups
+
+#### Core Features Completed:
+✅ **Weekly Attendance System** - Quick attendance marking for regular church services
+✅ **Visitor Management Dashboard** - Full visitor list with search and filters
+✅ **Visitor Detail Pages** - Complete visitor profiles with activity tracking
+✅ **Follow-up Workflow** - Status updates, assignments, and conversion tracking
+✅ **Activity Logging** - Track all visitor interactions and follow-ups
+
+#### Database Migrations Created:
+1. **`012_create_visitor_activities_table.sql`** - Tracks follow-up activities and interactions
+
+#### Backend Implementation:
+- **Validation Schemas**:
+  - `lib/validations/attendance.ts` - 4 Zod schemas for attendance operations
+  - `lib/validations/visitor-activity.ts` - 4 Zod schemas for visitor activities
+
+- **Query Functions**:
+  - `lib/queries/attendance.ts` - 9 functions for attendance data
+  - `lib/queries/visitor-activities.ts` - 7 functions for activity management
+
+- **Server Actions**:
+  - `lib/actions/attendance.ts` - 4 actions (record, bulk record, update, delete)
+  - `lib/actions/visitor-activities.ts` - 4 actions (create, update, complete, delete)
+
+#### UI Components Created:
+
+**Weekly Attendance:**
+1. **`/attendance` route** - Main attendance page
+2. **QuickAttendanceForm** - Bulk attendance marking with features:
+   - Date and service type selection (Sabbath Morning/Afternoon, Prayer Meeting)
+   - Member checklist with search
+   - Visitor selection with on-the-fly registration
+   - Bulk save for all attendees
+
+**Visitor Management:**
+3. **`/visitors` route** - Visitor list page with:
+   - Search by name, phone, email
+   - Filter by follow-up status and visitor type
+   - Quick view of all visitor information
+
+4. **`/visitors/[id]` route** - Visitor detail page with:
+   - Complete visitor profile
+   - Attendance history
+   - Activity timeline
+   - Quick action buttons
+
+**Visitor Components:**
+5. **VisitorListTable** - Searchable, filterable visitor list
+6. **VisitorDetailCard** - Complete visitor information display
+7. **FollowUpActivityLog** - Timeline of all visitor interactions
+8. **UpdateFollowUpStatusDialog** - Change follow-up status (pending/contacted/interested/not_interested/converted)
+9. **AssignVisitorDialog** - Assign visitors to users for follow-up
+10. **ConvertToMemberDialog** - Convert visitors to church members
+11. **AddActivityDialog** - Log new follow-up activities (phone calls, visits, bible studies, etc.)
+
+#### Updated Components:
+- **RegisterVisitorDialog** - Now supports both event registration and standalone visitor creation
+
+#### Follow-up Workflow:
+- **Status Tracking**: pending → contacted → interested → not_interested/converted
+- **Assignment System**: Assign visitors to specific users
+- **Activity Types**: phone_call, home_visit, bible_study, follow_up_email, text_message, scheduled_visit, other
+- **Activity Management**: Schedule, complete, and track outcomes
+- **Conversion Workflow**: Convert interested visitors to members with baptism info
+
+### Files Created (18):
+**Database:**
+1. `packages/database/migrations/012_create_visitor_activities_table.sql`
+
+**Backend:**
+2. `apps/web/lib/validations/attendance.ts`
+3. `apps/web/lib/validations/visitor-activity.ts`
+4. `apps/web/lib/queries/attendance.ts`
+5. `apps/web/lib/queries/visitor-activities.ts`
+6. `apps/web/lib/actions/attendance.ts`
+7. `apps/web/lib/actions/visitor-activities.ts`
+
+**Pages:**
+8. `apps/web/app/(protected)/attendance/page.tsx`
+9. `apps/web/app/(protected)/visitors/page.tsx`
+10. `apps/web/app/(protected)/visitors/[id]/page.tsx`
+
+**Components:**
+11. `apps/web/components/attendance/quick-attendance-form.tsx`
+12. `apps/web/components/visitors/visitor-list-table.tsx`
+13. `apps/web/components/visitors/visitor-detail-card.tsx`
+14. `apps/web/components/visitors/follow-up-activity-log.tsx`
+15. `apps/web/components/visitors/update-follow-up-status-dialog.tsx`
+16. `apps/web/components/visitors/assign-visitor-dialog.tsx`
+17. `apps/web/components/visitors/convert-to-member-dialog.tsx`
+18. `apps/web/components/visitors/add-activity-dialog.tsx`
+
+### Files Modified (2):
+1. `packages/database/src/types.ts` - Added ActivityType and VisitorActivity interface
+2. `apps/web/components/events/registrations/register-visitor-dialog.tsx` - Support for standalone visitor creation
+
+### Build Status:
+⚠️ **Build issue (pre-existing)** - Next.js build has a pre-existing error with `next/headers` that existed before Phase 8 work
+✅ **Development mode works** - All features functional in dev mode
+✅ **Ready for migration application** - Database migration ready
+✅ **Ready for testing** - All UI components complete
+
+### Key Features:
+
+**Weekly Attendance:**
+- Quick bulk attendance marking
+- Support for both members and visitors
+- Service type selection
+- Church-specific attendance (admin) or all churches (superadmin)
+- On-the-fly visitor registration
+
+**Visitor Follow-up:**
+- Comprehensive visitor profiles
+- Activity logging and tracking
+- Follow-up status management
+- User assignment for accountability
+- Conversion to member workflow
+- Attendance history tracking
+
+---
+
 ## 🎯 Next Steps
 
-### Immediate: Apply Migrations & Test
-1. Apply 3 database migrations in order
-2. Test visitor registration flow end-to-end
-3. Test attendance confirmation with visitors
-4. Verify RLS policies working correctly
+### Immediate: Apply Migration & Test Phase 8
+1. Apply database migration: `012_create_visitor_activities_table.sql`
+2. Test weekly attendance flow end-to-end
+3. Test visitor management and follow-up workflow
+4. Verify visitor conversion to member works
 
-### Future Phase 8: Complete Attendance System
-- [ ] Weekly service attendance UI forms
-- [ ] Bulk attendance entry for services
-- [ ] Attendance reports and analytics
-- [ ] Visitor follow-up dashboard
-- [ ] Visitor-to-member conversion workflow UI
-- [ ] Visitor engagement tracking
+### Remaining Phase 8 Work:
+- [ ] Attendance report pages (/reports/attendance)
+- [ ] Weekly attendance trend analysis
+- [ ] Visitor engagement metrics dashboard
+- [ ] Absent members alert system
+
+### Future Phase 9: Reports & Analytics Enhancement
+- [ ] Advanced attendance reports
+- [ ] Visitor conversion funnel analytics
+- [ ] Member engagement scoring
+- [ ] Predictive analytics for at-risk members
 

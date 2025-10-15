@@ -31,7 +31,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { toast } from 'sonner'
-import { createAndRegisterVisitor } from '@/lib/actions/visitors'
+import { createAndRegisterVisitor, createVisitor } from '@/lib/actions/visitors'
 import { ChurchSelect } from '@/components/members/church-select'
 import { countries } from '@/lib/data/countries'
 import { cn } from '@/lib/utils'
@@ -44,15 +44,17 @@ interface Church {
 }
 
 interface RegisterVisitorDialogProps {
-  eventId: string
+  eventId: string | null // Null when used for attendance (no event registration)
   churches: Church[]
   defaultChurchId?: string // For admins, their church is pre-selected
+  onSuccess?: (visitor: any) => void // Callback after visitor is created
 }
 
 export function RegisterVisitorDialog({
   eventId,
   churches,
   defaultChurchId,
+  onSuccess,
 }: RegisterVisitorDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -132,48 +134,59 @@ export function RegisterVisitorDialog({
         else visitorType = 'adult'
       }
 
-      const result = await createAndRegisterVisitor({
-        event_id: eventId,
-        visitor: {
-          full_name: fullName,
-          birthday: birthday ? format(birthday, 'yyyy-MM-dd') : null,
-          age,
-          gender: (gender as 'male' | 'female' | 'other' | null) || null,
-          phone,
-          email: email || null,
-          address: address || null,
-          city: city || null,
-          province: province || null,
-          country,
-          is_baptized: false, // Hidden field, default to false
-          date_of_baptism: null,
-          baptized_at_church: null,
-          baptized_at_country: null,
-          associated_church_id: associatedChurchId || null,
-          association_reason: associatedChurchId ? 'event_registration' : null,
-          emergency_contact_name: emergencyContactName || null,
-          emergency_contact_phone: emergencyContactPhone || null,
-          relationship: relationship || null,
-          visitor_type: visitorType,
-          is_accompanied_child: false,
-          accompanied_by_member_id: null,
-          accompanied_by_visitor_id: null,
-          notes: notes || null,
-          referral_source: (referralSource as 'member_invitation' | 'online' | 'walk_in' | 'social_media' | 'other' | null) || null,
-          first_visit_date: format(new Date(), 'yyyy-MM-dd'),
-          follow_up_status: 'pending',
-          follow_up_notes: null,
-          assigned_to_user_id: null,
-        },
-        notes: registrationNotes || null,
-      })
+      const visitorData = {
+        full_name: fullName,
+        birthday: birthday ? format(birthday, 'yyyy-MM-dd') : null,
+        age,
+        gender: (gender as 'male' | 'female' | 'other' | null) || null,
+        phone,
+        email: email || null,
+        address: address || null,
+        city: city || null,
+        province: province || null,
+        country,
+        is_baptized: false, // Hidden field, default to false
+        date_of_baptism: null,
+        baptized_at_church: null,
+        baptized_at_country: null,
+        associated_church_id: associatedChurchId || null,
+        association_reason: associatedChurchId ? 'event_registration' : null,
+        emergency_contact_name: emergencyContactName || null,
+        emergency_contact_phone: emergencyContactPhone || null,
+        relationship: relationship || null,
+        visitor_type: visitorType,
+        is_accompanied_child: false,
+        accompanied_by_member_id: null,
+        accompanied_by_visitor_id: null,
+        notes: notes || null,
+        referral_source: (referralSource as 'member_invitation' | 'online' | 'walk_in' | 'social_media' | 'other' | null) || null,
+        first_visit_date: format(new Date(), 'yyyy-MM-dd'),
+        follow_up_status: 'pending',
+        follow_up_notes: null,
+        assigned_to_user_id: null,
+      }
+
+      // If eventId is provided, register for event; otherwise just create visitor
+      const result = eventId
+        ? await createAndRegisterVisitor({
+            event_id: eventId,
+            visitor: visitorData,
+            notes: registrationNotes || null,
+          })
+        : await createVisitor(visitorData)
 
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success(`Visitor "${fullName}" registered successfully`)
+        const message = eventId
+          ? `Visitor "${fullName}" registered for event successfully`
+          : `Visitor "${fullName}" added successfully`
+        toast.success(message)
         setOpen(false)
         resetForm()
+        if (onSuccess && result.data) {
+          onSuccess(result.data)
+        }
         router.refresh()
       }
     })
