@@ -1,13 +1,12 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, UserPlus, Users as UsersIcon, Shield, Crown, Church, BookOpen, UserCog } from 'lucide-react'
+import { ArrowLeft, Users as UsersIcon, Shield, Crown, Church, BookOpen, UserCog } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getUsers, getUserStats } from '@/lib/queries/users'
 import { getChurches } from '@/lib/queries/churches'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { UsersTable } from '@/components/settings/users/users-table'
 import { CreateUserDialog } from '@/components/settings/users/create-user-dialog'
 
@@ -165,7 +164,7 @@ async function UsersTableWrapper({
   const { data: users, count } = await getUsers({
     limit,
     offset,
-    role: roleFilter as any,
+    role: roleFilter as 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'admin' | 'member' | undefined,
   })
 
   const totalPages = Math.ceil(count / limit)

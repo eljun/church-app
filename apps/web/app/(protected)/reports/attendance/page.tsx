@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { format, subDays } from 'date-fns'
+import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { getChurches } from '@/lib/queries/churches'
 import { getAttendanceByChurch, getAttendanceStats, getAttendanceSummaryByService, getAbsentMembers } from '@/lib/queries/attendance'
@@ -85,7 +85,6 @@ export default async function AttendanceReportPage({ searchParams }: AttendanceR
         <Suspense fallback={<ChurchReportSkeleton />}>
           <ChurchAttendanceReport
             church={churchToShow}
-            currentUserRole={currentUser.role}
             dateRange={selectedRange}
           />
         </Suspense>
@@ -107,11 +106,9 @@ export default async function AttendanceReportPage({ searchParams }: AttendanceR
 
 async function ChurchAttendanceReport({
   church,
-  currentUserRole,
   dateRange,
 }: {
   church: { id: string; name: string; district: string; field: string }
-  currentUserRole: string
   dateRange: DateRange
 }) {
   // Get date range based on selection
@@ -232,7 +229,7 @@ async function ChurchAttendanceReport({
               Members Needing Follow-up
             </CardTitle>
             <CardDescription>
-              {absentMembers.length} member{absentMembers.length !== 1 ? 's' : ''} haven't attended in 30+ days
+              {absentMembers.length} member{absentMembers.length !== 1 ? 's' : ''} haven&apos;t attended in 30+ days
             </CardDescription>
           </CardHeader>
           <CardContent>

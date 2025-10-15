@@ -48,14 +48,20 @@ export function MemberMultiSelect({
       try {
         const data = await getAssignableMembers(churchId)
         // Transform the data to match Member interface
-        const transformedData: Member[] = data.map((item: any) => ({
-          id: item.id,
-          full_name: item.full_name,
-          church_id: item.church_id,
-          churches: item.churches && Array.isArray(item.churches)
-            ? item.churches[0]
-            : item.churches
-        }))
+        const transformedData: Member[] = data.map((item) => {
+          // Handle the church relationship which can be an object or array
+          const churchData = item.churches as { name: string } | { name: string }[] | null
+          const church = churchData && Array.isArray(churchData)
+            ? churchData[0]
+            : churchData
+
+          return {
+            id: item.id,
+            full_name: item.full_name,
+            church_id: item.church_id,
+            churches: church
+          }
+        })
         setMembers(transformedData)
       } catch (error) {
         console.error('Failed to fetch members:', error)
