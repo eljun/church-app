@@ -178,8 +178,15 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
       <CardContent className="space-y-6">
         {/* Church, Date, and Service Type Selection */}
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Church Selector (for superadmin only) */}
-          {currentUser.role === 'superadmin' && (
+          {/* Church Selector - show for all except admin (who has default church) */}
+          {currentUser.role === 'admin' ? (
+            <div className="space-y-2">
+              <Label htmlFor="church">Church</Label>
+              <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm">
+                {churches.find(c => c.id === selectedChurchId)?.name || 'Your Church'}
+              </div>
+            </div>
+          ) : (
             <div className="space-y-2">
               <Label htmlFor="church">Church</Label>
               <Select value={selectedChurchId} onValueChange={setSelectedChurchId}>
@@ -406,7 +413,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
           </div>
         )}
 
-        {!selectedChurchId && currentUser.role === 'superadmin' && (
+        {!selectedChurchId && currentUser.role !== 'admin' && (
           <p className="text-sm text-muted-foreground text-center py-8">
             Please select a church to begin
           </p>
