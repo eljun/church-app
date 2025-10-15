@@ -7,11 +7,19 @@ import {
   CakeIcon,
   CalendarHeartIcon,
   FileTextIcon,
+  ClipboardCheckIcon,
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 const reportCategories = [
+  {
+    title: 'Attendance Reports',
+    description: 'View attendance statistics and trends',
+    icon: ClipboardCheckIcon,
+    href: '/reports/attendance',
+    color: 'text-primary'
+  },
   {
     title: 'Member Growth',
     description: 'Track member growth trends over time',
