@@ -1,9 +1,7 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
-import { ArrowLeftIcon } from 'lucide-react'
 import { getMemberGrowthData, getMemberStatistics } from '@/lib/queries/reports'
 import { MemberGrowthReport } from '@/components/reports/member-growth-report'
-import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/shared'
 
 interface MemberGrowthPageProps {
   searchParams: Promise<{
@@ -30,20 +28,11 @@ export default async function MemberGrowthPage({ searchParams }: MemberGrowthPag
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="icon">
-          <Link href="/reports">
-            <ArrowLeftIcon className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="font-display text-3xl  text-primary">Member Growth Report</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Track membership statistics and baptism growth trends over time
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        backHref="/reports"
+        title="Member Growth Report"
+        description="Track membership statistics and baptism growth trends over time"
+      />
 
       {/* Report content */}
       <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>

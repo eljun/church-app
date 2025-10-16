@@ -176,3 +176,36 @@ export function formatAnniversaryDataForExport(anniversaries: any[]) {
     'Email': member.email || '',
   }))
 }
+
+/**
+ * Format missionary report data for export
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function formatMissionaryReportDataForExport(reports: any[]) {
+  return reports.map(report => ({
+    'Date': new Date(report.report_date).toLocaleDateString(),
+    'Church': report.churches?.name || '',
+    'Report Type': report.report_type.charAt(0).toUpperCase() + report.report_type.slice(1),
+    'Bible Studies': report.bible_studies_given,
+    'Home Visits': report.home_visits,
+    'Seminars': report.seminars_conducted,
+    'Conferences': report.conferences_conducted,
+    'Public Lectures': report.public_lectures,
+    'Pamphlets': report.pamphlets_distributed,
+    'Books': report.books_distributed,
+    'Magazines': report.magazines_distributed,
+    'Youth Anchor': report.youth_anchor,
+    'Total Activities':
+      report.bible_studies_given +
+      report.home_visits +
+      report.seminars_conducted +
+      report.conferences_conducted +
+      report.public_lectures +
+      report.youth_anchor,
+    'Total Literature':
+      report.pamphlets_distributed +
+      report.books_distributed +
+      report.magazines_distributed,
+    'Reported By': report.reporter?.full_name || 'Unknown',
+  }))
+}

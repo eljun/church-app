@@ -1,14 +1,12 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getUsers } from '@/lib/queries/users'
 import { getChurches } from '@/lib/queries/churches'
-import { Button } from '@/components/ui/button'
 import { UsersTable } from '@/components/settings/users/users-table'
 import { CreateUserDialog } from '@/components/settings/users/create-user-dialog'
 import { PageFilters } from '@/components/shared/page-filters'
+import { PageHeader } from '@/components/shared'
 
 export const metadata = {
   title: 'User Management',
@@ -51,24 +49,12 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
-              </Link>
-            </Button>
-          </div>
-          <h1 className="font-display text-3xl text-primary">User Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage users, roles, and permissions across the system
-          </p>
-        </div>
-        <CreateUserDialog churches={churches} />
-      </div>
+      <PageHeader
+        backHref="/"
+        title="User Management"
+        description="Manage users, roles, and permissions across the system"
+        actions={<CreateUserDialog churches={churches} />}
+      />
 
       {/* Search and Filters */}
       <PageFilters

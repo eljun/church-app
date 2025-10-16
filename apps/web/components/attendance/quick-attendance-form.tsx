@@ -185,7 +185,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
           {currentUser.role === 'admin' ? (
             <div className="space-y-2">
               <Label htmlFor="church">Church</Label>
-              <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm">
+              <div className="flex h-10 w-full items-center border border-input bg-muted px-3 py-2 text-sm">
                 {churches.find(c => c.id === selectedChurchId)?.name || 'Your Church'}
               </div>
             </div>
@@ -303,7 +303,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
                 </div>
               </div>
 
-              <div className="max-h-[400px] overflow-y-auto border rounded-lg p-4 space-y-2">
+              <div className="max-h-[400px] overflow-y-auto border p-4 space-y-2">
                 {isLoading ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     Loading members...
@@ -316,7 +316,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
                   filteredMembers.map((member) => (
                     <div
                       key={member.id}
-                      className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent cursor-pointer"
+                      className="flex items-center space-x-3 p-2 hover:bg-accent cursor-pointer"
                       onClick={() => toggleMember(member.id)}
                     >
                       <Checkbox
@@ -352,7 +352,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
                 </Button>
               </div>
 
-              <div className="max-h-[400px] overflow-y-auto border rounded-lg p-4 space-y-2">
+              <div className="max-h-[400px] overflow-y-auto border p-4 space-y-2">
                 {isLoading ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     Loading visitors...
@@ -365,7 +365,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
                   filteredVisitors.map((visitor) => (
                     <div
                       key={visitor.id}
-                      className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent cursor-pointer"
+                      className="flex items-center space-x-3 p-2 hover:bg-accent cursor-pointer"
                       onClick={() => toggleVisitor(visitor.id)}
                     >
                       <Checkbox

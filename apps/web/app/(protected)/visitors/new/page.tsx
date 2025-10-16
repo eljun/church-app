@@ -1,10 +1,8 @@
 import { redirect } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { RegisterVisitorForm } from '@/components/visitors/register-visitor-form'
+import { PageHeader } from '@/components/shared'
 
 interface NewVisitorPageProps {
   searchParams: Promise<{ event_id?: string; return_to?: string }>
@@ -40,20 +38,11 @@ export default async function NewVisitorPage({ searchParams }: NewVisitorPagePro
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="icon">
-          <Link href={params.return_to || '/visitors'}>
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="font-display text-3xl text-primary">Register New Visitor</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Add a guest/visitor who is not a registered member
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        backHref={params.return_to || '/visitors'}
+        title="Register New Visitor"
+        description="Add a guest/visitor who is not a registered member"
+      />
 
       {/* Registration Form */}
       <Card>

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, MapPin, Calendar, Users, Building2 } from 'lucide-react'
+import { Pencil, MapPin, Calendar, Users, Building2 } from 'lucide-react'
 import { getChurchById } from '@/lib/queries/churches'
 import { getMembers } from '@/lib/queries/members'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ImageGallery } from '@/components/ui/image-gallery'
 import { DeleteChurchButton } from '@/components/churches/delete-church-button'
 import { createClient } from '@/lib/supabase/server'
+import { PageHeader } from '@/components/shared'
 
 interface ChurchDetailPageProps {
   params: Promise<{ id: string }>
@@ -72,33 +73,25 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
 
     return (
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* Header with back button */}
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" asChild>
-            <Link href="/churches">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Churches
-            </Link>
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href={`/churches/${id}/edit`}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </Link>
-            </Button>
-            <DeleteChurchButton churchId={id} churchName={church.name} />
-          </div>
-        </div>
+        <PageHeader
+          backHref="/churches"
+          title={church.name}
+          actions={
+            <>
+              <Button variant="outline" asChild>
+                <Link href={`/churches/${id}/edit`}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </Link>
+              </Button>
+              <DeleteChurchButton churchId={id} churchName={church.name} />
+            </>
+          }
+        />
 
         {/* Church Info Card */}
         <div className="bg-white border p-6">
           <div className="flex items-start justify-between">
-            <div>
-              <h1 className="font-display text-3xl  text-primary ">
-                {church.name}
-              </h1>              
-            </div>
             <div className="flex gap-2">
               {getStatusBadge(church.is_active)}
             </div>

@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { ArrowLeftIcon, DownloadIcon, ArrowUpIcon, ArrowDownIcon } from 'lucide-react'
+import { DownloadIcon, ArrowUpIcon, ArrowDownIcon } from 'lucide-react'
 import { getTransferStatistics, getTransferHistory } from '@/lib/queries/reports'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/shared'
 
 interface TransfersReportPageProps {
   searchParams: Promise<{
@@ -52,26 +53,17 @@ export default async function TransfersReportPage({ searchParams }: TransfersRep
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/reports">
-              <ArrowLeftIcon className="h-4 w-4" />
-            </Link>
+      <PageHeader
+        backHref="/reports"
+        title="Transfer Reports"
+        description="Analyze member transfers in and out of your church"
+        actions={
+          <Button variant="outline">
+            <DownloadIcon className="mr-2 h-4 w-4" />
+            Export Report
           </Button>
-          <div>
-            <h1 className="font-display text-3xl  text-primary ">Transfer Reports</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Analyze member transfers in and out of your church
-            </p>
-          </div>
-        </div>
-        <Button variant="outline">
-          <DownloadIcon className="mr-2 h-4 w-4" />
-          Export Report
-        </Button>
-      </div>
+        }
+      />
 
       {/* Statistics cards */}
       <div className="grid gap-6 md:grid-cols-5">

@@ -1,11 +1,11 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getEventById } from '@/lib/queries/events'
 import { getAllEventRegistrations } from '@/lib/queries/event-registrations'
 import { Button } from '@/components/ui/button'
 import { AttendanceConfirmationForm } from '@/components/events/registrations/attendance-confirmation-form'
+import { PageHeader } from '@/components/shared'
 
 interface EventAttendancePageProps {
   params: Promise<{ id: string }>
@@ -40,25 +40,11 @@ export default async function EventAttendancePage({ params }: EventAttendancePag
 
     return (
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={`/events/${id}/registrations`}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Registrations
-                </Link>
-              </Button>
-            </div>
-            <h1 className="font-display text-3xl text-primary">
-              Event Attendance
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {event.title} - Mark which members attended or were no-shows
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          backHref={`/events/${id}/registrations`}
+          title="Event Attendance"
+          description={`${event.title} - Mark which members attended or were no-shows`}
+        />
 
         {/* Attendance Confirmation */}
         {registrations.length === 0 ? (

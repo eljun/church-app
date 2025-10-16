@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import {
-  ArrowLeftIcon,
   DownloadIcon,
   UsersIcon,
   UserCheckIcon,
@@ -19,6 +18,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatisticsCard } from '@/components/reports/statistics-card'
+import { PageHeader } from '@/components/shared'
 
 interface StatisticsPageProps {
   searchParams: Promise<{
@@ -53,28 +53,17 @@ export default async function StatisticsPage({ searchParams }: StatisticsPagePro
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/reports">
-              <ArrowLeftIcon className="h-4 w-4" />
-            </Link>
+      <PageHeader
+        backHref="/reports"
+        title="Statistics Dashboard"
+        description="Comprehensive overview of your church metrics"
+        actions={
+          <Button variant="outline">
+            <DownloadIcon className="mr-2 h-4 w-4" />
+            Export Dashboard
           </Button>
-          <div>
-            <h1 className="font-display text-3xl  text-primary ">
-              Statistics Dashboard
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Comprehensive overview of your church metrics
-            </p>
-          </div>
-        </div>
-        <Button variant="outline">
-          <DownloadIcon className="mr-2 h-4 w-4" />
-          Export Dashboard
-        </Button>
-      </div>
+        }
+      />
 
       {/* Member Statistics */}
       <div>

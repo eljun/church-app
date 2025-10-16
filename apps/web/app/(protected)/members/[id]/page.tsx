@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, Calendar, Church, User, Heart, Activity } from 'lucide-react'
+import { Pencil, Calendar, Church, User, Heart, Activity } from 'lucide-react'
 import { getMemberById, getMemberTransferHistory } from '@/lib/queries/members'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DeleteMemberButton } from '@/components/members/delete-member-button'
+import { PageHeader } from '@/components/shared'
 
 interface MemberDetailPageProps {
   params: Promise<{ id: string }>
@@ -73,33 +74,27 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
 
     return (
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* Header with back button */}
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" asChild>
-            <Link href="/members">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Members
-            </Link>
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href={`/members/${id}/edit`}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </Link>
-            </Button>
-            <DeleteMemberButton memberId={id} memberName={member.full_name} />
-          </div>
-        </div>
+        <PageHeader
+          backHref="/members"
+          title={member.full_name}
+          actions={
+            <>
+              <Button variant="outline" asChild>
+                <Link href={`/members/${id}/edit`}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </Link>
+              </Button>
+              <DeleteMemberButton memberId={id} memberName={member.full_name} />
+            </>
+          }
+        />
 
         {/* Member Info Card */}
         <div className="bg-white border p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-display text-3xl  text-primary ">
-                {member.full_name}
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="text-sm text-gray-500">
                 Member ID: {member.id.slice(0, 8)}...
               </p>
             </div>

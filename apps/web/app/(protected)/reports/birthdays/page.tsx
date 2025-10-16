@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import { ArrowLeftIcon, DownloadIcon, CakeIcon } from 'lucide-react'
+import { DownloadIcon, CakeIcon } from 'lucide-react'
 import { getUpcomingBirthdays } from '@/lib/queries/reports'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/shared'
 
 interface BirthdaysPageProps {
   searchParams: Promise<{
@@ -64,28 +64,17 @@ export default async function BirthdaysPage({ searchParams }: BirthdaysPageProps
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/reports">
-              <ArrowLeftIcon className="h-4 w-4" />
-            </Link>
+      <PageHeader
+        backHref="/reports"
+        title="Birthday Report"
+        description="Upcoming member birthdays and celebrations"
+        actions={
+          <Button variant="outline">
+            <DownloadIcon className="mr-2 h-4 w-4" />
+            Export Report
           </Button>
-          <div>
-            <h1 className="font-display text-3xl  text-primary ">
-              Birthday Report
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Upcoming member birthdays and celebrations
-            </p>
-          </div>
-        </div>
-        <Button variant="outline">
-          <DownloadIcon className="mr-2 h-4 w-4" />
-          Export Report
-        </Button>
-      </div>
+        }
+      />
 
       {/* Summary cards */}
       <div className="grid gap-6 md:grid-cols-3">

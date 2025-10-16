@@ -84,7 +84,7 @@ export function VisitorListTable({
   return (
     <div className="space-y-4">
       {/* Table */}
-      <div className="border rounded-lg">
+      <div className="border">
         <Table>
           <TableHeader>
             <TableRow>

@@ -8,6 +8,7 @@ import {
   CalendarHeartIcon,
   FileTextIcon,
   ClipboardCheckIcon,
+  BookHeartIcon,
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,13 @@ const reportCategories = [
     description: 'View attendance statistics and trends',
     icon: ClipboardCheckIcon,
     href: '/reports/attendance',
+    color: 'text-primary'
+  },
+  {
+    title: 'Missionary Activities',
+    description: 'Analyze missionary work and outreach activities',
+    icon: BookHeartIcon,
+    href: '/reports/missionary-activities',
     color: 'text-primary'
   },
   {

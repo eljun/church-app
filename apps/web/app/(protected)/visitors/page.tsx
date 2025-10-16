@@ -80,12 +80,12 @@ export default async function VisitorsPage({ searchParams }: VisitorsPageProps) 
       </div>
 
       {/* Filters */}
-      <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 rounded-lg" />}>
+      <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100" />}>
         <VisitorsFilters />
       </Suspense>
 
       {/* Visitors Table */}
-      <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>
+      <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100" />}>
         <VisitorListTable
           visitors={visitorsData.data || []}
           currentPage={page}

@@ -1,17 +1,16 @@
 import { notFound, redirect } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, Calendar } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import type { Church } from '@church-app/database'
 import { createClient } from '@/lib/supabase/server'
 import { getVisitorById } from '@/lib/queries/visitors'
 import { getVisitorActivities } from '@/lib/queries/visitor-activities'
 import { getVisitorAttendanceHistory } from '@/lib/queries/attendance'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { VisitorDetailCard } from '@/components/visitors/visitor-detail-card'
 import { FollowUpActivityLog } from '@/components/visitors/follow-up-activity-log'
 import { VisitorActionsMenu } from '@/components/visitors/visitor-actions-menu'
+import { PageHeader } from '@/components/shared'
 
 interface VisitorDetailPageProps {
   params: Promise<{ id: string }>
@@ -57,38 +56,27 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
 
     return (
       <div className="space-y-6">
-        {/* Back Button */}
-        <div className="flex items-center justify-between">
-          <Button variant="outline" asChild>
-            <Link href="/visitors">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Visitors
-            </Link>
-          </Button>
-          {/* Action Menu - Hidden for converted visitors */}
-          {!isConverted && (
-            <VisitorActionsMenu
-              visitor={visitor}
-              currentUser={currentUser}
-              visitorId={id}
-            />
-          )}
-        </div>
-
-        {/* Header */}
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="font-display text-3xl text-primary">{visitor.full_name}</h1>
-            {isConverted && (
-              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                Converted to Member
-              </Badge>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isConverted ? 'Visitor Record (Read-only)' : 'Visitor Details & Follow-up'}
-          </p>
-        </div>
+        <PageHeader
+          backHref="/visitors"
+          title={visitor.full_name}
+          description={isConverted ? 'Visitor Record (Read-only)' : 'Visitor Details & Follow-up'}
+          actions={
+            <>
+              {isConverted && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                  Converted to Member
+                </Badge>
+              )}
+              {!isConverted && (
+                <VisitorActionsMenu
+                  visitor={visitor}
+                  currentUser={currentUser}
+                  visitorId={id}
+                />
+              )}
+            </>
+          }
+        />
 
         {/* Main Content */}
         <div className="grid gap-6 md:grid-cols-3">

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, UserPlus, Users, CheckCircle, XCircle, TrendingUp, Plus } from 'lucide-react'
+import { UserPlus, Users, CheckCircle, XCircle, TrendingUp, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getEventById } from '@/lib/queries/events'
 import {
@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { StatisticsCard } from '@/components/reports/statistics-card'
 import { RegisterMembersDialog } from '@/components/events/registrations/register-members-dialog'
 import { RegistrationsTable } from '@/components/events/registrations/registrations-table'
+import { PageHeader } from '@/components/shared'
 
 interface EventRegistrationsPageProps {
   params: Promise<{ id: string }>
@@ -53,37 +54,27 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
 
     return (
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={`/events/${id}`}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Event
-                </Link>
-              </Button>
-            </div>
-            <h1 className="font-display text-3xl text-primary">
-              Event Registrations
-            </h1>
-            <p className="text-muted-foreground">{event.title}</p>
-          </div>
-          {currentUser.role !== 'member' && (
-            <div className="flex gap-2">
-              <RegisterMembersDialog
-                eventId={id}
-                availableMembers={availableMembers}
-              />
-              <Button asChild variant="outline">
-                <Link href={`/visitors/new?event_id=${id}&return_to=/events/${id}/registrations`}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Register Visitor
-                </Link>
-              </Button>
-            </div>
-          )}
-        </div>
+        <PageHeader
+          backHref={`/events/${id}`}
+          title="Event Registrations"
+          description={event.title}
+          actions={
+            currentUser.role !== 'member' ? (
+              <>
+                <RegisterMembersDialog
+                  eventId={id}
+                  availableMembers={availableMembers}
+                />
+                <Button asChild variant="outline">
+                  <Link href={`/visitors/new?event_id=${id}&return_to=/events/${id}/registrations`}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Register Visitor
+                  </Link>
+                </Button>
+              </>
+            ) : undefined
+          }
+        />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Pencil, Calendar, MapPin, Building2, Clock, Users, ImageIcon } from 'lucide-react'
+import { Pencil, Calendar, MapPin, Building2, Clock, Users, ImageIcon } from 'lucide-react'
 import { getEventById } from '@/lib/queries/events'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { PageHeader } from '@/components/shared'
 
 interface EventDetailPageProps {
   params: Promise<{ id: string }>
@@ -47,23 +48,18 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
     return (
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* Header with back button */}
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" asChild>
-            <Link href="/events">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Events
-            </Link>
-          </Button>
-          <div className="flex gap-2">
+        <PageHeader
+          backHref="/events"
+          title={event.title}
+          actions={
             <Button variant="outline" asChild>
               <Link href={`/events/${id}/edit`}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </Link>
             </Button>
-          </div>
-        </div>
+          }
+        />
 
         {/* Event Image */}
         <div className="relative h-64 md:h-96 w-full overflow-hidden bg-gray-100">
@@ -87,9 +83,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         <div className="bg-white border border-primary/20 p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="space-y-2">
-              <h1 className="font-display text-3xl  text-primary">
-                {event.title}
-              </h1>
               <div className="flex items-center gap-2">
                 {getEventTypeBadge(event.event_type)}
                 {isUpcoming && (

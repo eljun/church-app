@@ -1,10 +1,9 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
-import { ArrowLeftIcon, FilterIcon } from 'lucide-react'
+import { FilterIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { CustomReportBuilder } from '@/components/reports/custom-report-builder'
+import { PageHeader } from '@/components/shared'
 
 interface CustomReportsPageProps {
   searchParams: Promise<{
@@ -33,24 +32,11 @@ export default async function CustomReportsPage({ searchParams }: CustomReportsP
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/reports">
-              <ArrowLeftIcon className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="font-display text-3xl  text-primary ">
-              Custom Reports
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Build and export custom reports with your own filters
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        backHref="/reports"
+        title="Custom Reports"
+        description="Build and export custom reports with your own filters"
+      />
 
       {/* Report builder */}
       <Card>

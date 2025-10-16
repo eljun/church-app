@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, User, Building, FileText, XCircle } from 'lucide-react'
+import { Calendar, User, Building, FileText, XCircle } from 'lucide-react'
 import { getTransferRequestById } from '@/lib/queries/transfers'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TransferActions } from '@/components/transfers/transfer-actions'
+import { PageHeader } from '@/components/shared'
 
 interface TransferDetailPageProps {
   params: Promise<{ id: string }>
@@ -36,21 +37,12 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
 
   return (
     <div className="space-y-6">
-      {/* Back button and header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/transfers">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="font-display text-3xl  text-primary ">Transfer Request Details</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            View and manage this transfer request
-          </p>
-        </div>
-        {getStatusBadge(transfer.status)}
-      </div>
+      <PageHeader
+        backHref="/transfers"
+        title="Transfer Request Details"
+        description="View and manage this transfer request"
+        actions={getStatusBadge(transfer.status)}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main content */}

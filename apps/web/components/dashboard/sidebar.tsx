@@ -17,6 +17,7 @@ import {
   ChevronRight,
   UserRound,
   ClipboardCheck,
+  BookHeart,
   type LucideIcon
 } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
@@ -112,6 +113,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       title: 'Analytics & Reports',
       items: [
         { name: 'Attendance', href: '/attendance', icon: ClipboardCheck },
+        { name: 'Missionary Reports', href: '/missionary-reports', icon: BookHeart },
         { name: 'Reports', href: '/reports', icon: FileText },
       ]
     })
@@ -135,6 +137,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       title: 'Analytics',
       items: [
         { name: 'Attendance', href: '/attendance', icon: ClipboardCheck },
+        { name: 'Missionary Reports', href: '/missionary-reports', icon: BookHeart },
         { name: 'Reports', href: '/reports', icon: FileText },
       ]
     })
@@ -178,6 +181,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       title: 'Analytics',
       items: [
         { name: 'Attendance', href: '/attendance', icon: ClipboardCheck },
+        { name: 'Missionary Reports', href: '/missionary-reports', icon: BookHeart },
         { name: 'Reports', href: '/reports', icon: FileText },
       ]
     })
@@ -288,9 +292,9 @@ export function DashboardSidebar({ user }: SidebarProps) {
 
             {/* Grouped items */}
             {!isCollapsed && groups.length > 0 && (
-              <Accordion type="multiple" defaultValue={groups.map((_, i) => `group-${i}`)} className="space-y-1">
-                {groups.map((group, groupIndex) => (
-                  <AccordionItem key={`group-${groupIndex}`} value={`group-${groupIndex}`} className="border-0">
+              <Accordion type="multiple" defaultValue={groups.map((group) => group.title)} className="space-y-1">
+                {groups.map((group) => (
+                  <AccordionItem key={group.title} value={group.title} className="border-0">
                     <AccordionTrigger className="py-4 px-4 hover:no-underline hover:bg-white/10 text-white font-display text-sm font-medium rounded-none">
                       {group.title}
                     </AccordionTrigger>
