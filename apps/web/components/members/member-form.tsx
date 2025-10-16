@@ -403,7 +403,7 @@ export function MemberForm({
           control={form.control}
           name="status"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="relative">
               <FormLabel>Status</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>

@@ -190,10 +190,10 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                   onValueChange={setChurchId}
                   showDistrictAndField
                 />
+                <p className="text-xs text-muted-foreground">
+                  Admin users manage a specific church
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Admin users manage a specific church
-              </p>
             </div>
           )}
 
@@ -254,10 +254,10 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                   selectedIds={assignedChurchIds}
                   onChange={setAssignedChurchIds}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Bible workers can work across multiple churches and areas
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Bible workers can work across multiple churches and areas
-              </p>
             </div>
           )}
 

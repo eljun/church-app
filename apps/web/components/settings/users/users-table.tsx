@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 import {
   Crown,
@@ -74,9 +75,17 @@ export function UsersTable({
   totalPages,
   totalCount,
 }: UsersTableProps) {
+  const searchParams = useSearchParams()
   const [editingUser, setEditingUser] = useState<UserWithChurch | null>(null)
   const [deletingUser, setDeletingUser] = useState<UserWithChurch | null>(null)
   const [resettingPassword, setResettingPassword] = useState<UserWithChurch | null>(null)
+
+  // Build pagination URLs that preserve search params
+  const buildPageUrl = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('page', page.toString())
+    return `?${params.toString()}`
+  }
 
   if (users.length === 0) {
     return (
@@ -90,7 +99,7 @@ export function UsersTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -216,7 +225,7 @@ export function UsersTable({
               asChild
               disabled={currentPage === 1}
             >
-              <Link href={`?page=${currentPage - 1}`}>
+              <Link href={buildPageUrl(currentPage - 1)}>
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
               </Link>
@@ -230,7 +239,7 @@ export function UsersTable({
               asChild
               disabled={currentPage === totalPages}
             >
-              <Link href={`?page=${currentPage + 1}`}>
+              <Link href={buildPageUrl(currentPage + 1)}>
                 Next
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Link>

@@ -1,14 +1,14 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Users as UsersIcon, Shield, Crown, Church, BookOpen, UserCog } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { getUsers, getUserStats } from '@/lib/queries/users'
+import { getUsers } from '@/lib/queries/users'
 import { getChurches } from '@/lib/queries/churches'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { UsersTable } from '@/components/settings/users/users-table'
 import { CreateUserDialog } from '@/components/settings/users/create-user-dialog'
+import { PageFilters } from '@/components/shared/page-filters'
 
 export const metadata = {
   title: 'User Management',
@@ -16,11 +16,11 @@ export const metadata = {
 }
 
 interface UsersPageProps {
-  searchParams: Promise<{ page?: string; role?: string }>
+  searchParams: Promise<{ page?: string; role?: string; query?: string }>
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
-  const { page: pageParam, role: roleFilter } = await searchParams
+  const { page: pageParam, role: roleFilter, query: searchQuery } = await searchParams
   const supabase = await createClient()
 
   // Get current user
@@ -70,10 +70,26 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         <CreateUserDialog churches={churches} />
       </div>
 
-      {/* Statistics */}
-      <Suspense fallback={<StatsSkeleton />}>
-        <UserStats />
-      </Suspense>
+      {/* Search and Filters */}
+      <PageFilters
+        searchPlaceholder="Search users by email..."
+        advancedFilters={[
+          {
+            key: 'role',
+            label: 'Role',
+            options: [
+              { value: 'all', label: 'All Roles' },
+              { value: 'superadmin', label: 'Superadmin' },
+              { value: 'coordinator', label: 'Coordinator' },
+              { value: 'pastor', label: 'Pastor' },
+              { value: 'bibleworker', label: 'Bible Worker' },
+              { value: 'admin', label: 'Admin' },
+              { value: 'member', label: 'Member' },
+            ],
+          },
+        ]}
+        basePath="/settings/users"
+      />
 
       {/* Users Table */}
       <Suspense fallback={<UsersTableSkeleton />}>
@@ -82,67 +98,10 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           limit={limit}
           offset={offset}
           roleFilter={roleFilter}
+          searchQuery={searchQuery}
           churches={churches}
         />
       </Suspense>
-    </div>
-  )
-}
-
-async function UserStats() {
-  const stats = await getUserStats()
-
-  const roleIcons = {
-    superadmin: Crown,
-    coordinator: UserCog,
-    pastor: Church,
-    bibleworker: BookOpen,
-    admin: Shield,
-    member: UsersIcon,
-  }
-
-  const roleColors = {
-    superadmin: 'text-purple-600 bg-purple-50 border-purple-200',
-    coordinator: 'text-blue-600 bg-blue-50 border-blue-200',
-    pastor: 'text-green-600 bg-green-50 border-green-200',
-    bibleworker: 'text-orange-600 bg-orange-50 border-orange-200',
-    admin: 'text-indigo-600 bg-indigo-50 border-indigo-200',
-    member: 'text-gray-600 bg-gray-50 border-gray-200',
-  }
-
-  return (
-    <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
-      <Card className="border-primary/50 bg-primary/5">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Users</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
-            </div>
-            <UsersIcon className="h-8 w-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {(Object.keys(roleIcons) as Array<keyof typeof roleIcons>).map((role) => {
-        const Icon = roleIcons[role]
-        const colorClass = roleColors[role]
-        return (
-          <Card key={role} className={`border ${colorClass}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground capitalize">
-                    {role === 'bibleworker' ? 'Bible Worker' : role}
-                  </p>
-                  <p className="text-xl font-bold">{stats[role]}</p>
-                </div>
-                <Icon className="h-6 w-6" />
-              </div>
-            </CardContent>
-          </Card>
-        )
-      })}
     </div>
   )
 }
@@ -152,87 +111,51 @@ async function UsersTableWrapper({
   limit,
   offset,
   roleFilter,
+  searchQuery,
   churches,
 }: {
   page: number
   limit: number
   offset: number
   roleFilter?: string
+  searchQuery?: string
   churches: Array<{ id: string; name: string; district: string; field: string }>
 }) {
-  // Fetch users
+  // Fetch users with search
   const { data: users, count } = await getUsers({
     limit,
     offset,
     role: roleFilter as 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'admin' | 'member' | undefined,
+    query: searchQuery,
   })
 
   const totalPages = Math.ceil(count / limit)
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>System Users</CardTitle>
-            <CardDescription>
-              {count} total users • Page {page} of {totalPages}
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <UsersTable
-          users={users}
-          churches={churches}
-          currentPage={page}
-          totalPages={totalPages}
-          totalCount={count}
-        />
-      </CardContent>
-    </Card>
-  )
-}
-
-function StatsSkeleton() {
-  return (
-    <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
-      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-        <Card key={i}>
-          <CardContent className="p-4">
-            <div className="animate-pulse space-y-2">
-              <div className="h-4 w-16 bg-gray-200 rounded" />
-              <div className="h-6 w-10 bg-gray-200 rounded" />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div>
+      <UsersTable
+        users={users}
+        churches={churches}
+        currentPage={page}
+        totalPages={totalPages}
+        totalCount={count}
+      />
     </div>
   )
 }
 
 function UsersTableSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <div className="animate-pulse space-y-2">
-          <div className="h-6 w-32 bg-gray-200 rounded" />
-          <div className="h-4 w-48 bg-gray-200 rounded" />
+    <div className="space-y-3">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="animate-pulse flex items-center gap-4 border-b pb-3">
+          <div className="h-12 w-12 bg-gray-200 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-48 bg-gray-200 rounded" />
+            <div className="h-3 w-32 bg-gray-200 rounded" />
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="animate-pulse flex items-center gap-4">
-              <div className="h-12 w-12 bg-gray-200 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-48 bg-gray-200 rounded" />
-                <div className="h-3 w-32 bg-gray-200 rounded" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+      ))}
+    </div>
   )
 }
