@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, UserPlus, Users, CheckCircle, XCircle, TrendingUp } from 'lucide-react'
+import { ArrowLeft, UserPlus, Users, CheckCircle, XCircle, TrendingUp, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getEventById } from '@/lib/queries/events'
 import {
@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatisticsCard } from '@/components/reports/statistics-card'
 import { RegisterMembersDialog } from '@/components/events/registrations/register-members-dialog'
-import { RegisterVisitorDialog } from '@/components/events/registrations/register-visitor-dialog'
 import { RegistrationsTable } from '@/components/events/registrations/registrations-table'
 
 interface EventRegistrationsPageProps {
@@ -42,13 +41,6 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
     if (!currentUser) {
       return null
     }
-
-    // Fetch all churches for visitor church association
-    const { data: churches } = await supabase
-      .from('churches')
-      .select('*')
-      .eq('is_active', true)
-      .order('name')
 
     const [event, { data: registrations, count }, stats, availableMembers] = await Promise.all([
       getEventById(id),
@@ -83,11 +75,12 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
                 eventId={id}
                 availableMembers={availableMembers}
               />
-              <RegisterVisitorDialog
-                eventId={id}
-                churches={churches || []}
-                defaultChurchId={currentUser.role === 'admin' ? currentUser.church_id || undefined : undefined}
-              />
+              <Button asChild variant="outline">
+                <Link href={`/visitors/new?event_id=${id}&return_to=/events/${id}/registrations`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Register Visitor
+                </Link>
+              </Button>
             </div>
           )}
         </div>

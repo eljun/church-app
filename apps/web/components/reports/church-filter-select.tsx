@@ -1,18 +1,18 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Building2 } from 'lucide-react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ChurchSelect } from '@/components/shared'
 import { Label } from '@/components/ui/label'
 
 interface ChurchFilterSelectProps {
-  churches: Array<{ id: string; name: string; district: string; field: string }>
+  churches: Array<{
+    id: string
+    name: string
+    district?: string
+    field?: string
+    city?: string | null
+    province?: string | null
+  }>
   selectedChurchId?: string
 }
 
@@ -31,26 +31,13 @@ export function ChurchFilterSelect({ churches, selectedChurchId }: ChurchFilterS
       <Label htmlFor="church-filter" className="text-sm font-medium mb-2 block">
         Filter by Church
       </Label>
-      <Select value={selectedChurchId} onValueChange={handleChurchChange}>
-        <SelectTrigger id="church-filter" className="w-full">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-            <SelectValue placeholder="Select a church" />
-          </div>
-        </SelectTrigger>
-        <SelectContent>
-          {churches.map((church) => (
-            <SelectItem key={church.id} value={church.id}>
-              <div className="flex flex-col items-start">
-                <span className="font-medium">{church.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {church.district} • {church.field}
-                </span>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <ChurchSelect
+        churches={churches}
+        value={selectedChurchId}
+        onValueChange={handleChurchChange}
+        placeholder="Select a church"
+        showDistrictAndField={true}
+      />
     </div>
   )
 }

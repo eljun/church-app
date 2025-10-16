@@ -15,14 +15,16 @@ import {
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { ChurchSelect } from '@/components/transfers/church-select'
+import { ChurchSelect } from '@/components/shared'
 import { createTransferRequest } from '@/lib/actions/transfers'
 
 interface Church {
   id: string
   name: string
-  field: string
-  district: string
+  field?: string
+  district?: string
+  city?: string | null
+  province?: string | null
 }
 
 interface Member {
@@ -154,7 +156,7 @@ export function BulkTransferForm({
             <ChurchSelect
               churches={churches}
               value={fromChurchId}
-              onChange={setFromChurchId}
+              onValueChange={setFromChurchId}
             />
           </CardContent>
         </Card>
@@ -229,7 +231,7 @@ export function BulkTransferForm({
             <ChurchSelect
               churches={churches}
               value={toChurchId}
-              onChange={setToChurchId}
+              onValueChange={setToChurchId}
               excludeChurchId={fromChurchId}
             />
           </CardContent>

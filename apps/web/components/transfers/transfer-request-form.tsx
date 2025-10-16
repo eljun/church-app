@@ -21,13 +21,15 @@ import {
 } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { MemberSelect } from '@/components/transfers/member-select'
-import { ChurchSelect } from '@/components/transfers/church-select'
+import { ChurchSelect } from '@/components/shared'
 
 interface Church {
   id: string
   name: string
-  field: string
-  district: string
+  field?: string
+  district?: string
+  city?: string | null
+  province?: string | null
 }
 
 interface Member {
@@ -160,7 +162,7 @@ export function TransferRequestForm({
                 <ChurchSelect
                   churches={churches}
                   value={field.value}
-                  onChange={field.onChange}
+                  onValueChange={field.onChange}
                   excludeChurchId={form.watch('from_church_id')}
                 />
               </FormControl>

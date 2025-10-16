@@ -36,11 +36,15 @@ import {
 } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { ChurchSelect } from '@/components/members/church-select'
+import { ChurchSelect } from '@/components/shared'
 
 interface Church {
   id: string
   name: string
+  district?: string
+  field?: string
+  city?: string | null
+  province?: string | null
 }
 
 interface MemberFormProps {

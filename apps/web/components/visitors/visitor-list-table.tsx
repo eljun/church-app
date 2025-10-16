@@ -1,18 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Search, Phone, Mail, Eye, Clock } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { useRouter } from 'next/navigation'
+import { Phone, Mail, Eye, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -37,33 +29,25 @@ interface Visitor {
 
 interface VisitorListTableProps {
   visitors: Visitor[]
+  currentPage: number
+  totalPages: number
+  totalCount: number
 }
 
-export function VisitorListTable({ visitors }: VisitorListTableProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [typeFilter, setTypeFilter] = useState<string>('all')
+export function VisitorListTable({
+  visitors,
+  currentPage,
+  totalPages,
+  totalCount
+}: VisitorListTableProps) {
+  const router = useRouter()
 
-  // Filter visitors
-  const filteredVisitors = useMemo(() => {
-    return visitors.filter((visitor) => {
-      // Search filter
-      const matchesSearch =
-        searchQuery === '' ||
-        visitor.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        visitor.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        visitor.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(window.location.search)
+    params.set('page', page.toString())
+    router.push(`?${params.toString()}`)
+  }
 
-      // Status filter
-      const matchesStatus =
-        statusFilter === 'all' || visitor.follow_up_status === statusFilter
-
-      // Type filter
-      const matchesType = typeFilter === 'all' || visitor.visitor_type === typeFilter
-
-      return matchesSearch && matchesStatus && matchesType
-    })
-  }, [visitors, searchQuery, statusFilter, typeFilter])
 
   // Get status badge color
   const getStatusColor = (status: string) => {
@@ -99,57 +83,8 @@ export function VisitorListTable({ visitors }: VisitorListTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-1 gap-4">
-          {/* Search */}
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, phone, or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          {/* Status Filter */}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="contacted">Contacted</SelectItem>
-              <SelectItem value="interested">Interested</SelectItem>
-              <SelectItem value="not_interested">Not Interested</SelectItem>
-              <SelectItem value="converted">Converted</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Type Filter */}
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Filter by type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="adult">Adult</SelectItem>
-              <SelectItem value="youth">Youth</SelectItem>
-              <SelectItem value="child">Child</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Results count */}
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredVisitors.length} of {visitors.length} visitors
-        </div>
-      </div>
-
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
@@ -162,76 +97,60 @@ export function VisitorListTable({ visitors }: VisitorListTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredVisitors.length === 0 ? (
+            {visitors.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No visitors found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredVisitors.map((visitor) => (
+              visitors.map((visitor) => (
                 <TableRow key={visitor.id}>
-                  {/* Name */}
-                  <TableCell className="font-medium">
-                    <Link
-                      href={`/visitors/${visitor.id}`}
-                      className="hover:underline"
-                    >
-                      {visitor.full_name}
-                    </Link>
-                  </TableCell>
-
-                  {/* Contact */}
                   <TableCell>
-                    <div className="flex flex-col gap-1 text-sm">
+                    <div className="font-medium">{visitor.full_name}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
                       {visitor.phone && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Phone className="h-3 w-3" />
-                          <span>{visitor.phone}</span>
+                          {visitor.phone}
                         </div>
                       )}
                       {visitor.email && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Mail className="h-3 w-3" />
-                          <span className="truncate max-w-[200px]">{visitor.email}</span>
+                          {visitor.email}
                         </div>
                       )}
                     </div>
                   </TableCell>
-
-                  {/* Type */}
                   <TableCell>
                     <Badge className={getTypeColor(visitor.visitor_type)}>
                       {visitor.visitor_type}
                     </Badge>
                   </TableCell>
-
-                  {/* Follow-up Status */}
                   <TableCell>
                     <Badge className={getStatusColor(visitor.follow_up_status)}>
                       {visitor.follow_up_status.replace('_', ' ')}
                     </Badge>
                   </TableCell>
-
-                  {/* First Visit */}
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell>
                     {visitor.first_visit_date ? (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(new Date(visitor.first_visit_date), {
                           addSuffix: true,
                         })}
                       </div>
                     ) : (
-                      '-'
+                      <span className="text-sm text-muted-foreground">-</span>
                     )}
                   </TableCell>
-
-                  {/* Actions */}
                   <TableCell className="text-right">
                     <Button asChild variant="ghost" size="sm">
                       <Link href={`/visitors/${visitor.id}`}>
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Eye className="h-4 w-4 mr-2" />
                         View
                       </Link>
                     </Button>
@@ -242,6 +161,35 @@ export function VisitorListTable({ visitors }: VisitorListTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing page {currentPage} of {totalPages} ({totalCount.toLocaleString()} total visitors)
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

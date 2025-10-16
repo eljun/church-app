@@ -29,9 +29,17 @@ import type {
   MemberReportRow,
 } from '@/lib/types/custom-reports'
 import { MEMBER_FIELD_LABELS } from '@/lib/types/custom-reports'
+import { ChurchSelect } from '@/components/shared'
 
 interface CustomReportBuilderProps {
-  churches: Array<{ id: string; name: string }>
+  churches: Array<{
+    id: string
+    name: string
+    district?: string
+    field?: string
+    city?: string | null
+    province?: string | null
+  }>
   userRole: string
   initialTemplate?: string
 }
@@ -196,27 +204,20 @@ export function CustomReportBuilder({
           {userRole !== 'admin' && (
             <div className="space-y-2">
               <Label>Church</Label>
-              <Select
-                value={filters.church_id || 'all'}
+              <ChurchSelect
+                churches={churches}
+                value={filters.church_id}
                 onValueChange={(value) =>
                   setFilters(prev => ({
                     ...prev,
-                    church_id: value === 'all' ? undefined : value,
+                    church_id: value || undefined,
                   }))
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Churches" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Churches</SelectItem>
-                  {churches.map(church => (
-                    <SelectItem key={church.id} value={church.id}>
-                      {church.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="All Churches"
+                allowEmpty={true}
+                showDistrictAndField={true}
+                emptyLabel="All Churches"
+              />
             </div>
           )}
 

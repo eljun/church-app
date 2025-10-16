@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { createUser } from '@/lib/actions/users'
-import { ChurchSelect } from '@/components/members/church-select'
+import { ChurchSelect } from '@/components/shared'
 import { ChurchMultiSelect } from './church-multi-select'
 import type { UserRole } from '@/lib/validations/user'
 

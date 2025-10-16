@@ -27,7 +27,7 @@ export default async function CustomReportsPage({ searchParams }: CustomReportsP
   // Get churches for filter
   const { data: churches } = await supabase
     .from('churches')
-    .select('id, name')
+    .select('id, name, city, province, district, field')
     .eq('is_active', true)
     .order('name')
 

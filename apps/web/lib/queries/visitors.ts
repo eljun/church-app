@@ -83,8 +83,10 @@ export async function getVisitors(filters?: FilterVisitorsInput) {
     query = query.eq('referral_source', filters.referral_source)
   }
 
-  if (filters?.search) {
-    query = query.ilike('full_name', `%${filters.search}%`)
+  // Search by name, phone, or email
+  const searchTerm = filters?.query || filters?.search
+  if (searchTerm) {
+    query = query.or(`full_name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
   }
 
   // Apply pagination and ordering

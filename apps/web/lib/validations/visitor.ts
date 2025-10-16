@@ -200,7 +200,8 @@ export const filterVisitorsSchema = z.object({
   is_baptized: z.boolean().optional(),
   follow_up_status: followUpStatusSchema.optional(),
   referral_source: referralSourceSchema.optional(),
-  search: z.string().optional(), // Search by name
+  query: z.string().optional(), // Search by name, phone, or email
+  search: z.string().optional(), // Deprecated: use query instead
   limit: z.number().int().min(1).max(100).default(20),
   offset: z.number().int().min(0).default(0),
 })

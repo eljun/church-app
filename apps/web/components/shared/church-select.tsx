@@ -23,6 +23,8 @@ interface Church {
   name: string
   field?: string
   district?: string
+  city?: string | null
+  province?: string | null
 }
 
 interface ChurchSelectProps {
@@ -33,6 +35,8 @@ interface ChurchSelectProps {
   placeholder?: string
   allowEmpty?: boolean
   showDistrictAndField?: boolean
+  excludeChurchId?: string
+  emptyLabel?: string
 }
 
 export function ChurchSelect({
@@ -42,15 +46,55 @@ export function ChurchSelect({
   disabled,
   placeholder = 'Select a church',
   allowEmpty = false,
-  showDistrictAndField = false,
+  showDistrictAndField = true,
+  excludeChurchId,
+  emptyLabel = 'None (All churches)',
 }: ChurchSelectProps) {
   const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState('')
 
   const selectedChurch = churches.find((church) => church.id === value)
 
+  // Filter out excluded church if specified and sort alphabetically
+  const availableChurches = React.useMemo(() => {
+    const filtered = excludeChurchId
+      ? churches.filter((church) => church.id !== excludeChurchId)
+      : churches
+
+    // Sort alphabetically by church name
+    return filtered.sort((a, b) => a.name.localeCompare(b.name))
+  }, [churches, excludeChurchId])
+
+  // Client-side search filtering
+  const filteredChurches = React.useMemo(() => {
+    if (!search) return availableChurches
+
+    const searchLower = search.toLowerCase()
+    return availableChurches.filter((church) => {
+      const searchableText = [
+        church.name,
+        church.city,
+        church.province,
+        church.district,
+        church.field,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      return searchableText.includes(searchLower)
+    })
+  }, [availableChurches, search])
+
   const handleSelect = (churchId: string) => {
-    onValueChange(churchId === value ? '' : churchId)
+    if (allowEmpty && churchId === value) {
+      // Allow deselection if allowEmpty is true
+      onValueChange('')
+    } else {
+      onValueChange(churchId)
+    }
     setOpen(false)
+    setSearch('') // Reset search when closing
   }
 
   return (
@@ -67,13 +111,17 @@ export function ChurchSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Search churches..." />
-          <CommandList>
+      <PopoverContent className="w-[400px] p-0" align="start" sideOffset={5}>
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Search churches..."
+            value={search}
+            onValueChange={setSearch}
+          />
+          <CommandList className="max-h-[300px] overflow-y-auto">
             <CommandEmpty>No churches found.</CommandEmpty>
             <CommandGroup>
-              {allowEmpty && (
+              {allowEmpty && !search && (
                 <CommandItem
                   value="empty-selection"
                   onSelect={() => handleSelect('')}
@@ -85,11 +133,11 @@ export function ChurchSelect({
                     )}
                   />
                   <span className="text-muted-foreground italic">
-                    None (All churches)
+                    {emptyLabel}
                   </span>
                 </CommandItem>
               )}
-              {churches.map((church) => (
+              {filteredChurches.map((church) => (
                 <CommandItem
                   key={church.id}
                   value={church.name}
@@ -98,17 +146,22 @@ export function ChurchSelect({
                   <Check
                     className={cn(
                       'mr-2 h-4 w-4',
-                      value === church.id ? 'opacity-100' : 'opacity-0'
+                      value === church.id ? 'opacity-100 text-accent' : 'opacity-0'
                     )}
                   />
-                  <div className="flex flex-col items-start">
-                    <span>{church.name}</span>
-                    {showDistrictAndField && (church.district || church.field) && (
-                      <span className="text-xs text-muted-foreground">
-                        {church.district && `District: ${church.district}`}
-                        {church.district && church.field && ' • '}
-                        {church.field && `Field: ${church.field}`}
-                      </span>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="font-medium text-primary">{church.name}</span>
+                    {showDistrictAndField && (
+                      <div className="text-xs text-muted-foreground">
+                        {[
+                          church.city,
+                          church.province,
+                          church.district,
+                          church.field,
+                        ]
+                          .filter(Boolean)
+                          .join(' • ')}
+                      </div>
                     )}
                   </div>
                 </CommandItem>

@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { updateUser } from '@/lib/actions/users'
-import { ChurchSelect } from '@/components/members/church-select'
+import { ChurchSelect } from '@/components/shared'
 import { MemberMultiSelect } from './member-multi-select'
 import type { UserRole } from '@/lib/validations/user'
 import type { UserWithChurch } from '@/lib/queries/users'

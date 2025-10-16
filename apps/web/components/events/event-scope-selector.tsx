@@ -11,13 +11,15 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FIELDS, type EventScope } from '@/lib/constants/organization'
-import { ChurchSelect } from '@/components/members/church-select'
+import { ChurchSelect } from '@/components/shared'
 
 interface Church {
   id: string
   name: string
   field?: string
   district?: string
+  city?: string | null
+  province?: string | null
 }
 
 interface EventScopeSelectorProps {

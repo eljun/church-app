@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/popover'
 import { toast } from 'sonner'
 import { createAndRegisterVisitor, createVisitor } from '@/lib/actions/visitors'
-import { ChurchSelect } from '@/components/members/church-select'
+import { ChurchSelect } from '@/components/shared'
 import { countries } from '@/lib/data/countries'
 import { cn } from '@/lib/utils'
 import type { Church, Visitor } from '@church-app/database'

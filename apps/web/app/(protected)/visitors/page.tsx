@@ -1,16 +1,33 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getVisitors } from '@/lib/queries/visitors'
-import { getChurches } from '@/lib/queries/churches'
 import { VisitorListTable } from '@/components/visitors/visitor-list-table'
-import { RegisterVisitorDialog } from '@/components/events/registrations/register-visitor-dialog'
+import { VisitorsFilters } from '@/components/visitors/visitors-filters'
+import { Button } from '@/components/ui/button'
 
 export const metadata = {
   title: 'Visitors',
   description: 'Manage visitors and track follow-ups',
 }
 
-export default async function VisitorsPage() {
+interface VisitorsPageProps {
+  searchParams: Promise<{
+    query?: string
+    visitor_type?: 'adult' | 'youth' | 'child'
+    follow_up_status?: 'pending' | 'contacted' | 'interested' | 'not_interested' | 'converted'
+    referral_source?: 'member_invitation' | 'online' | 'walk_in' | 'social_media' | 'other'
+    page?: string
+  }>
+}
+
+export default async function VisitorsPage({ searchParams }: VisitorsPageProps) {
+  const params = await searchParams
+  const page = parseInt(params.page || '1')
+  const limit = 50
+  const offset = (page - 1) * limit
   const supabase = await createClient()
 
   // Get current user
@@ -30,15 +47,19 @@ export default async function VisitorsPage() {
     redirect('/login')
   }
 
-  // Get visitors based on role
+  // Get visitors based on role and filters
   const churchId = currentUser.role === 'admin' ? currentUser.church_id : undefined
   const visitorsData = await getVisitors({
-    limit: 1000, // Get all visitors for now (can add pagination later)
-    offset: 0,
+    query: params.query,
+    visitor_type: params.visitor_type,
+    follow_up_status: params.follow_up_status,
+    referral_source: params.referral_source,
     church_id: churchId || undefined,
+    limit,
+    offset,
   })
 
-  const churchesData = await getChurches()
+  const totalPages = Math.ceil(visitorsData.count / limit)
 
   return (
     <div className="space-y-6">
@@ -46,21 +67,32 @@ export default async function VisitorsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl text-primary">Visitors</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage visitors and track follow-up activities
+          <p className="mt-1 text-sm text-foreground">
+            Manage visitors and track follow-up activities ({visitorsData.count.toLocaleString()} total)
           </p>
         </div>
-        <RegisterVisitorDialog
-          eventId={null}
-          churches={churchesData?.data || []}
-          defaultChurchId={currentUser.role === 'admin' ? currentUser.church_id || undefined : undefined}
-        />
+        <Button asChild>
+          <Link href="/visitors/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Register Visitor
+          </Link>
+        </Button>
       </div>
 
+      {/* Filters */}
+      <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 rounded-lg" />}>
+        <VisitorsFilters />
+      </Suspense>
+
       {/* Visitors Table */}
-      <VisitorListTable
-        visitors={visitorsData.data || []}
-      />
+      <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>
+        <VisitorListTable
+          visitors={visitorsData.data || []}
+          currentPage={page}
+          totalPages={totalPages}
+          totalCount={visitorsData.count}
+        />
+      </Suspense>
     </div>
   )
 }

@@ -19,7 +19,9 @@ import { cn } from '@/lib/utils'
 import { recordBulkAttendance } from '@/lib/actions/attendance'
 import { fetchMembersForAttendance } from '@/lib/actions/members'
 import { fetchVisitorsForAttendance } from '@/lib/actions/visitors'
-import { RegisterVisitorDialog } from '@/components/events/registrations/register-visitor-dialog'
+import { ChurchSelect } from '@/components/shared'
+import Link from 'next/link'
+import { Plus } from 'lucide-react'
 
 interface QuickAttendanceFormProps {
   currentUser: UserType & { churches?: Church }
@@ -190,18 +192,13 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
           ) : (
             <div className="space-y-2">
               <Label htmlFor="church">Church</Label>
-              <Select value={selectedChurchId} onValueChange={setSelectedChurchId}>
-                <SelectTrigger id="church">
-                  <SelectValue placeholder="Select church" />
-                </SelectTrigger>
-                <SelectContent>
-                  {churches.map((church) => (
-                    <SelectItem key={church.id} value={church.id}>
-                      {church.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ChurchSelect
+                churches={churches}
+                value={selectedChurchId}
+                onValueChange={setSelectedChurchId}
+                placeholder="Select church"
+                showDistrictAndField={true}
+              />
             </div>
           )}
 
@@ -347,15 +344,12 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
                 <p className="text-sm text-muted-foreground">
                   Select visitors who attended
                 </p>
-                <RegisterVisitorDialog
-                  eventId={null}
-                  churches={churches}
-                  defaultChurchId={selectedChurchId}
-                  onSuccess={(visitor) => {
-                    setVisitors([visitor, ...visitors])
-                    toast.success('Visitor added successfully')
-                  }}
-                />
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/visitors/new?return_to=/attendance`}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Register Visitor
+                  </Link>
+                </Button>
               </div>
 
               <div className="max-h-[400px] overflow-y-auto border rounded-lg p-4 space-y-2">
