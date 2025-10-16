@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Church } from '@church-app/database'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageHeader } from '@/components/shared'
 import { getMissionaryReports, getMissionaryReportStats } from '@/lib/queries/missionary-reports'
 import { MissionaryActivitiesFilters } from '@/components/reports/missionary-activities-filters'
@@ -51,7 +51,6 @@ export default async function MissionaryActivitiesReportPage({ searchParams }: P
   const params = await searchParams
 
   // Calculate date range based on period
-  const now = new Date()
   let startDate = params.start_date
   let endDate = params.end_date
 

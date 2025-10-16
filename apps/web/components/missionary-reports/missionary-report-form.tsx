@@ -186,7 +186,7 @@ export function MissionaryReportForm({
               <FormField
                 control={form.control}
                 name="church_id"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Church</FormLabel>
                     <FormControl>

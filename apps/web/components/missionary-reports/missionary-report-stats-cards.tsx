@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { BookOpen, Home, Users, FileText, MessageSquare, Book, Newspaper, User2 } from 'lucide-react'
+import { BookOpen, Home, Users, FileText, Book, User2 } from 'lucide-react'
 
 interface MissionaryReportStatsCardsProps {
   stats: {
