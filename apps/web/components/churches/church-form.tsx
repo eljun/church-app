@@ -247,7 +247,7 @@ export function ChurchForm({ initialData, mode = 'create' }: ChurchFormProps) {
         </div>
 
         {/* Additional Information */}
-        <div className="space-y-4">
+        <div className="space-y-4 relative">
           <h2 className="text-lg font-semibold ">Additional Information</h2>
 
           {/* Established Date */}
@@ -299,7 +299,7 @@ export function ChurchForm({ initialData, mode = 'create' }: ChurchFormProps) {
             control={form.control}
             name="is_active"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 border p-4">
                 <FormControl>
                   <Checkbox
                     checked={field.value}

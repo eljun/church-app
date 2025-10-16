@@ -149,7 +149,7 @@ export function ImageUpload({
               <div
                 {...getRootProps()}
                 className={cn(
-                  'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
+                  'border-2 border-dashed p-8 text-center cursor-pointer transition-colors',
                   isDragActive
                     ? 'border-primary bg-primary/5'
                     : 'border-gray-300 hover:border-gray-400',
@@ -165,7 +165,7 @@ export function ImageUpload({
                     </>
                   ) : (
                     <>
-                      <div className="rounded-full bg-primary/10 p-3">
+                      <div className="bg-primary/10 p-3">
                         <Upload className="h-8 w-8 text-primary" />
                       </div>
                       <div className="text-sm text-gray-600">
@@ -268,7 +268,7 @@ export function ImageUpload({
                 </div>
 
                 {/* Index number */}
-                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1">
                   {index + 1}
                 </div>
               </div>
@@ -279,7 +279,7 @@ export function ImageUpload({
 
       {/* Empty State */}
       {value.length === 0 && !uploading && (
-        <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+        <div className="text-center py-8 border-2 border-dashed border-gray-200">
           <ImageIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-sm text-gray-500">No images uploaded yet</p>
         </div>

@@ -411,7 +411,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
             <DropdownMenuItem asChild>
               <Link href="/settings" className="cursor-pointer text-primary">
                 <Settings className="w-4 h-4 mr-2 text-primary" />
-                Settings
+                User Settings
               </Link>
             </DropdownMenuItem>            
             <DropdownMenuItem
