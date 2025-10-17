@@ -1,9 +1,10 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { getChurches } from '@/lib/queries/churches'
-import { getAttendanceByChurch, getAttendanceStats, getAttendanceSummaryByService, getAbsentMembers } from '@/lib/queries/attendance'
+import { getAttendanceByChurch, getAttendanceStats, getAttendanceSummaryByService, getAbsentMembers, getAttendanceTrend } from '@/lib/queries/attendance'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AlertCircle, Building2, Users, TrendingUp, CalendarDays, Church } from 'lucide-react'
@@ -11,6 +12,7 @@ import { ChurchFilterSelect } from '@/components/reports/church-filter-select'
 import { DateFilterSelect, type DateRange } from '@/components/reports/date-filter-select'
 import { StatisticsCard } from '@/components/reports/statistics-card'
 import { getDateRange } from '@/lib/utils/date-ranges'
+import { LineChart } from '@/components/shared'
 
 export const metadata = {
   title: 'Attendance Reports',
@@ -115,11 +117,12 @@ async function ChurchAttendanceReport({
   const { startDate, endDate, label: dateLabel, daysCount } = getDateRange(dateRange)
 
   // Fetch data in parallel
-  const [stats, serviceBreakdown, absentMembers, recentAttendance] = await Promise.all([
+  const [stats, serviceBreakdown, absentMembers, recentAttendance, trendData] = await Promise.all([
     getAttendanceStats(church.id, startDate, endDate),
     getAttendanceSummaryByService(church.id, startDate, endDate),
     getAbsentMembers(church.id, 30),
-    getAttendanceByChurch(church.id, startDate, endDate)
+    getAttendanceByChurch(church.id, startDate, endDate),
+    getAttendanceTrend(church.id, startDate, endDate)
   ])
 
   // Calculate weekly average
@@ -134,6 +137,14 @@ async function ChurchAttendanceReport({
   const weeklyAverage = weeklyAttendance.size > 0
     ? Math.round(Array.from(weeklyAttendance.values()).reduce((a, b) => a + b, 0) / weeklyAttendance.size)
     : 0
+
+  // Format trend data for chart
+  const chartData = trendData.map(item => ({
+    date: format(new Date(item.date), 'MMM dd'),
+    Total: item.total,
+    Members: item.members,
+    Visitors: item.visitors,
+  }))
 
   return (
     <div className="space-y-6">
@@ -188,6 +199,28 @@ async function ChurchAttendanceReport({
         />
       </div>
 
+      {/* Attendance Trend Chart */}
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Attendance Trend</CardTitle>
+            <CardDescription>{dateLabel} attendance pattern</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LineChart
+              data={chartData}
+              lines={[
+                { dataKey: 'Total', name: 'Total Attendance', color: '#2B4C7E' },
+                { dataKey: 'Members', name: 'Members', color: '#87B984' },
+                { dataKey: 'Visitors', name: 'Visitors', color: '#D4A574' },
+              ]}
+              xAxisKey="date"
+              height={350}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Service Type Breakdown */}
       <Card>
         <CardHeader>
@@ -235,9 +268,13 @@ async function ChurchAttendanceReport({
           <CardContent>
             <div className="border divide-y max-h-96 overflow-y-auto">
               {absentMembers.slice(0, 20).map((member) => (
-                <div key={member.id} className="p-4 flex items-center justify-between hover:bg-accent transition-colors">
+                <Link
+                  key={member.id}
+                  href={`/members/${member.id}`}
+                  className="p-4 flex items-center justify-between hover:bg-accent transition-colors block"
+                >
                   <div>
-                    <p className="font-medium">{member.full_name}</p>
+                    <p className="font-medium hover:text-primary hover:underline">{member.full_name}</p>
                     {member.sp && (
                       <p className="text-sm text-muted-foreground">SP: {member.sp}</p>
                     )}
@@ -245,7 +282,7 @@ async function ChurchAttendanceReport({
                   <Badge variant="outline" className="text-orange-600 border-orange-300">
                     Absent 30+ days
                   </Badge>
-                </div>
+                </Link>
               ))}
               {absentMembers.length > 20 && (
                 <div className="p-4 text-center text-sm text-muted-foreground bg-muted">

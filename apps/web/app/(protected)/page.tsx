@@ -4,6 +4,7 @@ import {
   UserXIcon,
   CalendarHeartIcon,
   CakeIcon,
+  AlertCircle,
 } from 'lucide-react'
 import {
   getMemberStatistics,
@@ -12,6 +13,7 @@ import {
   getUpcomingBaptismAnniversaries,
   getAgeDistribution,
 } from '@/lib/queries/reports'
+import { getAbsentMembers } from '@/lib/queries/attendance'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatisticsCard } from '@/components/reports/statistics-card'
 import { LineChart } from '@/components/shared'
@@ -32,7 +34,7 @@ export default async function DashboardPage() {
     .single()
 
   // Fetch all data in parallel
-  const [memberStats, growthData, upcomingBirthdays, upcomingAnniversaries, ageDistribution, churches] =
+  const [memberStats, growthData, upcomingBirthdays, upcomingAnniversaries, ageDistribution, absentMembers, churches] =
     await Promise.all([
       getMemberStatistics(userData?.role === 'admin' ? userData.church_id : undefined),
       getMemberGrowthData({
@@ -47,6 +49,7 @@ export default async function DashboardPage() {
         months_ahead: 1,
       }),
       getAgeDistribution(userData?.role === 'admin' ? userData.church_id : undefined),
+      getAbsentMembers(userData?.role === 'admin' ? userData.church_id : undefined, 30),
       // Get church/field breakdown
       supabase
         .from('members')
@@ -280,7 +283,7 @@ export default async function DashboardPage() {
       {/* Upcoming Events */}
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Upcoming Events (Next 30 Days)</h2>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -347,6 +350,42 @@ export default async function DashboardPage() {
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">No upcoming anniversaries</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Members Needing Follow-up */}
+          <Card className="border-orange-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-600">
+                <AlertCircle className="h-5 w-5" />
+                Members Needing Follow-up
+              </CardTitle>
+              <CardDescription>Haven&apos;t attended in 30+ days</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {absentMembers.length > 0 ? (
+                <>
+                  <div className="space-y-2">
+                    {absentMembers.slice(0, 10).map((member) => (
+                      <div key={member.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                        <Link href={`/members/${member.id}`} className="font-medium hover:text-primary hover:underline">
+                          {member.full_name}
+                        </Link>
+                        <span className="text-xs text-orange-600">
+                          Absent
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button asChild variant="link" className="px-0 w-full justify-start text-orange-600">
+                    <Link href="/reports/attendance">
+                      View all {absentMembers.length} members →
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No absent members</p>
               )}
             </CardContent>
           </Card>

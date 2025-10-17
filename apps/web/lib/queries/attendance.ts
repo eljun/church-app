@@ -295,17 +295,22 @@ export async function getAttendanceSummaryByService(
  * Get members who haven't attended in the last N days
  */
 export async function getAbsentMembers(
-  churchId: string,
+  churchId?: string,
   daysSinceLastAttendance = 30
 ) {
   const supabase = await createClient()
 
-  // First, get all active members from the church
-  const { data: members, error: membersError } = await supabase
+  // First, get all active members (filtered by church if provided)
+  let membersQuery = supabase
     .from('members')
-    .select('id, full_name, sp')
-    .eq('church_id', churchId)
+    .select('id, full_name, sp, church_id')
     .eq('status', 'active')
+
+  if (churchId) {
+    membersQuery = membersQuery.eq('church_id', churchId)
+  }
+
+  const { data: members, error: membersError } = await membersQuery
 
   if (membersError) {
     console.error('Error fetching members:', membersError)
@@ -318,12 +323,17 @@ export async function getAbsentMembers(
   const cutoffDateStr = cutoffDate.toISOString().split('T')[0]
 
   // Get members who have attended since cutoff
-  const { data: recentAttendance, error: attendanceError } = await supabase
+  let attendanceQuery = supabase
     .from('attendance')
     .select('member_id')
-    .eq('church_id', churchId)
     .gte('attendance_date', cutoffDateStr)
     .not('member_id', 'is', null)
+
+  if (churchId) {
+    attendanceQuery = attendanceQuery.eq('church_id', churchId)
+  }
+
+  const { data: recentAttendance, error: attendanceError } = await attendanceQuery
 
   if (attendanceError) {
     console.error('Error fetching recent attendance:', attendanceError)
@@ -335,4 +345,52 @@ export async function getAbsentMembers(
   const absentMembers = members?.filter(m => !recentMemberIds.has(m.id)) || []
 
   return absentMembers
+}
+
+/**
+ * Get attendance trend data grouped by date for charting
+ */
+export async function getAttendanceTrend(
+  churchId: string,
+  startDate: string,
+  endDate: string
+) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('attendance_date, member_id, visitor_id, attended')
+    .eq('church_id', churchId)
+    .is('event_id', null)
+    .eq('attended', true)
+    .gte('attendance_date', startDate)
+    .lte('attendance_date', endDate)
+    .order('attendance_date', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching attendance trend:', error)
+    throw new Error(`Failed to fetch attendance trend: ${error.message}`)
+  }
+
+  // Group by date and count members vs visitors
+  const trendMap = new Map<string, { date: string; members: number; visitors: number; total: number }>()
+
+  data?.forEach(record => {
+    const date = record.attendance_date
+    const existing = trendMap.get(date) || { date, members: 0, visitors: 0, total: 0 }
+
+    if (record.member_id) {
+      existing.members++
+    } else if (record.visitor_id) {
+      existing.visitors++
+    }
+    existing.total++
+
+    trendMap.set(date, existing)
+  })
+
+  // Convert to array and sort by date
+  return Array.from(trendMap.values()).sort((a, b) =>
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  )
 }
