@@ -8,7 +8,14 @@ import { Separator } from '@/components/ui/separator'
 import { formatDistanceToNow } from 'date-fns'
 
 interface VisitorDetailCardProps {
-  visitor: Visitor
+  visitor: Visitor & {
+    associated_church?: {
+      id: string
+      name: string
+      district?: string
+      field?: string
+    } | null
+  }
 }
 
 export function VisitorDetailCard({ visitor }: VisitorDetailCardProps) {
@@ -142,7 +149,7 @@ export function VisitorDetailCard({ visitor }: VisitorDetailCardProps) {
         )}
 
         {/* Church Association */}
-        {visitor.associated_church_id && (
+        {visitor.associated_church && (
           <>
             <Separator />
             <div>
@@ -152,9 +159,11 @@ export function VisitorDetailCard({ visitor }: VisitorDetailCardProps) {
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <div className="text-sm">
-                  <p className="font-medium">Church ID: {visitor.associated_church_id}</p>
+                  <p className="font-medium">{visitor.associated_church.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {visitor.association_reason || 'Not specified'}
+                    {[visitor.associated_church.district, visitor.associated_church.field]
+                      .filter(Boolean)
+                      .join(' • ') || visitor.association_reason || 'Not specified'}
                   </p>
                 </div>
               </div>

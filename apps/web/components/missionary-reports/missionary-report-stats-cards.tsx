@@ -70,7 +70,7 @@ export function MissionaryReportStatsCards({ stats }: MissionaryReportStatsCards
               <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{card.value.toLocaleString()}</div>
+              <div className="text-4xl font-display">{card.value.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
             </CardContent>
           </Card>

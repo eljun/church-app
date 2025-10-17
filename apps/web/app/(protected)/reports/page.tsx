@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import Link from 'next/link'
 import {
   BarChart3Icon,
@@ -111,43 +110,6 @@ export default function ReportsPage() {
           )
         })}
       </div>
-
-      {/* Quick stats */}
-      <Suspense fallback={<div className="h-32 animate-pulse bg-gray-100 rounded-lg" />}>
-        <QuickStats />
-      </Suspense>
     </div>
-  )
-}
-
-async function QuickStats() {
-  // This will be enhanced with actual data later
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Quick Overview</CardTitle>
-        <CardDescription>Key metrics at a glance</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">Total Members</p>
-            <p className="text-2xl ">-</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">Active Members</p>
-            <p className="text-2xl ">-</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">Pending Transfers</p>
-            <p className="text-2xl ">-</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">This Month</p>
-            <p className="text-2xl ">-</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   )
 }

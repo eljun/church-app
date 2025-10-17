@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { LineChart } from '@/components/shared'
 import type { MissionaryReport } from '@church-app/database'
 
 interface MissionaryActivitiesChartsProps {
@@ -59,63 +59,18 @@ export function MissionaryActivitiesCharts({ reports, stats }: MissionaryActivit
         </CardHeader>
         <CardContent>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="bibleStudies"
-                  stroke="var(--purple)"
-                  name="Bible Studies"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="homeVisits"
-                  stroke="var(--inactive)"
-                  name="Home Visits"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="seminars"
-                  stroke="var(--primary)"
-                  name="Seminars"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="conferences"
-                  stroke="var(--accent)"
-                  name="Conferences"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="publicLectures"
-                  stroke="var(--primary-light)"
-                  name="Public Lectures"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="youthAnchor"
-                  stroke="var(--muted-foreground)"
-                  name="Youth Anchor"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <LineChart
+              data={chartData}
+              lines={[
+                { dataKey: 'bibleStudies', name: 'Bible Studies', color: '#2B4C7E' },
+                { dataKey: 'homeVisits', name: 'Home Visits', color: '#87B984' },
+                { dataKey: 'seminars', name: 'Seminars', color: '#D4A574' },
+                { dataKey: 'conferences', name: 'Conferences', color: '#E57373' },
+                { dataKey: 'publicLectures', name: 'Public Lectures', color: '#64B5F6' },
+                { dataKey: 'youthAnchor', name: 'Youth Anchor', color: '#81C784' },
+              ]}
+              height={400}
+            />
           ) : (
             <div className="flex h-96 flex-col items-center justify-center text-muted-foreground space-y-2">
               <p className="text-lg font-medium">No report data available</p>

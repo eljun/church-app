@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MemberGrowthChart } from './member-growth-chart'
+import { LineChart } from '@/components/shared'
 import { DownloadIcon } from 'lucide-react'
 
 interface MemberGrowthReportProps {
@@ -94,7 +94,14 @@ export function MemberGrowthReport({ initialData, stats }: MemberGrowthReportPro
         </CardHeader>
         <CardContent>
           {chartData.length > 0 ? (
-            <MemberGrowthChart data={chartData} />
+            <LineChart
+              data={chartData}
+              lines={[
+                { dataKey: 'count', name: 'New Baptisms', color: '#2B4C7E' },
+                { dataKey: 'cumulative', name: 'Cumulative Baptisms', color: '#87B984' },
+              ]}
+              height={400}
+            />
           ) : (
             <div className="flex h-96 flex-col items-center justify-center text-gray-500 space-y-2">
               <p className="text-lg font-medium">No baptism data available</p>

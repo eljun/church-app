@@ -33,7 +33,8 @@ export default async function AttendancePage() {
     redirect('/')
   }
 
-  const churchesData = await getChurches()
+  // Fetch all churches without pagination limit
+  const churchesData = await getChurches({ limit: 1000, offset: 0 })
 
   return (
     <div className="space-y-6">

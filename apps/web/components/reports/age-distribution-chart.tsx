@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts'
+import { LineChart } from '@/components/shared'
 
 interface AgeDistributionChartProps {
   data: {
@@ -61,44 +61,15 @@ export function AgeDistributionChart({ data }: AgeDistributionChartProps) {
         })}
       </div>
 
-      {/* Bar chart */}
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="0 3"/>
-          <XAxis
-            dataKey="category"
-            tick={{ fontSize: 12 }}
-          />
-          <YAxis tick={{ fontSize: 12 }} />
-          <Tooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const data = payload[0].payload
-                const percentage = total > 0 ? Math.round((data.count / total) * 100) : 0
-                return (
-                  <div className="bg-white p-3 border rounded-lg shadow-lg">
-                    <p className="font-semibold">{data.category}</p>
-                    <p className="text-sm text-gray-600">{data.label}</p>
-                    <p className="text-sm">
-                      <span className="font-medium">Count:</span> {data.count}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-medium">Percentage:</span> {percentage}%
-                    </p>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-          <Legend />
-          <Bar dataKey="count" name="Members" radius={[8, 8, 0, 0]}>
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      {/* Line chart */}
+      <LineChart
+        data={chartData}
+        lines={[
+          { dataKey: 'count', name: 'Members by Age Group', color: '#2B4C7E' }
+        ]}
+        xAxisKey="category"
+        height={300}
+      />
     </div>
   )
 }

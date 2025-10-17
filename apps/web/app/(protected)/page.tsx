@@ -14,7 +14,7 @@ import {
 } from '@/lib/queries/reports'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatisticsCard } from '@/components/reports/statistics-card'
-import { MemberGrowthChart } from '@/components/reports/member-growth-chart'
+import { LineChart } from '@/components/shared'
 import { AgeDistributionChart } from '@/components/reports/age-distribution-chart'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
@@ -94,14 +94,14 @@ export default async function DashboardPage() {
   const femalePercentage =
     memberStats.total > 0 ? Math.round((memberStats.female / memberStats.total) * 100) : 0
 
-  // Process growth data for chart
+  // Process growth data for chart (yearly aggregation for dashboard overview)
   const processGrowthData = (data: Array<{ date_of_baptism: string }>) => {
     if (data.length === 0) return []
 
     const grouped = new Map<string, number>()
     data.forEach((member) => {
       const date = new Date(member.date_of_baptism)
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const key = `${date.getFullYear()}` // Yearly grouping for dashboard
       grouped.set(key, (grouped.get(key) || 0) + 1)
     })
 
@@ -277,6 +277,82 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* Upcoming Events */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Upcoming Events (Next 30 Days)</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CakeIcon className="h-5 w-5 text-pink-600" />
+                Birthdays
+              </CardTitle>
+              <CardDescription>Members with birthdays this month</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {upcomingBirthdays.length > 0 ? (
+                <>
+                  <div className="space-y-2">
+                    {upcomingBirthdays.slice(0, 5).map((member) => (
+                      <div key={member.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                        <Link href={`/members/${member.id}`} className="font-medium hover:text-primary hover:underline">
+                          {member.full_name}
+                        </Link>
+                        <span className="text-muted-foreground">
+                          {new Date(member.birthday!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button asChild variant="link" className="px-0 w-full justify-start">
+                    <Link href="/reports/birthdays">
+                      View all {upcomingBirthdays.length} birthdays →
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No upcoming birthdays</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarHeartIcon className="h-5 w-5 text-green-600" />
+                Baptism Anniversaries
+              </CardTitle>
+              <CardDescription>Anniversaries this month</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {upcomingAnniversaries.length > 0 ? (
+                <>
+                  <div className="space-y-2">
+                    {upcomingAnniversaries.slice(0, 5).map((member) => (
+                      <div key={member.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                        <Link href={`/members/${member.id}`} className="font-medium hover:text-primary hover:underline">
+                          {member.full_name}
+                        </Link>
+                        <span className="text-muted-foreground">
+                          {member.years_since_baptism} {member.years_since_baptism === 1 ? 'year' : 'years'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button asChild variant="link" className="px-0 w-full justify-start">
+                    <Link href="/reports/baptism-anniversaries">
+                      View all {upcomingAnniversaries.length} anniversaries →
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No upcoming anniversaries</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       {/* Age Distribution */}
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Age Distribution</h2>
@@ -293,55 +369,31 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Upcoming Events */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Upcoming Events (Next 30 Days)</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CakeIcon className="h-5 w-5 text-pink-600" />
-                Birthdays
-              </CardTitle>
-              <CardDescription>Members with birthdays this month</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl ">{upcomingBirthdays.length}</div>
-              <Button asChild variant="link" className="px-0 mt-2">
-                <Link href="/reports/birthdays">View all birthdays →</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarHeartIcon className="h-5 w-5 text-green-600" />
-                Baptism Anniversaries
-              </CardTitle>
-              <CardDescription>Anniversaries this month</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl ">{upcomingAnniversaries.length}</div>
-              <Button asChild variant="link" className="px-0 mt-2">
-                <Link href="/reports/baptism-anniversaries">View all anniversaries →</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
       {/* Baptism Growth Trend */}
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Baptism Growth Trend</h2>
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Baptism Growth</CardTitle>
-            <CardDescription>New baptisms and cumulative total based on baptism dates (Last 5 years)</CardDescription>
+            <CardTitle>Yearly Baptism Growth</CardTitle>
+            <CardDescription>Annual baptisms and cumulative total based on baptism dates (Overview)</CardDescription>
           </CardHeader>
           <CardContent>
             {chartData.length > 0 ? (
-              <MemberGrowthChart data={chartData} />
+              <LineChart
+                data={chartData}
+                lines={[
+                  {
+                    dataKey: 'count',
+                    name: 'New Baptisms',
+                    color: '#2B4C7E',
+                  },
+                  {
+                    dataKey: 'cumulative',
+                    name: 'Cumulative Baptisms',
+                    color: '#87B984',
+                  },
+                ]}
+              />
             ) : (
               <div className="flex h-[300px] flex-col items-center justify-center text-gray-500 space-y-2">
                 <p className="text-lg font-medium">No baptism data available</p>

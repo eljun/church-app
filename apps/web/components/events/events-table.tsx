@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { MoreHorizontal, Eye, Pencil, Trash2, CalendarDays } from 'lucide-react'
+import { MoreHorizontal, Eye, Pencil, Trash2, CalendarDays, UserPlus, ClipboardCheck } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -209,6 +209,19 @@ export function EventsTable({ events, currentPage, totalPages, totalCount }: Eve
                             View
                           </Link>
                         </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/events/${event.id}/registrations`}>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Registrations
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/events/${event.id}/attendance`}>
+                            <ClipboardCheck className="mr-2 h-4 w-4" />
+                            Attendance
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                           <Link href={`/events/${event.id}/edit`}>
                             <Pencil className="mr-2 h-4 w-4" />

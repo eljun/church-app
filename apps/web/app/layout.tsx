@@ -3,7 +3,7 @@ import { gilroy, agenorNeue } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Church Management System",
+  title: "IMSSDARM Church Management System",
   description: "Manage church members, transfers, and reports",
 };
 
