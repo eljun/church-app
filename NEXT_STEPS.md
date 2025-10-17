@@ -2397,7 +2397,7 @@ const brandColors = [
 
 ---
 
-## 📋 Session Summary (2025-10-17)
+## 📋 Session Summary (2025-10-17 Part 1-3)
 
 ### Total Changes Today:
 - **Components Created**: 1 (shared LineChart)
@@ -2422,6 +2422,642 @@ const brandColors = [
 - [ ] Verify church dropdown shows all churches
 - [ ] Test event quick actions workflow
 - [ ] Consider adding more shared components (BarChart, PieChart if needed)
+
+---
+
+## 🎯 Session Summary (2025-10-17 Part 4): Phase 8 Enhancements & Calendar Feature
+
+### Overview
+Completed Phase 8 attendance report enhancements and implemented a comprehensive calendar feature integrating events, birthdays, and baptism anniversaries.
+
+---
+
+## ✅ Phase 8 Enhancements - COMPLETE
+
+### What Was Implemented
+
+#### 1. Weekly Attendance Trend Analysis Graph
+✅ **Attendance Trend Visualization** - Line chart showing weekly attendance patterns
+- **Backend**: Created `getAttendanceTrend()` function in [lib/queries/attendance.ts](apps/web/lib/queries/attendance.ts:353-396)
+- **Data Structure**: Groups attendance by date with member/visitor breakdown
+- **Chart Integration**: Using shared LineChart component with 3 lines:
+  - Total Attendance (Dark Blue)
+  - Members (Green)
+  - Visitors (Gold/Tan)
+- **Location**: [/reports/attendance](apps/web/app/(protected)/reports/attendance/page.tsx)
+
+**Query Function:**
+```typescript
+// Returns array of {date, members, visitors, total}
+export async function getAttendanceTrend(
+  churchId: string,
+  startDate: string,
+  endDate: string
+)
+```
+
+#### 2. Clickable Absent Member Names
+✅ **Member Profile Links** - All absent member names now link to member detail pages
+- **Implementation**: Wrapped member names with Next.js Link components
+- **Navigation**: Links to `/members/${member.id}`
+- **Hover Effect**: Primary color and underline on hover
+- **Location**: Absent Members section in attendance reports
+
+**Code Example:**
+```tsx
+<Link
+  href={`/members/${member.id}`}
+  className="hover:text-primary hover:underline"
+>
+  {member.full_name}
+</Link>
+```
+
+#### 3. Dashboard "Members Needing Follow-up" Card
+✅ **Follow-up Alert Card** - Dashboard card showing members absent 30+ days
+- **Backend**: Updated `getAbsentMembers()` to support optional churchId parameter
+- **Display**: Shows top 10 absent members with church association
+- **Styling**: Orange-themed card matching alert/warning pattern
+- **Action**: "View all X members →" link to attendance reports
+- **Location**: Dashboard Upcoming Events section (3-column grid)
+
+**Features:**
+- Clickable member names → member profile
+- Orange badge with "Absent" status
+- Dynamic count display
+- Role-based filtering (admin sees their church, superadmin sees all)
+
+**Updated Query:**
+```typescript
+// Now supports optional church filtering
+export async function getAbsentMembers(
+  churchId?: string,
+  daysSinceLastAttendance = 30
+)
+```
+
+---
+
+## ✅ Birthday/Baptism Report Pages - Enhanced
+
+### What Was Changed
+
+#### Clickable Names and Churches
+✅ **Interactive Links** - Member names and church names are now clickable
+- **Member Names**: Link to `/members/${member.id}`
+- **Church Names**: Link to `/churches/${church.id}`
+- **Hover Effects**: Primary color and underline on hover
+- **Null Safety**: Graceful handling of missing church data
+
+**Files Updated:**
+- [apps/web/app/(protected)/reports/birthdays/page.tsx](apps/web/app/(protected)/reports/birthdays/page.tsx:146-166)
+- [apps/web/app/(protected)/reports/baptism-anniversaries/page.tsx](apps/web/app/(protected)/reports/baptism-anniversaries/page.tsx:139-156)
+
+#### Layout Consistency
+✅ **Removed Card Wrappers** - Consistent layout across all report sections
+- **Changed From**: Card component with CardHeader/CardContent
+- **Changed To**: Plain `div` with `space-y-4` class
+- **Headers**: `h2` with `text-xl font-semibold` and icon
+- **Description**: `p` with `text-sm text-muted-foreground`
+- **Table**: Wrapped in `rounded-md border` div
+
+**Before/After:**
+```tsx
+// Before
+<Card key={month}>
+  <CardHeader>...</CardHeader>
+  <CardContent>...</CardContent>
+</Card>
+
+// After
+<div key={month} className="space-y-4">
+  <div>
+    <h2 className="text-xl font-semibold flex items-center gap-2">
+      <CakeIcon className="h-5 w-5 text-pink-600" />
+      {month}
+    </h2>
+    <p className="text-sm text-muted-foreground mt-1">...</p>
+  </div>
+  <div className="rounded-md border">
+    <Table>...</Table>
+  </div>
+</div>
+```
+
+---
+
+## ✅ Calendar Feature - COMPLETE
+
+### Overview
+Unified calendar page showing events, birthdays, and baptism anniversaries with toggleable filters and interactive navigation.
+
+---
+
+### Backend Implementation
+
+#### New Query Functions
+✅ **Calendar Data Queries** - [lib/queries/calendar.ts](apps/web/lib/queries/calendar.ts)
+
+**Key Functions:**
+```typescript
+// Main export function - groups items by date
+export async function getCalendarItemsByDate(
+  startDate: string,
+  endDate: string,
+  filters: CalendarFilters = {}
+): Promise<Record<string, CalendarItem[]>>
+
+// Fetch all calendar items
+export async function getCalendarItems(
+  startDate: string,
+  endDate: string,
+  filters: CalendarFilters = {}
+): Promise<CalendarItem[]>
+```
+
+**Helper Functions:**
+- `getEventsForCalendar()` - Fetches events from events table
+- `getBirthdaysForCalendar()` - Calculates next birthday occurrences
+- `getBaptismsForCalendar()` - Calculates next baptism anniversary occurrences
+- `getNextOccurrence()` - Helper to find next recurring date within range
+
+**Type Definitions:**
+```typescript
+export type CalendarItemType = 'event' | 'birthday' | 'baptism'
+
+export interface CalendarItem {
+  id: string
+  type: CalendarItemType
+  date: string // YYYY-MM-DD format
+  title: string
+  description?: string
+  church?: { id: string; name: string }
+  member?: { id: string; name: string }
+  metadata?: {
+    age?: number
+    years?: number
+    eventType?: string
+  }
+}
+
+export interface CalendarFilters {
+  showEvents?: boolean
+  showBirthdays?: boolean
+  showBaptisms?: boolean
+  churchId?: string
+}
+```
+
+#### Calendar Utilities
+✅ **Date Helper Functions** - [lib/utils/calendar-helpers.ts](apps/web/lib/utils/calendar-helpers.ts)
+
+**Functions:**
+- `getCalendarDays(date)` - Get all days in month grid (including padding)
+- `getMonthRange(date)` - Get start/end dates for month
+- `isInMonth(date, currentMonth)` - Check if date is in current month
+- `isToday(date)` - Check if date is today
+- `formatCalendarDate(date)` - Format date for display
+- `getPreviousMonth(date)` - Get previous month
+- `getNextMonth(date)` - Get next month
+- `getMonthYearDisplay(date)` - Get "MMMM yyyy" string
+- `getDayOfMonth(date)` - Get day number
+- `getWeekdayNames(short)` - Get weekday labels
+
+**Dependencies:** date-fns library for date manipulation
+
+---
+
+### UI Components
+
+#### 1. CalendarFilters Component
+✅ **Filter Panel** - [components/calendar/calendar-filters.tsx](apps/web/components/calendar/calendar-filters.tsx)
+
+**Features:**
+- Toggle checkboxes for Events, Birthdays, Baptisms
+- Color-coded labels (blue/pink/green)
+- Real-time filtering
+- Card-based layout
+
+**Props:**
+```typescript
+interface CalendarFiltersProps {
+  showEvents: boolean
+  showBirthdays: boolean
+  showBaptisms: boolean
+  onToggleEvents: (show: boolean) => void
+  onToggleBirthdays: (show: boolean) => void
+  onToggleBaptisms: (show: boolean) => void
+}
+```
+
+#### 2. CalendarView Component
+✅ **Calendar Grid** - [components/calendar/calendar-view.tsx](apps/web/components/calendar/calendar-view.tsx)
+
+**Features:**
+- Full month calendar grid (7x5 or 7x6)
+- Month navigation (Previous/Next buttons)
+- Event name display (not just dots)
+- Up to 2 items shown per day with "+X more" indicator
+- Color-coded event types:
+  - Events: Blue background
+  - Birthdays: Pink background
+  - Baptisms: Green background
+- Past event graying (opacity-60 on cell, gray colors on items)
+- Clickable event titles:
+  - Events → `/events/${item.id}`
+  - Birthdays/Baptisms → `/members/${member.id}`
+- Day detail modal with full list of items
+- Today highlighting with primary ring
+- Padding days (previous/next month) with reduced opacity
+
+**Props:**
+```typescript
+interface CalendarViewProps {
+  items: Record<string, CalendarItem[]>
+  currentMonth: Date
+  onMonthChange: (newMonth: Date) => void
+}
+```
+
+**UI Evolution:**
+1. **Initial**: Colored dots (w-1.5 h-1.5)
+2. **v2**: Event names displayed (text-[10px])
+3. **v3**: Larger font size (text-xs = 12px) + font-medium
+4. **v4**: Past event graying with opacity-60
+5. **v5**: Clickable titles with Link components
+
+#### 3. CalendarPageClient Component
+✅ **Client-Side Logic** - [components/calendar/calendar-page-client.tsx](apps/web/components/calendar/calendar-page-client.tsx)
+
+**Features:**
+- State management for filters and current month
+- API calls for month navigation
+- Filter application logic
+- Server/client boundary handling
+
+**Props:**
+```typescript
+interface CalendarPageClientProps {
+  initialItems: Record<string, CalendarItem[]>
+  initialMonth: string // Serialized Date (ISO string)
+}
+```
+
+**State:**
+```typescript
+const [currentMonth, setCurrentMonth] = useState(new Date(initialMonth))
+const [items, setItems] = useState(initialItems)
+const [showEvents, setShowEvents] = useState(true)
+const [showBirthdays, setShowBirthdays] = useState(true)
+const [showBaptisms, setShowBaptisms] = useState(true)
+```
+
+**Month Change Handler:**
+```typescript
+const handleMonthChange = async (newMonth: Date) => {
+  setCurrentMonth(newMonth)
+
+  // Fetch new data via API route
+  const response = await fetch(`/api/calendar?start=${start}&end=${end}`)
+  const data = await response.json()
+  setItems(data)
+}
+```
+
+---
+
+### Pages & Routes
+
+#### 1. Calendar Page (Server Component)
+✅ **Main Calendar Page** - [app/(protected)/calendar/page.tsx](apps/web/app/(protected)/calendar/page.tsx)
+
+**Features:**
+- Server component for initial data fetching
+- Role-based church filtering (admin sees their church only)
+- PageHeader with back button
+- Grid layout: Filters (250px) + Calendar (1fr)
+- Date serialization for client component
+
+**Data Flow:**
+```typescript
+// 1. Get current user and role
+const { data: { user } } = await supabase.auth.getUser()
+const { data: userData } = await supabase.from('users').select('role, church_id')...
+
+// 2. Set church filter for admins
+const churchId = userData?.role === 'admin' ? userData.church_id : undefined
+
+// 3. Fetch initial month data
+const currentMonth = new Date()
+const { start, end } = getMonthRange(currentMonth)
+const items = await getCalendarItemsByDate(start, end, {
+  showEvents: true,
+  showBirthdays: true,
+  showBaptisms: true,
+  churchId
+})
+
+// 4. Pass to client component with serialized date
+<CalendarPageClient
+  initialItems={items}
+  initialMonth={currentMonth.toISOString()}
+/>
+```
+
+#### 2. Calendar API Route
+✅ **Month Navigation API** - [app/api/calendar/route.ts](apps/web/app/api/calendar/route.ts)
+
+**Purpose:** Fetch calendar data when user navigates months
+
+**Endpoint:** `GET /api/calendar?start=YYYY-MM-DD&end=YYYY-MM-DD`
+
+**Features:**
+- Server-side authorization check
+- Role-based church filtering
+- Returns calendar items grouped by date
+
+**Implementation:**
+```typescript
+export async function GET(request: NextRequest) {
+  // Parse query params
+  const searchParams = request.nextUrl.searchParams
+  const start = searchParams.get('start')
+  const end = searchParams.get('end')
+
+  // Validate params
+  if (!start || !end) {
+    return NextResponse.json({ error: 'Missing start or end date' }, { status: 400 })
+  }
+
+  // Get current user
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Apply role-based filtering
+  const { data: userData } = await supabase.from('users').select('role, church_id')...
+  const churchId = userData?.role === 'admin' ? userData.church_id : undefined
+
+  // Fetch and return data
+  const items = await getCalendarItemsByDate(start, end, {
+    showEvents: true,
+    showBirthdays: true,
+    showBaptisms: true,
+    churchId
+  })
+
+  return NextResponse.json(items)
+}
+```
+
+---
+
+### Navigation Integration
+
+#### Sidebar Updates
+✅ **Calendar Link Added** - [components/dashboard/sidebar.tsx](apps/web/components/dashboard/sidebar.tsx)
+
+**Icon:** CalendarDays (Lucide React)
+
+**Navigation Structure by Role:**
+
+**Superadmin:**
+```typescript
+{
+  title: 'Organization',
+  items: [
+    { name: 'Churches', href: '/churches', icon: Building2 },
+    { name: 'Events', href: '/events', icon: HeartHandshake },
+    { name: 'Calendar', href: '/calendar', icon: CalendarDays }, // NEW
+  ]
+}
+```
+
+**Pastor/Admin/Bibleworker:**
+```typescript
+// Top-level navigation
+topLevel.push({ name: 'Calendar', href: '/calendar', icon: CalendarDays })
+```
+
+---
+
+### Bug Fixes & Technical Issues
+
+#### Issue 1: Server/Client Boundary Error
+**Error:** `cookies was called outside a request scope`
+
+**Root Cause:**
+- Initial implementation had client component calling `createClient()` from `lib/supabase/server.ts`
+- Client components cannot access Next.js cookies() API which requires server context
+
+**Solution:**
+1. Split into server component (page.tsx) and client component (calendar-page-client.tsx)
+2. Server component fetches initial data with server-side Supabase client
+3. Client component handles interactivity and state
+4. Created API route for client-side data fetching during navigation
+
+**Files Changed:**
+- Created `app/(protected)/calendar/page.tsx` (server)
+- Created `components/calendar/calendar-page-client.tsx` (client)
+- Created `app/api/calendar/route.ts` (API)
+
+#### Issue 2: Events Not Showing
+**Error:** Events query failing with database error
+
+**Root Cause:**
+1. Wrong Supabase foreign key syntax: `churches:church_id (id, name)`
+2. Trying to access non-existent `scope` field
+
+**Solution:**
+```typescript
+// BEFORE (incorrect)
+.select(`
+  id,
+  title,
+  churches:church_id (
+    id,
+    name
+  ),
+  scope
+`)
+
+// AFTER (correct)
+.select(`
+  id,
+  title,
+  churches (
+    id,
+    name
+  )
+`)
+```
+
+**Additional Fixes:**
+- Removed `scope` field from CalendarItem interface
+- Added `.split('T')[0]` to extract date from timestamp
+
+**File:** [lib/queries/calendar.ts](apps/web/lib/queries/calendar.ts:36-79)
+
+#### Issue 3: Date Serialization Error
+**Error:** Cannot pass Date object from server to client component
+
+**Root Cause:** React cannot serialize Date objects across server/client boundary
+
+**Solution:**
+```typescript
+// Server component - serialize to ISO string
+<CalendarPageClient
+  initialItems={items}
+  initialMonth={currentMonth.toISOString()} // Serialize
+/>
+
+// Client component - deserialize
+const [currentMonth, setCurrentMonth] = useState(new Date(initialMonth)) // Deserialize
+```
+
+**Files Changed:**
+- [app/(protected)/calendar/page.tsx](apps/web/app/(protected)/calendar/page.tsx)
+- [components/calendar/calendar-page-client.tsx](apps/web/components/calendar/calendar-page-client.tsx)
+
+#### Issue 4: PageHeader Missing Prop
+**Error:** TypeScript error - Property 'backHref' is missing
+
+**Root Cause:** PageHeader component requires backHref as mandatory prop
+
+**Solution:**
+```typescript
+<PageHeader
+  backHref="/" // Added
+  title="Calendar"
+  description="View all events, birthdays, and baptism anniversaries"
+/>
+```
+
+---
+
+### UI/UX Refinements
+
+#### Iteration 1: Dots to Text
+**Change:** Show event names instead of colored dots
+- **Before:** Small colored dots (w-1.5 h-1.5 rounded-full)
+- **After:** Text labels with event titles (truncated with ellipsis)
+- **Benefit:** Users can see what events are without clicking
+
+#### Iteration 2: Font Size Increase
+**Change:** Increased font size from 10px to 12px
+- **Before:** `text-[10px]` (hard to read)
+- **After:** `text-xs` (12px) with `font-medium`
+- **Additional:** Increased padding from `px-1 py-0.5` to `px-1.5 py-1`
+- **Benefit:** Better readability
+
+#### Iteration 3: Past Event Graying
+**Change:** Visual distinction for past events
+- **Date Cell:** Added `opacity-60` when date is in the past
+- **Event Colors:**
+  - **Past:** All items show as `bg-gray-100 text-gray-500` (uniform gray)
+  - **Future/Current:** Color-coded (blue/pink/green)
+- **Logic:**
+```typescript
+const isPastDate = date < new Date(new Date().setHours(0, 0, 0, 0))
+```
+- **Benefit:** Clear visual hierarchy, focus on upcoming events
+
+#### Iteration 4: Clickable Titles
+**Change:** Made all item titles clickable
+- **Events:** Link to `/events/${item.id}`
+- **Birthdays/Baptisms:** Link to `/members/${member.id}`
+- **Implementation:**
+```tsx
+{item.type === 'event' ? (
+  <Link href={`/events/${item.id}`} className="hover:text-primary hover:underline">
+    {item.title}
+  </Link>
+) : item.member ? (
+  <Link href={`/members/${item.member.id}`} className="hover:text-primary hover:underline">
+    {item.title}
+  </Link>
+) : (
+  <span>{item.title}</span>
+)}
+```
+- **Benefit:** Quick navigation to event/member details
+
+---
+
+### Files Summary
+
+#### Files Created (7):
+1. `apps/web/lib/queries/calendar.ts` - Calendar data queries
+2. `apps/web/lib/utils/calendar-helpers.ts` - Date helper functions
+3. `apps/web/components/calendar/calendar-filters.tsx` - Filter panel
+4. `apps/web/components/calendar/calendar-view.tsx` - Calendar grid
+5. `apps/web/components/calendar/calendar-page-client.tsx` - Client logic
+6. `apps/web/app/(protected)/calendar/page.tsx` - Server page
+7. `apps/web/app/api/calendar/route.ts` - API endpoint
+
+#### Files Modified (6):
+1. `apps/web/lib/queries/attendance.ts` - Added getAttendanceTrend(), updated getAbsentMembers()
+2. `apps/web/app/(protected)/reports/attendance/page.tsx` - Added trend chart, clickable names
+3. `apps/web/app/(protected)/page.tsx` - Added "Members Needing Follow-up" card
+4. `apps/web/app/(protected)/reports/birthdays/page.tsx` - Clickable names/churches, removed card wrapper
+5. `apps/web/app/(protected)/reports/baptism-anniversaries/page.tsx` - Same updates
+6. `apps/web/components/dashboard/sidebar.tsx` - Added Calendar navigation link
+
+---
+
+### Build Status
+
+✅ **All TypeScript checks passing**
+✅ **No compilation errors**
+✅ **No source code linting errors**
+✅ **Production ready**
+
+---
+
+### Testing Checklist
+
+- [x] Calendar displays events correctly
+- [x] Birthdays show next occurrence within range
+- [x] Baptism anniversaries calculate correctly
+- [x] Filters toggle on/off properly
+- [x] Month navigation updates data via API
+- [x] Past events show as grayed out
+- [x] Event titles are clickable
+- [x] Member names link to profiles
+- [x] Day detail modal shows all items
+- [x] Admin users see only their church data
+- [x] Superadmin users see all data
+- [x] Attendance trend chart displays correctly
+- [x] Absent member names are clickable
+- [x] Dashboard follow-up card shows correct data
+- [x] Birthday report names/churches are clickable
+- [x] Baptism anniversary report names/churches are clickable
+
+---
+
+### Key Technical Decisions
+
+1. **Server/Client Split:** Essential for Next.js 15 to avoid cookie context errors
+2. **API Route for Navigation:** Enables client-side month changes without full page reload
+3. **Date Serialization:** ISO strings passed across boundary, deserialized in client
+4. **Event Name Display:** Better UX than dots, more informative at a glance
+5. **Past Event Graying:** Visual hierarchy focuses attention on future events
+6. **Clickable Titles:** Reduces clicks needed to access details
+7. **Role-Based Filtering:** Applied at query level for security
+
+---
+
+### Future Enhancements (Optional)
+
+- [ ] Recurring events support (monthly, yearly patterns)
+- [ ] Event color customization
+- [ ] Export calendar to iCal format
+- [ ] Print-friendly calendar view
+- [ ] Week view and Day view options
+- [ ] Event reminders/notifications
+- [ ] Multi-month view
 
 ---
 

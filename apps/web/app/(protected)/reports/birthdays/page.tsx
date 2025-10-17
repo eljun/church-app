@@ -1,4 +1,5 @@
 import { DownloadIcon, CakeIcon } from 'lucide-react'
+import Link from 'next/link'
 import { getUpcomingBirthdays } from '@/lib/queries/reports'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -110,80 +111,94 @@ export default async function BirthdaysPage({ searchParams }: BirthdaysPageProps
 
       {/* Birthdays grouped by month */}
       {(Object.entries(byMonth) as [string, BirthdayMember[]][]).map(([month, members]) => (
-        <Card key={month}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div key={month} className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold flex items-center gap-2">
               <CakeIcon className="h-5 w-5 text-pink-600" />
               {month}
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
               {members.length} {members.length === 1 ? 'birthday' : 'birthdays'} this month
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Member Name</TableHead>
-                    <TableHead>Church</TableHead>
-                    <TableHead>Birthday</TableHead>
-                    <TableHead>Days Until</TableHead>
-                    <TableHead>Turning Age</TableHead>
-                    <TableHead>Contact</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {members.map((member) => {
-                    const nextDate = getNextBirthdayDate(member.birthday!)
-                    const daysUntil = Math.ceil(
-                      (nextDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                    )
-                    const isMilestone = member.age >= 50 && member.age % 10 === 0
-                    return (
-                      <TableRow key={member.id}>
-                        <TableCell className="font-medium">
+            </p>
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Member Name</TableHead>
+                  <TableHead>Church</TableHead>
+                  <TableHead>Birthday</TableHead>
+                  <TableHead>Days Until</TableHead>
+                  <TableHead>Turning Age</TableHead>
+                  <TableHead>Contact</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {members.map((member) => {
+                  const nextDate = getNextBirthdayDate(member.birthday!)
+                  const daysUntil = Math.ceil(
+                    (nextDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                  )
+                  const isMilestone = member.age >= 50 && member.age % 10 === 0
+                  return (
+                    <TableRow key={member.id}>
+                      <TableCell className="font-medium">
+                        <Link
+                          href={`/members/${member.id}`}
+                          className="hover:text-primary hover:underline"
+                        >
                           {member.full_name}
-                          {isMilestone && (
-                            <CakeIcon className="ml-2 inline h-4 w-4 text-pink-600" />
-                          )}
-                        </TableCell>
-                        <TableCell>{member.churches?.name}</TableCell>
-                        <TableCell>
-                          {new Date(member.birthday!).toLocaleDateString('default', {
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </TableCell>
-                        <TableCell>
-                          {daysUntil === 0 ? (
-                            <Badge variant="default" className="bg-pink-600">
-                              Today!
-                            </Badge>
-                          ) : daysUntil === 1 ? (
-                            <Badge variant="default" className="bg-pink-500">
-                              Tomorrow
-                            </Badge>
-                          ) : (
-                            <span className="text-sm text-gray-500">{daysUntil} days</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={isMilestone ? 'default' : 'outline'}>
-                            {member.age} {isMilestone && 'Years'}
+                        </Link>
+                        {isMilestone && (
+                          <CakeIcon className="ml-2 inline h-4 w-4 text-pink-600" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {member.churches?.id ? (
+                          <Link
+                            href={`/churches/${member.churches.id}`}
+                            className="hover:text-primary hover:underline"
+                          >
+                            {member.churches.name}
+                          </Link>
+                        ) : (
+                          member.churches?.name || '-'
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(member.birthday!).toLocaleDateString('default', {
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        {daysUntil === 0 ? (
+                          <Badge variant="default" className="bg-pink-600">
+                            Today!
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-500">
-                          {member.phone_number || member.email || '-'}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                        ) : daysUntil === 1 ? (
+                          <Badge variant="default" className="bg-pink-500">
+                            Tomorrow
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-gray-500">{daysUntil} days</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={isMilestone ? 'default' : 'outline'}>
+                          {member.age} {isMilestone && 'Years'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {member.phone_number || member.email || '-'}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       ))}
 
       {/* Empty state */}

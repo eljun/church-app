@@ -18,6 +18,7 @@ import {
   UserRound,
   ClipboardCheck,
   BookHeart,
+  CalendarDays,
   type LucideIcon
 } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
@@ -106,6 +107,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       items: [
         { name: 'Churches', href: '/churches', icon: Building2 },
         { name: 'Events', href: '/events', icon: HeartHandshake },
+        { name: 'Calendar', href: '/calendar', icon: CalendarDays },
       ]
     })
 
@@ -130,8 +132,9 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       ]
     })
 
-    // Events as top-level for pastor
+    // Events and Calendar as top-level for pastor
     topLevel.push({ name: 'Events', href: '/events', icon: HeartHandshake })
+    topLevel.push({ name: 'Calendar', href: '/calendar', icon: CalendarDays })
 
     groups.push({
       title: 'Analytics',
@@ -154,6 +157,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
     })
 
     topLevel.push({ name: 'Events', href: '/events', icon: HeartHandshake })
+    topLevel.push({ name: 'Calendar', href: '/calendar', icon: CalendarDays })
 
     groups.push({
       title: 'Reports',
@@ -174,8 +178,9 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       ]
     })
 
-    // Events as top-level for admin
+    // Events and Calendar as top-level for admin
     topLevel.push({ name: 'Events', href: '/events', icon: HeartHandshake })
+    topLevel.push({ name: 'Calendar', href: '/calendar', icon: CalendarDays })
 
     groups.push({
       title: 'Analytics',
