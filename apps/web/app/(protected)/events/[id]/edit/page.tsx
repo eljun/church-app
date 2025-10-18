@@ -29,6 +29,11 @@ export default async function EventEditPage({ params }: EventEditPageProps) {
     redirect('/login')
   }
 
+  // Bibleworkers cannot edit events
+  if (userData.role === 'bibleworker') {
+    redirect('/events')
+  }
+
   try {
     // Fetch event, churches, countries, and districts
     const [event, { data: churches }, countries, districts] = await Promise.all([

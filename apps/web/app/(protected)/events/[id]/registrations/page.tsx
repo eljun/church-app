@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { UserPlus, Users, CheckCircle, XCircle, TrendingUp, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -41,6 +41,11 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
 
     if (!currentUser) {
       return null
+    }
+
+    // Only admins, coordinators, and superadmins can access registrations
+    if (!['admin', 'coordinator', 'superadmin'].includes(currentUser.role)) {
+      redirect('/events')
     }
 
     const [event, { data: registrations, count }, stats, availableMembers] = await Promise.all([

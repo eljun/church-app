@@ -192,7 +192,7 @@ export function RegistrationsTable({
                     {formatDate(registration.registered_at)}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {registration.registered_by_user.email}
+                    {registration.registered_by_user?.email || 'N/A'}
                   </TableCell>
                 {userRole !== 'member' && (
                   <TableCell className="text-right">

@@ -112,6 +112,11 @@ export async function updateMember(input: UpdateMemberInput) {
     }
 
     // Check permissions
+    // Bibleworkers have read-only access to members
+    if (userData.role === 'bibleworker') {
+      return { error: 'Forbidden: Bibleworkers have read-only access to members' }
+    }
+
     if (userData.role === 'admin' && currentMember.church_id !== userData.church_id) {
       return { error: 'Forbidden: Cannot update member from another church' }
     }

@@ -47,6 +47,9 @@ export default async function VisitorsPage({ searchParams }: VisitorsPageProps) 
     redirect('/login')
   }
 
+  // Bibleworkers have read-only access
+  const isBibleworker = currentUser.role === 'bibleworker'
+
   // Get visitors based on role and filters
   const churchId = currentUser.role === 'admin' ? currentUser.church_id : undefined
   const visitorsData = await getVisitors({
@@ -68,15 +71,17 @@ export default async function VisitorsPage({ searchParams }: VisitorsPageProps) 
         <div>
           <h1 className="font-display text-3xl text-primary">Visitors</h1>
           <p className="mt-1 text-sm text-foreground">
-            Manage visitors and track follow-up activities ({visitorsData.count.toLocaleString()} total)
+            {isBibleworker ? 'View visitors and track follow-up activities' : 'Manage visitors and track follow-up activities'} ({visitorsData.count.toLocaleString()} total)
           </p>
         </div>
-        <Button asChild>
-          <Link href="/visitors/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Register Visitor
-          </Link>
-        </Button>
+        {!isBibleworker && (
+          <Button asChild>
+            <Link href="/visitors/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Register Visitor
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Filters */}

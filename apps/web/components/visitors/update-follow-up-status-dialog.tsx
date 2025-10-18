@@ -40,14 +40,14 @@ export function UpdateFollowUpStatusDialog({ visitor, trigger }: UpdateFollowUpS
   const [notes, setNotes] = useState('')
 
   const handleStatusChange = (value: string) => {
-    setStatus(value as 'pending' | 'contacted' | 'interested' | 'not_interested' | 'converted')
+    setStatus(value as 'pending' | 'contacted' | 'interested' | 'not_interested')
   }
 
   const handleSubmit = () => {
     startTransition(async () => {
       const result = await updateFollowUpStatus({
         visitor_id: visitor.id,
-        follow_up_status: status as 'pending' | 'contacted' | 'interested' | 'not_interested' | 'converted',
+        follow_up_status: status as 'pending' | 'contacted' | 'interested' | 'not_interested',
         follow_up_notes: notes || null,
       })
 
@@ -93,7 +93,6 @@ export function UpdateFollowUpStatusDialog({ visitor, trigger }: UpdateFollowUpS
                 <SelectItem value="contacted">Contacted</SelectItem>
                 <SelectItem value="interested">Interested</SelectItem>
                 <SelectItem value="not_interested">Not Interested</SelectItem>
-                <SelectItem value="converted">Converted</SelectItem>
               </SelectContent>
             </Select>
           </div>

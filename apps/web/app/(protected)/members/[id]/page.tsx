@@ -1,6 +1,7 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Pencil, Calendar, Church, User, Heart, Activity } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 import { getMemberById, getMemberTransferHistory } from '@/lib/queries/members'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +23,24 @@ interface MemberDetailPageProps {
 
 export default async function MemberDetailPage({ params }: MemberDetailPageProps) {
   const { id } = await params
+
+  // Get current user and role
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  const { data: currentUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  // Check if user is bibleworker (read-only access)
+  const isBibleworker = currentUser?.role === 'bibleworker'
+  const isSuperadmin = currentUser?.role === 'superadmin'
 
   try {
     const [member, transferHistory] = await Promise.all([
@@ -78,15 +97,19 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
           backHref="/members"
           title={member.full_name}
           actions={
-            <>
-              <Button variant="outline" asChild>
-                <Link href={`/members/${id}/edit`}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </Link>
-              </Button>
-              <DeleteMemberButton memberId={id} memberName={member.full_name} />
-            </>
+            !isBibleworker ? (
+              <>
+                <Button variant="outline" asChild>
+                  <Link href={`/members/${id}/edit`}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </Link>
+                </Button>
+                {isSuperadmin && (
+                  <DeleteMemberButton memberId={id} memberName={member.full_name} />
+                )}
+              </>
+            ) : undefined
           }
         />
 

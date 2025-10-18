@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Pencil, Calendar, MapPin, Building2, Clock, Users, ImageIcon } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 import { getEventById } from '@/lib/queries/events'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +17,18 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const { id } = await params
 
   try {
+    // Get current user role
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: currentUser } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user?.id || '')
+      .single()
+
+    // Bibleworkers have read-only access
+    const isBibleworker = currentUser?.role === 'bibleworker'
+
     const event = await getEventById(id)
 
     const formatDateTime = (date: string) => {
@@ -52,12 +65,14 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           backHref="/events"
           title={event.title}
           actions={
-            <Button variant="outline" asChild>
-              <Link href={`/events/${id}/edit`}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </Link>
-            </Button>
+            !isBibleworker ? (
+              <Button variant="outline" asChild>
+                <Link href={`/events/${id}/edit`}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </Link>
+              </Button>
+            ) : undefined
           }
         />
 
@@ -177,24 +192,26 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white border border-primary/20 p-6">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="default" asChild>
-              <Link href={`/events/${id}/registrations`}>
-                <Users className="mr-2 h-4 w-4" />
-                View Registrations
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href={`/events/${id}/edit`}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Event
-              </Link>
-            </Button>
+        {/* Quick Actions - Hidden for bibleworkers */}
+        {!isBibleworker && (
+          <div className="bg-white border border-primary/20 p-6">
+            <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="default" asChild>
+                <Link href={`/events/${id}/registrations`}>
+                  <Users className="mr-2 h-4 w-4" />
+                  View Registrations
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href={`/events/${id}/edit`}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit Event
+                </Link>
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     )
   } catch {

@@ -23,6 +23,11 @@ export default async function NewEventPage() {
     redirect('/login')
   }
 
+  // Bibleworkers cannot create events
+  if (userData.role === 'bibleworker') {
+    redirect('/events')
+  }
+
   // Fetch churches, countries, and districts for dropdown
   const { data: churches } = await getChurches({ limit: 1000, offset: 0 })
   const countries = await getCountries()

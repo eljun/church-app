@@ -29,6 +29,8 @@ export default async function NewVisitorPage({ searchParams }: NewVisitorPagePro
     redirect('/login')
   }
 
+  // Bibleworkers can create visitors (removed restriction)
+
   // Get all churches for the dropdown
   const { data: churches } = await supabase
     .from('churches')

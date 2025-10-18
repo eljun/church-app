@@ -7,6 +7,7 @@ import { getVisitorActivities } from '@/lib/queries/visitor-activities'
 import { getVisitorAttendanceHistory } from '@/lib/queries/attendance'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { VisitorDetailCard } from '@/components/visitors/visitor-detail-card'
 import { FollowUpActivityLog } from '@/components/visitors/follow-up-activity-log'
 import { VisitorActionsMenu } from '@/components/visitors/visitor-actions-menu'
@@ -78,13 +79,21 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
           }
         />
 
-        {/* Main Content */}
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Left Column - Visitor Details */}
-          <div className="md:col-span-2 space-y-6">
-            <VisitorDetailCard visitor={visitor} />
+        {/* Main Content - Tabbed Layout */}
+        <Tabs defaultValue="info" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="info">User Info</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance History</TabsTrigger>
+            <TabsTrigger value="activities">Activity Log</TabsTrigger>
+          </TabsList>
 
-            {/* Attendance History */}
+          {/* User Info Tab */}
+          <TabsContent value="info" className="space-y-6">
+            <VisitorDetailCard visitor={visitor} />
+          </TabsContent>
+
+          {/* Attendance History Tab */}
+          <TabsContent value="attendance" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Attendance History</CardTitle>
@@ -126,16 +135,16 @@ export default async function VisitorDetailPage({ params }: VisitorDetailPagePro
                 )}
               </CardContent>
             </Card>
-          </div>
+          </TabsContent>
 
-          {/* Right Column - Activity Log */}
-          <div>
+          {/* Activity Log Tab */}
+          <TabsContent value="activities" className="space-y-6">
             <FollowUpActivityLog
               activities={activities}
               isConverted={isConverted}
             />
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     )
   } catch (error) {

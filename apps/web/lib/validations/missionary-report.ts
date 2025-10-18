@@ -73,6 +73,7 @@ export const updateMissionaryReportSchema = z.object({
 // Filter missionary reports
 export const filterMissionaryReportsSchema = z.object({
   church_id: z.string().uuid('Invalid church ID').optional(),
+  church_ids: z.array(z.string().uuid('Invalid church ID')).optional(), // For filtering by multiple churches
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   report_type: reportTypeSchema.optional(),

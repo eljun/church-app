@@ -54,7 +54,7 @@ interface MembersTableProps {
   currentPage: number
   totalPages: number
   totalCount: number
-  userRole: 'superadmin' | 'admin' | 'member'
+  userRole: 'superadmin' | 'admin' | 'bibleworker' | 'member'
 }
 
 export function MembersTable({ members, currentPage, totalPages, totalCount, userRole }: MembersTableProps) {
@@ -63,6 +63,9 @@ export function MembersTable({ members, currentPage, totalPages, totalCount, use
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Bibleworkers have read-only access
+  const isBibleworker = userRole === 'bibleworker'
 
   const buildPaginationUrl = (page: number) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -170,25 +173,29 @@ export function MembersTable({ members, currentPage, totalPages, totalCount, use
                             View
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/members/${member.id}/edit`}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </Link>
-                        </DropdownMenuItem>
-                        {userRole === 'superadmin' && (
+                        {!isBibleworker && (
                           <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => {
-                                setMemberToDelete(member.id)
-                                setDeleteDialogOpen(true)
-                              }}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                            <DropdownMenuItem asChild>
+                              <Link href={`/members/${member.id}/edit`}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </Link>
                             </DropdownMenuItem>
+                            {userRole === 'superadmin' && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => {
+                                    setMemberToDelete(member.id)
+                                    setDeleteDialogOpen(true)
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </>
                         )}
                       </DropdownMenuContent>

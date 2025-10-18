@@ -51,6 +51,7 @@ type MissionaryReportWithChurch = MissionaryReport & {
 interface MissionaryReportsTableProps {
   reports: MissionaryReportWithChurch[]
   userRole: string
+  userId?: string
   currentPage: number
   totalPages: number
   totalCount: number
@@ -59,6 +60,7 @@ interface MissionaryReportsTableProps {
 export function MissionaryReportsTable({
   reports,
   userRole,
+  userId,
   currentPage,
   totalPages,
   totalCount,
@@ -67,6 +69,9 @@ export function MissionaryReportsTable({
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
+
+  // Bibleworkers can create and edit their own reports
+  const isBibleworker = userRole === 'bibleworker'
 
   const getReportTypeBadge = (reportType: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'outline', label: string }> = {
@@ -198,20 +203,27 @@ export function MissionaryReportsTable({
                             View Details
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/missionary-reports/${report.id}/edit`} className="cursor-pointer">
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </Link>
-                        </DropdownMenuItem>
-                        {(userRole === 'superadmin' || userRole === 'admin' || userRole === 'pastor') && (
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteClick(report.id)}
-                            className="text-destructive cursor-pointer"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
+                        {/* Bibleworkers can edit only their own reports, others can edit all */}
+                        {(!isBibleworker || (isBibleworker && report.reported_by === userId)) && (
+                          <>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/missionary-reports/${report.id}/edit`} className="cursor-pointer">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                            {/* Superadmin, admin, pastor can delete all; bibleworkers can delete only their own */}
+                            {(userRole === 'superadmin' || userRole === 'admin' || userRole === 'pastor' ||
+                              (isBibleworker && report.reported_by === userId)) && (
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(report.id)}
+                                className="text-destructive cursor-pointer"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
+                          </>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>

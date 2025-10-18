@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getMemberById } from '@/lib/queries/members'
 import { getChurches } from '@/lib/queries/churches'
 import { createClient } from '@/lib/supabase/server'
@@ -11,20 +11,29 @@ interface EditMemberPageProps {
 export default async function EditMemberPage({ params }: EditMemberPageProps) {
   const { id } = await params
 
+  // Get current user data to determine church permissions
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role, church_id')
+    .eq('id', user.id)
+    .single()
+
+  // Bibleworkers cannot edit members
+  if (userData?.role === 'bibleworker') {
+    redirect('/members')
+  }
+
   // Fetch member data
   try {
     const member = await getMemberById(id)
     const { data: churches } = await getChurches({ limit: 100, offset: 0 })
-
-    // Get current user data to determine church permissions
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role, church_id')
-      .eq('id', user!.id)
-      .single()
 
     return (
       <div className="max-w-4xl mx-auto space-y-6">

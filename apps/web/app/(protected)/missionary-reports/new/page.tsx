@@ -19,7 +19,7 @@ export default async function NewMissionaryReportPage() {
   // Get user details with role
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role, church_id, assigned_church_ids')
     .eq('id', user.id)
     .single()
 
@@ -27,11 +27,20 @@ export default async function NewMissionaryReportPage() {
     redirect('/login')
   }
 
-  // Get all churches (for superadmin/pastor)
-  const { data: churches } = await supabase
+  // Bibleworkers can create missionary reports (removed restriction)
+
+  // Get churches based on role
+  let churchesQuery = supabase
     .from('churches')
     .select('id, name, field, district, city, province')
     .order('name')
+
+  // Bibleworkers can only report for their assigned churches
+  if (userData.role === 'bibleworker' && userData.assigned_church_ids && userData.assigned_church_ids.length > 0) {
+    churchesQuery = churchesQuery.in('id', userData.assigned_church_ids)
+  }
+
+  const { data: churches } = await churchesQuery
 
   return (
     <div className="space-y-6">

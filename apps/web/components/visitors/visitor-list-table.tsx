@@ -38,7 +38,7 @@ export function VisitorListTable({
   visitors,
   currentPage,
   totalPages,
-  totalCount
+  totalCount,
 }: VisitorListTableProps) {
   const router = useRouter()
 

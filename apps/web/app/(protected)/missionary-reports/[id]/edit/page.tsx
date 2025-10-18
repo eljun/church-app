@@ -26,7 +26,7 @@ export default async function EditMissionaryReportPage({ params }: PageProps) {
   // Get user details with role
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role, church_id, assigned_church_ids')
     .eq('id', user.id)
     .single()
 
@@ -44,11 +44,23 @@ export default async function EditMissionaryReportPage({ params }: PageProps) {
     notFound()
   }
 
-  // Get all churches (for superadmin/pastor)
-  const { data: churches } = await supabase
+  // Bibleworkers can only edit their own reports
+  if (userData.role === 'bibleworker' && report.reported_by !== user.id) {
+    redirect('/missionary-reports')
+  }
+
+  // Get churches based on role
+  let churchesQuery = supabase
     .from('churches')
     .select('id, name, field, district, city, province')
     .order('name')
+
+  // Bibleworkers can only report for their assigned churches
+  if (userData.role === 'bibleworker' && userData.assigned_church_ids && userData.assigned_church_ids.length > 0) {
+    churchesQuery = churchesQuery.in('id', userData.assigned_church_ids)
+  }
+
+  const { data: churches } = await churchesQuery
 
   // Prepare initial data for edit mode
   const initialData = {

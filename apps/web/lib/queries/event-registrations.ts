@@ -30,7 +30,7 @@ export interface EventRegistrationWithDetails extends EventRegistration {
   registered_by_user: {
     id: string
     email: string
-  }
+  } | null
   attendance_confirmed_by_user?: {
     id: string
     email: string

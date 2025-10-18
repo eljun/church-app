@@ -78,13 +78,26 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
     return {
       topLevel: [
         { name: 'Events', href: '/events', icon: HeartHandshake },
-        { name: 'Reports', href: '/reports', icon: FileText },
       ],
       groups: []
     }
   }
 
-  // Dashboard is always top-level
+  // Bibleworkers don't have Dashboard - flat navigation without grouping
+  if (user?.role === 'bibleworker') {
+    return {
+      topLevel: [
+        { name: 'Events', href: '/events', icon: HeartHandshake },
+        { name: 'Calendar', href: '/calendar', icon: CalendarDays },
+        { name: 'Members', href: '/members', icon: Users },
+        { name: 'Interested Guest', href: '/visitors', icon: UserRound },
+        { name: 'Missionary Reports', href: '/missionary-reports', icon: BookHeart },
+      ],
+      groups: []
+    }
+  }
+
+  // Dashboard is always top-level for other roles
   const topLevel: NavItem[] = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   ]
@@ -97,7 +110,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       title: 'People Management',
       items: [
         { name: 'Members', href: '/members', icon: Users },
-        { name: 'Visitors', href: '/visitors', icon: UserRound },
+        { name: 'Interested Guest', href: '/visitors', icon: UserRound },
         { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
       ]
     })
@@ -122,13 +135,13 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
   }
 
   // Pastor: District/Field Management
-  else if (user?.role === 'pastor') {
+  if (user?.role === 'pastor') {
     groups.push({
       title: 'My District',
       items: [
         { name: 'Churches', href: '/churches', icon: Building2 },
         { name: 'Members', href: '/members', icon: Users },
-        { name: 'Visitors', href: '/visitors', icon: UserRound },
+        { name: 'Interested Guest', href: '/visitors', icon: UserRound },
       ]
     })
 
@@ -146,34 +159,13 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
     })
   }
 
-  // Bibleworker: Assigned Members Management
-  else if (user?.role === 'bibleworker') {
-    groups.push({
-      title: 'My Members',
-      items: [
-        { name: 'Members', href: '/members', icon: Users },
-        { name: 'Visitors', href: '/visitors', icon: UserRound },
-      ]
-    })
-
-    topLevel.push({ name: 'Events', href: '/events', icon: HeartHandshake })
-    topLevel.push({ name: 'Calendar', href: '/calendar', icon: CalendarDays })
-
-    groups.push({
-      title: 'Reports',
-      items: [
-        { name: 'Activity Reports', href: '/reports', icon: FileText },
-      ]
-    })
-  }
-
   // Admin: My Church group
-  else if (user?.role === 'admin') {
+  if (user?.role === 'admin') {
     groups.push({
       title: 'My Church',
       items: [
         { name: 'Members', href: '/members', icon: Users },
-        { name: 'Visitors', href: '/visitors', icon: UserRound },
+        { name: 'Interested Guest', href: '/visitors', icon: UserRound },
         { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
       ]
     })

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import {
   UsersIcon,
   UserCheckIcon,
@@ -32,6 +33,11 @@ export default async function DashboardPage() {
     .select('role, church_id')
     .eq('id', user?.id || '')
     .single()
+
+  // Bibleworkers don't have access to dashboard
+  if (userData?.role === 'bibleworker') {
+    redirect('/events')
+  }
 
   // Fetch all data in parallel
   const [memberStats, growthData, upcomingBirthdays, upcomingAnniversaries, ageDistribution, absentMembers, churches] =

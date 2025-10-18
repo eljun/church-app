@@ -28,15 +28,15 @@ export default async function EventAttendancePage({ params }: EventAttendancePag
       return null
     }
 
+    // Only admins, coordinators, and superadmins can access attendance
+    if (!['admin', 'coordinator', 'superadmin'].includes(currentUser.role)) {
+      redirect('/events')
+    }
+
     const [event, registrations] = await Promise.all([
       getEventById(id),
       getAllEventRegistrations(id),
     ])
-
-    // Only admins, coordinators, and superadmins can confirm attendance
-    if (currentUser.role === 'member') {
-      redirect(`/events/${id}`)
-    }
 
     return (
       <div className="max-w-7xl mx-auto space-y-6">

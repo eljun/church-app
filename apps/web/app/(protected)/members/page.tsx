@@ -27,7 +27,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   // Get current user role
   const supabase = await createClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()
-  let userRole: 'superadmin' | 'admin' | 'member' = 'member'
+  let userRole: 'superadmin' | 'admin' | 'bibleworker' | 'member' = 'member'
 
   if (authUser) {
     const { data: userData } = await supabase
@@ -40,6 +40,9 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       userRole = userData.role
     }
   }
+
+  // Bibleworkers have read-only access
+  const isBibleworker = userRole === 'bibleworker'
 
   // Build filter params
   const filters: SearchMembersInput = {
@@ -63,15 +66,17 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
         <div>
           <h1 className="font-display text-3xl  text-primary text-primary">Members</h1>
           <p className="mt-1 text-sm text-foreground">
-            Manage your church members ({count.toLocaleString()} total)
+            {isBibleworker ? 'View church members' : 'Manage your church members'} ({count.toLocaleString()} total)
           </p>
         </div>
-        <Button asChild>
-          <Link href="/members/new">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Add Member
-          </Link>
-        </Button>
+        {!isBibleworker && (
+          <Button asChild>
+            <Link href="/members/new">
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Add Member
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Filters */}

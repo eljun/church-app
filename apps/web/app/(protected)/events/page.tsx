@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { PlusIcon, CalendarDays, Grid3x3, List } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 import { getEvents } from '@/lib/queries/events'
 import { EventsTable } from '@/components/events/events-table'
 import { EventsFilters } from '@/components/events/events-filters'
@@ -28,6 +29,15 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const offset = (page - 1) * limit
   const view = params.view || 'list'
 
+  // Get current user
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: currentUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user?.id || '')
+    .single()
+
   // Build filter params
   const filters: SearchEventsInput = {
     query: params.query,
@@ -50,6 +60,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
   const totalPages = Math.ceil(count / limit)
 
+  // Bibleworkers have read-only access
+  const isBibleworker = currentUser?.role === 'bibleworker'
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -57,15 +70,17 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         <div>
           <h1 className="font-display text-3xl  text-primary">Events & Activities</h1>
           <p className="mt-1 text-sm text-foreground">
-            Manage church events and activities ({count.toLocaleString()} total)
+            {isBibleworker ? 'View church events and activities' : 'Manage church events and activities'} ({count.toLocaleString()} total)
           </p>
         </div>
-        <Button asChild>
-          <Link href="/events/new">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Create Event
-          </Link>
-        </Button>
+        {!isBibleworker && (
+          <Button asChild>
+            <Link href="/events/new">
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Create Event
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -100,6 +115,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               currentPage={page}
               totalPages={totalPages}
               totalCount={count}
+              userRole={currentUser?.role}
             />
           </Suspense>
         </TabsContent>

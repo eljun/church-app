@@ -41,6 +41,7 @@ export async function getMissionaryReports(filters: FilterMissionaryReportsInput
   const supabase = await createClient()
   const {
     church_id,
+    church_ids,
     start_date,
     end_date,
     report_type,
@@ -66,7 +67,10 @@ export async function getMissionaryReports(filters: FilterMissionaryReportsInput
     `, { count: 'exact' })
 
   // Apply filters
-  if (church_id) {
+  // Prioritize church_ids array over single church_id
+  if (church_ids && church_ids.length > 0) {
+    query = query.in('church_id', church_ids)
+  } else if (church_id) {
     query = query.eq('church_id', church_id)
   }
 
@@ -164,14 +168,15 @@ export async function getLastMissionaryReport(
 }
 
 /**
- * Get missionary report statistics for a church
- * If churchId is not provided, returns stats for all churches (superadmin view)
+ * Get missionary report statistics for a church or multiple churches
+ * If churchId/churchIds is not provided, returns stats for all churches (superadmin view)
  */
 export async function getMissionaryReportStats(
   churchId?: string,
   startDate?: string,
   endDate?: string,
-  reportType?: ReportType
+  reportType?: ReportType,
+  churchIds?: string[]
 ) {
   const supabase = await createClient()
 
@@ -179,8 +184,10 @@ export async function getMissionaryReportStats(
     .from('missionary_reports')
     .select('*')
 
-  // Only filter by church if churchId is provided
-  if (churchId) {
+  // Prioritize churchIds array over single churchId
+  if (churchIds && churchIds.length > 0) {
+    query = query.in('church_id', churchIds)
+  } else if (churchId) {
     query = query.eq('church_id', churchId)
   }
 
@@ -446,6 +453,14 @@ export async function getAccessibleChurchIds(userId: string) {
 
     // Remove duplicates
     return [...new Set(churchIds)]
+  }
+
+  // Bibleworker: Only their assigned churches
+  if (user.role === 'bibleworker') {
+    if (user.assigned_church_ids && user.assigned_church_ids.length > 0) {
+      return user.assigned_church_ids
+    }
+    return []
   }
 
   // Default: No access

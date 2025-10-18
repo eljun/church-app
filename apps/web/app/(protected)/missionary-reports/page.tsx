@@ -49,6 +49,7 @@ export default async function MissionaryReportsPage({ searchParams }: PageProps)
     page: number
     limit: number
     church_id?: string
+    church_ids?: string[]
     start_date?: string
     end_date?: string
     report_type?: 'weekly' | 'biennial' | 'triennial'
@@ -62,8 +63,15 @@ export default async function MissionaryReportsPage({ searchParams }: PageProps)
     filters.church_id = userData.church_id
   }
 
-  // Apply URL filters
-  if (params.church_id) filters.church_id = params.church_id
+  // Bibleworker: Filter to their assigned churches
+  if (userData.role === 'bibleworker' && userData.assigned_church_ids && userData.assigned_church_ids.length > 0) {
+    filters.church_ids = userData.assigned_church_ids
+  }
+
+  // Apply URL filters (but don't override role-based church filters for admin/bibleworker)
+  if (params.church_id && userData.role !== 'admin' && userData.role !== 'bibleworker') {
+    filters.church_id = params.church_id
+  }
   if (params.start_date) filters.start_date = params.start_date
   if (params.end_date) filters.end_date = params.end_date
   if (params.report_type) filters.report_type = params.report_type
@@ -71,17 +79,17 @@ export default async function MissionaryReportsPage({ searchParams }: PageProps)
   // Fetch reports
   const { data: reports, count, totalPages } = await getMissionaryReports(filters)
 
-  // Fetch statistics (same filters but without pagination)
-  const statsFilters = { ...filters }
-  delete (statsFilters as { page?: number }).page
-  delete (statsFilters as { limit?: number }).limit
-
+  // Fetch statistics
   const stats = await getMissionaryReportStats(
     filters.church_id,
     params.start_date,
     params.end_date,
-    params.report_type
+    params.report_type,
+    filters.church_ids
   )
+
+  // Bibleworkers can create reports (no longer read-only)
+  const isBibleworker = userData.role === 'bibleworker'
 
   return (
     <div className="space-y-6">
@@ -89,7 +97,9 @@ export default async function MissionaryReportsPage({ searchParams }: PageProps)
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Missionary Reports</h1>
-          <p className="text-muted-foreground mt-1">Track and manage missionary activities for your church</p>
+          <p className="text-muted-foreground mt-1">
+            {isBibleworker ? 'Track missionary activities for your assigned churches' : 'Track and manage missionary activities for your church'}
+          </p>
         </div>
         <Link href="/missionary-reports/new">
           <Button>
@@ -106,6 +116,7 @@ export default async function MissionaryReportsPage({ searchParams }: PageProps)
       <MissionaryReportsTable
         reports={reports}
         userRole={userData.role}
+        userId={user.id}
         currentPage={currentPage}
         totalPages={totalPages}
         totalCount={count}

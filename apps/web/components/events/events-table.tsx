@@ -54,11 +54,15 @@ interface EventsTableProps {
   currentPage: number
   totalPages: number
   totalCount: number
+  userRole?: string
 }
 
-export function EventsTable({ events, currentPage, totalPages, totalCount }: EventsTableProps) {
+export function EventsTable({ events, currentPage, totalPages, totalCount, userRole }: EventsTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Bibleworkers have read-only access
+  const isBibleworker = userRole === 'bibleworker'
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [eventToDelete, setEventToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -209,36 +213,40 @@ export function EventsTable({ events, currentPage, totalPages, totalCount }: Eve
                             View
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/events/${event.id}/registrations`}>
-                            <UserPlus className="mr-2 h-4 w-4" />
-                            Registrations
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/events/${event.id}/attendance`}>
-                            <ClipboardCheck className="mr-2 h-4 w-4" />
-                            Attendance
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link href={`/events/${event.id}/edit`}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => {
-                            setEventToDelete(event.id)
-                            setDeleteDialogOpen(true)
-                          }}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
+                        {!isBibleworker && (
+                          <>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/events/${event.id}/registrations`}>
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Registrations
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/events/${event.id}/attendance`}>
+                                <ClipboardCheck className="mr-2 h-4 w-4" />
+                                Attendance
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <Link href={`/events/${event.id}/edit`}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => {
+                                setEventToDelete(event.id)
+                                setDeleteDialogOpen(true)
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

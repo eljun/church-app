@@ -159,10 +159,12 @@ export async function deleteMissionaryReport(reportId: string) {
     // - Superadmin: can delete any report
     // - Admin: can delete reports from their church
     // - Pastor: can delete reports from their district/field/assigned churches (checked by RLS)
+    // - Bibleworker: can delete only their own reports
     const canDelete =
       userData.role === 'superadmin' ||
       (userData.role === 'admin' && userData.church_id === report.church_id) ||
-      userData.role === 'pastor'
+      userData.role === 'pastor' ||
+      (userData.role === 'bibleworker' && report.reported_by === user.id)
 
     if (!canDelete) {
       return { error: 'You do not have permission to delete this report' }

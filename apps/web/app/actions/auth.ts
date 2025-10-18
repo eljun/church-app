@@ -16,13 +16,26 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { error, data: authData } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
     return { error: error.message }
   }
 
+  // Get user role to determine redirect
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', authData.user.id)
+    .single()
+
   revalidatePath('/', 'layout')
+
+  // Redirect bibleworkers to /events instead of dashboard
+  if (userData?.role === 'bibleworker') {
+    redirect('/events')
+  }
+
   redirect('/')
 }
 
