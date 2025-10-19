@@ -54,14 +54,24 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // Coordinator role restrictions - only allow access to /events
+  // Check user status and role restrictions
   if (user) {
     const { data: userData } = await supabase
       .from('users')
-      .select('role')
+      .select('role, is_active')
       .eq('id', user.id)
       .single()
 
+    // Block deactivated users - sign them out and redirect to login
+    if (userData && userData.is_active === false) {
+      await supabase.auth.signOut()
+      const response = NextResponse.redirect(new URL('/login?deactivated=true', request.url))
+      response.cookies.delete('sb-access-token')
+      response.cookies.delete('sb-refresh-token')
+      return response
+    }
+
+    // Coordinator role restrictions - only allow access to /events
     if (userData?.role === 'coordinator') {
       const coordinatorAllowedPaths = ['/events']
       const isAllowedPath = coordinatorAllowedPaths.some(path =>

@@ -152,7 +152,6 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
     groups.push({
       title: 'Analytics',
       items: [
-        { name: 'Attendance', href: '/attendance', icon: ClipboardCheck },
         { name: 'Missionary Reports', href: '/missionary-reports', icon: BookHeart },
         { name: 'Reports', href: '/reports', icon: FileText },
       ]
@@ -409,12 +408,14 @@ export function DashboardSidebar({ user }: SidebarProps) {
                 </p>
               )}
             </div>
-            <DropdownMenuItem asChild>
-              <Link href="/settings" className="cursor-pointer text-primary">
-                <Settings className="w-4 h-4 mr-2 text-primary" />
-                User Settings
-              </Link>
-            </DropdownMenuItem>            
+            {user?.role === 'superadmin' && (
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="cursor-pointer text-primary">
+                  <Settings className="w-4 h-4 mr-2 text-primary" />
+                  User Settings
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={handleSignout}
               className="cursor-pointer text-primary font-semibold"

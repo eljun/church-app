@@ -296,7 +296,8 @@ export async function getAttendanceSummaryByService(
  */
 export async function getAbsentMembers(
   churchId?: string,
-  daysSinceLastAttendance = 30
+  daysSinceLastAttendance = 30,
+  churchIds?: string[]
 ) {
   const supabase = await createClient()
 
@@ -308,6 +309,8 @@ export async function getAbsentMembers(
 
   if (churchId) {
     membersQuery = membersQuery.eq('church_id', churchId)
+  } else if (churchIds && churchIds.length > 0) {
+    membersQuery = membersQuery.in('church_id', churchIds)
   }
 
   const { data: members, error: membersError } = await membersQuery
@@ -331,6 +334,8 @@ export async function getAbsentMembers(
 
   if (churchId) {
     attendanceQuery = attendanceQuery.eq('church_id', churchId)
+  } else if (churchIds && churchIds.length > 0) {
+    attendanceQuery = attendanceQuery.in('church_id', churchIds)
   }
 
   const { data: recentAttendance, error: attendanceError } = await attendanceQuery

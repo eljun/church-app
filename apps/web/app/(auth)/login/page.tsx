@@ -7,18 +7,28 @@
 
 import { login } from '@/app/actions/auth'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
-import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2, Eye, EyeOff, AlertTriangle } from 'lucide-react'
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [deactivatedMessage, setDeactivatedMessage] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('deactivated') === 'true') {
+      setDeactivatedMessage(true)
+    }
+  }, [searchParams])
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)
@@ -56,6 +66,14 @@ export default function LoginPage() {
 
         <form action={handleSubmit}>
           <CardContent className="space-y-4">
+            {deactivatedMessage && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Your account has been deactivated. Please contact your administrator for assistance.
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white/80">Email</Label>
               <Input
@@ -135,5 +153,13 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary to-accent"><Loader2 className="h-8 w-8 animate-spin text-white" /></div>}>
+      <LoginForm />
+    </Suspense>
   )
 }

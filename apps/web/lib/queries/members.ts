@@ -5,6 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { SearchMembersInput } from '@/lib/validations/member'
+import { getPastorAccessibleChurches } from '@/lib/utils/pastor-helpers'
 
 /**
  * Get all members with pagination and filtering
@@ -32,6 +33,15 @@ export async function getMembers(params?: SearchMembersInput) {
   // Role-based filtering
   if (userData.role === 'admin' && userData.church_id) {
     query = query.eq('church_id', userData.church_id)
+  }
+
+  // Pastor filtering - show members from their assigned churches
+  if (userData.role === 'pastor') {
+    const pastorChurchIds = await getPastorAccessibleChurches(user.id)
+    if (pastorChurchIds === null || pastorChurchIds.length === 0) {
+      return { data: [], count: 0, limit: params?.limit || 50, offset: params?.offset || 0 }
+    }
+    query = query.in('church_id', pastorChurchIds)
   }
 
   // Apply filters

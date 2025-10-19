@@ -20,6 +20,7 @@ import { StatisticsCard } from '@/components/reports/statistics-card'
 import { LineChart } from '@/components/shared'
 import { AgeDistributionChart } from '@/components/reports/age-distribution-chart'
 import { createClient } from '@/lib/supabase/server'
+import { getPastorAccessibleChurches } from '@/lib/utils/pastor-helpers'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -39,58 +40,86 @@ export default async function DashboardPage() {
     redirect('/events')
   }
 
+  // Get pastor's accessible churches
+  const pastorChurchIds = userData?.role === 'pastor' && user
+    ? await getPastorAccessibleChurches(user.id)
+    : null
+
   // Fetch all data in parallel
   const [memberStats, growthData, upcomingBirthdays, upcomingAnniversaries, ageDistribution, absentMembers, churches] =
     await Promise.all([
-      getMemberStatistics(userData?.role === 'admin' ? userData.church_id : undefined),
+      getMemberStatistics(
+        userData?.role === 'admin' ? userData.church_id : undefined,
+        pastorChurchIds || undefined
+      ),
       getMemberGrowthData({
         church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+        church_ids: pastorChurchIds || undefined,
       }),
       getUpcomingBirthdays({
         church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+        church_ids: pastorChurchIds || undefined,
         months_ahead: 1,
       }),
       getUpcomingBaptismAnniversaries({
         church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+        church_ids: pastorChurchIds || undefined,
         months_ahead: 1,
       }),
-      getAgeDistribution(userData?.role === 'admin' ? userData.church_id : undefined),
-      getAbsentMembers(userData?.role === 'admin' ? userData.church_id : undefined, 30),
+      getAgeDistribution(
+        userData?.role === 'admin' ? userData.church_id : undefined,
+        pastorChurchIds || undefined
+      ),
+      getAbsentMembers(
+        userData?.role === 'admin' ? userData.church_id : undefined,
+        30,
+        pastorChurchIds || undefined
+      ),
       // Get church/field breakdown
-      supabase
-        .from('members')
-        .select('church_id, churches(name, field)')
-        .eq('status', 'active')
-        .then(({ data }) => {
-          // Group by church and field
-          const churchCounts = new Map<string, { name: string; field: string; count: number }>()
-          data?.forEach((member) => {
-            const churches = member.churches as { name: string; field: string } | { name: string; field: string }[] | null
-            const churchData = Array.isArray(churches) ? churches[0] : churches
-            const churchName = churchData?.name || 'Unknown'
-            const field = churchData?.field || 'Unknown'
-            const key = `${field}:${churchName}`
+      (async () => {
+        let query = supabase
+          .from('members')
+          .select('church_id, churches(name, field)')
+          .eq('status', 'active')
 
-            if (churchCounts.has(key)) {
-              churchCounts.get(key)!.count++
-            } else {
-              churchCounts.set(key, { name: churchName, field, count: 1 })
-            }
-          })
+        // Apply pastor filtering
+        if (userData?.role === 'admin' && userData.church_id) {
+          query = query.eq('church_id', userData.church_id)
+        } else if (pastorChurchIds && pastorChurchIds.length > 0) {
+          query = query.in('church_id', pastorChurchIds)
+        }
 
-          // Group by field
-          const fieldCounts = new Map<string, { churches: string[]; count: number }>()
-          Array.from(churchCounts.values()).forEach(({ name, field, count }) => {
-            if (fieldCounts.has(field)) {
-              fieldCounts.get(field)!.count += count
-              fieldCounts.get(field)!.churches.push(`${name} (${count})`)
-            } else {
-              fieldCounts.set(field, { churches: [`${name} (${count})`], count })
-            }
-          })
+        const { data } = await query
 
-          return { churchCounts, fieldCounts }
-        }),
+        // Group by church and field
+        const churchCounts = new Map<string, { name: string; field: string; count: number }>()
+        data?.forEach((member) => {
+          const churches = member.churches as { name: string; field: string } | { name: string; field: string }[] | null
+          const churchData = Array.isArray(churches) ? churches[0] : churches
+          const churchName = churchData?.name || 'Unknown'
+          const field = churchData?.field || 'Unknown'
+          const key = `${field}:${churchName}`
+
+          if (churchCounts.has(key)) {
+            churchCounts.get(key)!.count++
+          } else {
+            churchCounts.set(key, { name: churchName, field, count: 1 })
+          }
+        })
+
+        // Group by field
+        const fieldCounts = new Map<string, { churches: string[]; count: number }>()
+        Array.from(churchCounts.values()).forEach(({ name, field, count }) => {
+          if (fieldCounts.has(field)) {
+            fieldCounts.get(field)!.count += count
+            fieldCounts.get(field)!.churches.push(`${name} (${count})`)
+          } else {
+            fieldCounts.set(field, { churches: [`${name} (${count})`], count })
+          }
+        })
+
+        return { churchCounts, fieldCounts }
+      })(),
     ])
 
   // Calculate percentages

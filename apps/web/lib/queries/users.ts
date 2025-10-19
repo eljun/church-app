@@ -13,7 +13,9 @@ export interface UserWithChurch {
   church_id: string | null
   district_id: string | null
   field_id: string | null
+  assigned_church_ids: string[]
   assigned_member_ids: string[]
+  is_active: boolean
   created_at: string
   updated_at: string
   churches?: {
@@ -33,6 +35,7 @@ export async function getUsers(params?: {
   role?: UserRole
   church_id?: string
   query?: string
+  show_inactive?: boolean
 }) {
   const supabase = await createClient()
 
@@ -62,6 +65,11 @@ export async function getUsers(params?: {
         field
       )
     `, { count: 'exact' })
+
+  // Filter active users by default (unless show_inactive is true)
+  if (!params?.show_inactive) {
+    query = query.eq('is_active', true)
+  }
 
   // Apply filters
   if (params?.role) {
@@ -182,10 +190,11 @@ export async function getUserStats() {
     throw new Error('Unauthorized: Superadmin access required')
   }
 
-  // Get counts by role
+  // Get counts by role (active users only)
   const { data, error } = await supabase
     .from('users')
-    .select('role')
+    .select('role, is_active')
+    .eq('is_active', true)
 
   if (error) throw error
 

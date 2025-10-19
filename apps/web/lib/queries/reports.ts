@@ -11,6 +11,7 @@ import type { CustomReportFilters, MemberField, MemberReportRow } from '@/lib/ty
  */
 export async function getMemberGrowthData(params?: {
   church_id?: string
+  church_ids?: string[]
   start_date?: string
   end_date?: string
   period?: 'monthly' | 'quarterly' | 'yearly'
@@ -45,6 +46,8 @@ export async function getMemberGrowthData(params?: {
   // Role-based filtering
   if (userData.role === 'admin' && userData.church_id) {
     query = query.eq('church_id', userData.church_id)
+  } else if (params?.church_ids && params.church_ids.length > 0) {
+    query = query.in('church_id', params.church_ids)
   } else if (params?.church_id) {
     query = query.eq('church_id', params.church_id)
   }
@@ -59,7 +62,7 @@ export async function getMemberGrowthData(params?: {
 /**
  * Get member statistics summary
  */
-export async function getMemberStatistics(churchId?: string) {
+export async function getMemberStatistics(churchId?: string, churchIds?: string[]) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -82,6 +85,9 @@ export async function getMemberStatistics(churchId?: string) {
     if (targetChurchId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (baseQuery as any).eq('church_id', targetChurchId)
+    } else if (churchIds && churchIds.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (baseQuery as any).in('church_id', churchIds)
     }
     return baseQuery
   }
@@ -244,6 +250,7 @@ export async function getTransferStatistics(params?: {
  */
 export async function getUpcomingBaptismAnniversaries(params?: {
   church_id?: string
+  church_ids?: string[]
   months_ahead?: number
 }) {
   const supabase = await createClient()
@@ -278,6 +285,8 @@ export async function getUpcomingBaptismAnniversaries(params?: {
 
   if (targetChurchId) {
     query = query.eq('church_id', targetChurchId)
+  } else if (params?.church_ids && params.church_ids.length > 0) {
+    query = query.in('church_id', params.church_ids)
   }
 
   const { data, error } = await query
@@ -314,6 +323,7 @@ export async function getUpcomingBaptismAnniversaries(params?: {
  */
 export async function getUpcomingBirthdays(params?: {
   church_id?: string
+  church_ids?: string[]
   months_ahead?: number
 }) {
   const supabase = await createClient()
@@ -348,6 +358,8 @@ export async function getUpcomingBirthdays(params?: {
 
   if (targetChurchId) {
     query = query.eq('church_id', targetChurchId)
+  } else if (params?.church_ids && params.church_ids.length > 0) {
+    query = query.in('church_id', params.church_ids)
   }
 
   const { data, error } = await query
@@ -579,7 +591,7 @@ export async function generateCustomMemberReport(
  * Get age distribution statistics
  * Categories: Children (<12), Youth (12-34), Adults (35-65), Seniors (66+)
  */
-export async function getAgeDistribution(churchId?: string) {
+export async function getAgeDistribution(churchId?: string, churchIds?: string[]) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -605,6 +617,8 @@ export async function getAgeDistribution(churchId?: string) {
 
   if (targetChurchId) {
     query = query.eq('church_id', targetChurchId)
+  } else if (churchIds && churchIds.length > 0) {
+    query = query.in('church_id', churchIds)
   }
 
   const { data, error } = await query

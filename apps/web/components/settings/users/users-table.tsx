@@ -17,6 +17,7 @@ import {
   Key,
   ChevronLeft,
   ChevronRight,
+  RotateCcw,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { EditUserDialog } from './edit-user-dialog'
 import { DeleteUserDialog } from './delete-user-dialog'
 import { ResetPasswordDialog } from './reset-password-dialog'
+import { ReactivateUserDialog } from './reactivate-user-dialog'
 import type { UserWithChurch } from '@/lib/queries/users'
 
 interface UsersTableProps {
@@ -79,6 +81,7 @@ export function UsersTable({
   const [editingUser, setEditingUser] = useState<UserWithChurch | null>(null)
   const [deletingUser, setDeletingUser] = useState<UserWithChurch | null>(null)
   const [resettingPassword, setResettingPassword] = useState<UserWithChurch | null>(null)
+  const [reactivatingUser, setReactivatingUser] = useState<UserWithChurch | null>(null)
 
   // Build pagination URLs that preserve search params
   const buildPageUrl = (page: number) => {
@@ -131,10 +134,17 @@ export function UsersTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={roleColor}>
-                      <RoleIcon className="mr-1 h-3 w-3" />
-                      {user.role === 'bibleworker' ? 'Bible Worker' : user.role}
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge variant="outline" className={roleColor}>
+                        <RoleIcon className="mr-1 h-3 w-3" />
+                        {user.role === 'bibleworker' ? 'Bible Worker' : user.role}
+                      </Badge>
+                      {!user.is_active && (
+                        <Badge variant="destructive" className="text-xs">
+                          Inactive
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
@@ -195,13 +205,23 @@ export function UsersTable({
                           Reset Password
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => setDeletingUser(user)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete User
-                        </DropdownMenuItem>
+                        {user.is_active ? (
+                          <DropdownMenuItem
+                            onClick={() => setDeletingUser(user)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Deactivate User
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() => setReactivatingUser(user)}
+                            className="text-green-600"
+                          >
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Reactivate User
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -266,6 +286,12 @@ export function UsersTable({
         <ResetPasswordDialog
           user={resettingPassword}
           onClose={() => setResettingPassword(null)}
+        />
+      )}
+      {reactivatingUser && (
+        <ReactivateUserDialog
+          user={reactivatingUser}
+          onClose={() => setReactivatingUser(null)}
         />
       )}
     </div>

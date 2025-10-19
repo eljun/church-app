@@ -14,11 +14,11 @@ export const metadata = {
 }
 
 interface UsersPageProps {
-  searchParams: Promise<{ page?: string; role?: string; query?: string }>
+  searchParams: Promise<{ page?: string; role?: string; query?: string; status?: string }>
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
-  const { page: pageParam, role: roleFilter, query: searchQuery } = await searchParams
+  const { page: pageParam, role: roleFilter, query: searchQuery, status: statusFilter } = await searchParams
   const supabase = await createClient()
 
   // Get current user
@@ -61,6 +61,15 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         searchPlaceholder="Search users by email..."
         advancedFilters={[
           {
+            key: 'status',
+            label: 'Status',
+            options: [
+              { value: 'all', label: 'All Users' },
+              { value: 'active', label: 'Active Only' },
+              { value: 'inactive', label: 'Inactive Only' },
+            ],
+          },
+          {
             key: 'role',
             label: 'Role',
             options: [
@@ -85,6 +94,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           offset={offset}
           roleFilter={roleFilter}
           searchQuery={searchQuery}
+          statusFilter={statusFilter}
           churches={churches}
         />
       </Suspense>
@@ -98,6 +108,7 @@ async function UsersTableWrapper({
   offset,
   roleFilter,
   searchQuery,
+  statusFilter,
   churches,
 }: {
   page: number
@@ -105,26 +116,38 @@ async function UsersTableWrapper({
   offset: number
   roleFilter?: string
   searchQuery?: string
+  statusFilter?: string
   churches: Array<{ id: string; name: string; district: string; field: string }>
 }) {
-  // Fetch users with search
+  // Determine show_inactive based on status filter
+  const showInactive = statusFilter === 'all' || statusFilter === 'inactive'
+
+  // Fetch users with search and filters
   const { data: users, count } = await getUsers({
     limit,
     offset,
     role: roleFilter as 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'admin' | 'member' | undefined,
     query: searchQuery,
+    show_inactive: showInactive,
   })
+
+  // Filter by active/inactive if specific status selected
+  const filteredUsers = statusFilter === 'inactive'
+    ? users.filter(u => !u.is_active)
+    : statusFilter === 'active'
+    ? users.filter(u => u.is_active)
+    : users
 
   const totalPages = Math.ceil(count / limit)
 
   return (
     <div>
       <UsersTable
-        users={users}
+        users={filteredUsers}
         churches={churches}
         currentPage={page}
         totalPages={totalPages}
-        totalCount={count}
+        totalCount={filteredUsers.length}
       />
     </div>
   )

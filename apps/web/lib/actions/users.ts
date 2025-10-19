@@ -170,7 +170,89 @@ export async function updateUser(input: UpdateUserInput) {
 }
 
 /**
- * Delete a user (superadmin only)
+ * Deactivate a user (soft delete - superadmin only)
+ * Sets is_active = false, preserving all historical data
+ */
+export async function deactivateUser(input: DeleteUserInput) {
+  try {
+    // Check authorization
+    const authCheck = await checkSuperadmin()
+    if (authCheck.error) {
+      return { error: authCheck.error }
+    }
+
+    // Validate input
+    const validatedInput = deleteUserSchema.parse(input)
+
+    const adminClient = createAdminClient()
+
+    // Prevent deactivating self
+    if (authCheck.user?.id === validatedInput.id) {
+      return { error: 'Cannot deactivate your own account' }
+    }
+
+    // Soft delete: Set is_active = false
+    const { error: updateError } = await (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      adminClient.from('users') as any
+    )
+      .update({ is_active: false })
+      .eq('id', validatedInput.id)
+
+    if (updateError) {
+      return { error: `Failed to deactivate user: ${updateError.message}` }
+    }
+
+    revalidatePath('/settings/users')
+    return { success: true }
+  } catch (error) {
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: 'Failed to deactivate user' }
+  }
+}
+
+/**
+ * Reactivate a user (superadmin only)
+ */
+export async function reactivateUser(userId: string) {
+  try {
+    // Check authorization
+    const authCheck = await checkSuperadmin()
+    if (authCheck.error) {
+      return { error: authCheck.error }
+    }
+
+    const adminClient = createAdminClient()
+
+    // Set is_active = true
+    const { error: updateError } = await (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      adminClient.from('users') as any
+    )
+      .update({ is_active: true })
+      .eq('id', userId)
+
+    if (updateError) {
+      return { error: `Failed to reactivate user: ${updateError.message}` }
+    }
+
+    revalidatePath('/settings/users')
+    return { success: true }
+  } catch (error) {
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: 'Failed to reactivate user' }
+  }
+}
+
+/**
+ * Delete a user permanently (superadmin only)
+ * WARNING: This permanently deletes the user and auth account.
+ * Use deactivateUser() instead to preserve historical data.
+ * This will fail if user has related records (events, reports, etc.)
  */
 export async function deleteUser(input: DeleteUserInput) {
   try {

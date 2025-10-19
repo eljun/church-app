@@ -5,6 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { SearchChurchesInput } from '@/lib/validations/church'
+import { getPastorAccessibleChurches } from '@/lib/utils/pastor-helpers'
 
 /**
  * Get all churches with pagination and filtering
@@ -15,10 +16,22 @@ export async function getChurches(params?: SearchChurchesInput) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
+  // Check if user is pastor - filter by accessible churches
+  const pastorChurchIds = await getPastorAccessibleChurches(user.id)
+
   // Build query
   let query = supabase
     .from('churches')
     .select('*', { count: 'exact' })
+
+  // Filter by pastor's accessible churches
+  if (pastorChurchIds !== null) {
+    if (pastorChurchIds.length === 0) {
+      // Pastor has no churches assigned - return empty
+      return { data: [], count: 0, limit: params?.limit || 50, offset: params?.offset || 0 }
+    }
+    query = query.in('id', pastorChurchIds)
+  }
 
   // Apply filters
   if (params?.query) {
