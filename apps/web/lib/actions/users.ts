@@ -7,6 +7,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import {
   createUserSchema,
   updateUserSchema,
@@ -54,11 +55,11 @@ export async function createUser(input: CreateUserInput) {
     // Validate input
     const validatedInput = createUserSchema.parse(input)
 
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
     // Create auth user via Supabase Admin API
-    // Note: This requires service_role key in production
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Note: This requires service_role key
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: validatedInput.email,
       password: validatedInput.password,
       email_confirm: true, // Auto-confirm email
@@ -73,8 +74,11 @@ export async function createUser(input: CreateUserInput) {
     }
 
     // Update user record in users table with role and assignments
-    const { error: updateError } = await supabase
-      .from('users')
+    // Use admin client to bypass RLS and ensure update succeeds
+    const { error: updateError } = await (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      adminClient.from('users') as any
+    )
       .update({
         role: validatedInput.role,
         church_id: validatedInput.church_id,
@@ -87,7 +91,7 @@ export async function createUser(input: CreateUserInput) {
 
     if (updateError) {
       // Rollback: Delete auth user
-      await supabase.auth.admin.deleteUser(authData.user.id)
+      await adminClient.auth.admin.deleteUser(authData.user.id)
       return { error: `Failed to update user record: ${updateError.message}` }
     }
 
@@ -115,7 +119,7 @@ export async function updateUser(input: UpdateUserInput) {
     // Validate input
     const validatedInput = updateUserSchema.parse(input)
 
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
     // Build update object (only include provided fields)
     const updateData: Record<string, unknown> = {}
@@ -131,9 +135,11 @@ export async function updateUser(input: UpdateUserInput) {
       updateData.assigned_member_ids = validatedInput.assigned_member_ids
     }
 
-    // Update user record
-    const { error: updateError } = await supabase
-      .from('users')
+    // Update user record - use admin client to bypass RLS
+    const { error: updateError } = await (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      adminClient.from('users') as any
+    )
       .update(updateData)
       .eq('id', validatedInput.id)
 
@@ -143,7 +149,7 @@ export async function updateUser(input: UpdateUserInput) {
 
     // Update auth email if provided
     if (validatedInput.email) {
-      const { error: authError } = await supabase.auth.admin.updateUserById(
+      const { error: authError } = await adminClient.auth.admin.updateUserById(
         validatedInput.id,
         { email: validatedInput.email }
       )
@@ -177,7 +183,7 @@ export async function deleteUser(input: DeleteUserInput) {
     // Validate input
     const validatedInput = deleteUserSchema.parse(input)
 
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
     // Prevent deleting self
     if (authCheck.user?.id === validatedInput.id) {
@@ -185,7 +191,7 @@ export async function deleteUser(input: DeleteUserInput) {
     }
 
     // Delete user from auth (this will cascade to users table via trigger)
-    const { error: authError } = await supabase.auth.admin.deleteUser(validatedInput.id)
+    const { error: authError } = await adminClient.auth.admin.deleteUser(validatedInput.id)
 
     if (authError) {
       return { error: `Failed to delete user: ${authError.message}` }
@@ -220,10 +226,10 @@ export async function resetUserPassword(userId: string, newPassword: string) {
       return { error: 'Password must be at least 8 characters' }
     }
 
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
     // Update password via Admin API
-    const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
+    const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
       password: newPassword,
     })
 
