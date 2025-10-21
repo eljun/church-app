@@ -53,12 +53,15 @@ export async function createUser(input: CreateUserInput) {
     }
 
     // Validate input
+    console.log('CreateUser Input:', JSON.stringify(input, null, 2))
     const validatedInput = createUserSchema.parse(input)
+    console.log('Validated Input:', JSON.stringify(validatedInput, null, 2))
 
     const adminClient = createAdminClient()
 
     // Create auth user via Supabase Admin API
     // Note: This requires service_role key
+    console.log('Creating auth user...')
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: validatedInput.email,
       password: validatedInput.password,
@@ -66,35 +69,44 @@ export async function createUser(input: CreateUserInput) {
     })
 
     if (authError) {
+      console.error('Auth creation error:', authError)
       return { error: `Failed to create auth user: ${authError.message}` }
     }
 
     if (!authData.user) {
+      console.error('No user data returned from auth creation')
       return { error: 'Failed to create auth user: No user data returned' }
     }
 
+    console.log('Auth user created:', authData.user.id)
+
     // Update user record in users table with role and assignments
     // Use admin client to bypass RLS and ensure update succeeds
+    const updateData = {
+      role: validatedInput.role,
+      church_id: validatedInput.church_id,
+      district_id: validatedInput.district_id,
+      field_id: validatedInput.field_id,
+      assigned_church_ids: validatedInput.assigned_church_ids,
+      assigned_member_ids: validatedInput.assigned_member_ids,
+    }
+    console.log('Updating user record with:', JSON.stringify(updateData, null, 2))
+
     const { error: updateError } = await (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       adminClient.from('users') as any
     )
-      .update({
-        role: validatedInput.role,
-        church_id: validatedInput.church_id,
-        district_id: validatedInput.district_id,
-        field_id: validatedInput.field_id,
-        assigned_church_ids: validatedInput.assigned_church_ids,
-        assigned_member_ids: validatedInput.assigned_member_ids,
-      })
+      .update(updateData)
       .eq('id', authData.user.id)
 
     if (updateError) {
+      console.error('User record update error:', updateError)
       // Rollback: Delete auth user
       await adminClient.auth.admin.deleteUser(authData.user.id)
       return { error: `Failed to update user record: ${updateError.message}` }
     }
 
+    console.log('User record updated successfully')
     revalidatePath('/settings/users')
     return { success: true, data: { id: authData.user.id } }
   } catch (error) {
