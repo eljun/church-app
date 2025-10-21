@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
 import Image from 'next/image'
+import { getRoleDisplayName } from '@/lib/rbac'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,7 +47,7 @@ import {
 interface UserData {
   id: string
   email: string
-  role: 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'church_secretary'
+  role: 'superadmin' | 'field_secretary' | 'pastor' | 'church_secretary' | 'coordinator' | 'bibleworker'
   church_id: string | null
   district_id?: string | null
   field_id?: string | null
@@ -105,7 +106,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
   const groups: NavGroup[] = []
 
   // Superadmin: People Management group
-  if (user?.role === 'superadmin') {
+  if (user?.role === 'superadmin' || user?.role === 'field_secretary') {
     groups.push({
       title: 'People Management',
       items: [
@@ -388,8 +389,8 @@ export function DashboardSidebar({ user }: SidebarProps) {
                     <p className="text-sm text-secondary font-semibold truncate">
                       {user?.email}
                     </p>
-                    <p className="text-xs text-white/50 capitalize">
-                      {user?.role}
+                    <p className="text-xs text-white/50">
+                      {user?.role && getRoleDisplayName(user.role)}
                       {user?.churches?.name && ` • ${user.churches.name}`}
                     </p>
                   </div>
@@ -400,7 +401,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-2 py-2">
               <p className="text-sm font-medium">{user?.email}</p>
-              <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+              <p className="text-xs text-muted-foreground">{user?.role && getRoleDisplayName(user.role)}</p>
               {user?.churches?.name && (
                 <p className="text-xs text-foreground flex items-center mt-1">
                   <Building2 className="w-3 h-3 mr-1" />

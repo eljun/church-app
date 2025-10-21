@@ -5,6 +5,9 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { canAccessModule } from '@/lib/rbac'
+import type { UserRole } from '@/lib/rbac'
+import type { ModuleName } from '@/lib/rbac'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -54,7 +57,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // Check user status and role restrictions
+  // Check user status and role-based access control
   if (user) {
     const { data: userData } = await supabase
       .from('users')
@@ -71,16 +74,51 @@ export async function middleware(request: NextRequest) {
       return response
     }
 
-    // Coordinator role restrictions - only allow access to /events
-    if (userData?.role === 'coordinator') {
-      const coordinatorAllowedPaths = ['/events']
-      const isAllowedPath = coordinatorAllowedPaths.some(path =>
-        request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
-      )
+    // Role-based module access control
+    if (userData?.role) {
+      const pathname = request.nextUrl.pathname
+      const userRole = userData.role as UserRole
 
-      // Redirect coordinators to /events if they try to access other pages
-      if (!isAllowedPath && request.nextUrl.pathname !== '/events') {
-        return NextResponse.redirect(new URL('/events', request.url))
+      // Map routes to modules
+      const routeToModule: Record<string, ModuleName> = {
+        '/': 'dashboard',
+        '/members': 'members',
+        '/visitors': 'visitors',
+        '/churches': 'churches',
+        '/events': 'events',
+        '/attendance': 'attendance',
+        '/transfers': 'transfers',
+        '/calendar': 'calendar',
+        '/reports': 'reports',
+        '/missionary-reports': 'missionary-reports',
+        '/settings': 'settings',
+      }
+
+      // Find the module for current route
+      let module: ModuleName | null = null
+      for (const [route, moduleName] of Object.entries(routeToModule)) {
+        if (pathname === route || pathname.startsWith(route + '/')) {
+          module = moduleName
+          break
+        }
+      }
+
+      // Check if user has access to this module
+      if (module && !canAccessModule(userRole, module)) {
+        // Redirect to their default landing page based on role
+        const defaultPages: Record<UserRole, string> = {
+          superadmin: '/',
+          field_secretary: '/',
+          pastor: '/',
+          church_secretary: '/',
+          coordinator: '/events',
+          bibleworker: '/',
+        }
+
+        const defaultPage = defaultPages[userRole] || '/'
+        if (pathname !== defaultPage) {
+          return NextResponse.redirect(new URL(defaultPage, request.url))
+        }
       }
     }
   }

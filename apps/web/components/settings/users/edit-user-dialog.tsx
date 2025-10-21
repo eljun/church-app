@@ -70,6 +70,11 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
       return
     }
 
+    if (role === 'field_secretary' && !fieldId) {
+      toast.error('Field Secretary must be assigned to a field')
+      return
+    }
+
     startTransition(async () => {
       const result = await updateUser({
         id: user.id,
@@ -127,9 +132,10 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bibleworker">Bible Worker - Assigned members</SelectItem>
+                  <SelectItem value="bibleworker">Bible Worker - Church assignments</SelectItem>
                   <SelectItem value="church_secretary">Church Secretary - Church management</SelectItem>
-                  <SelectItem value="pastor">Pastor - District/Field oversight</SelectItem>
+                  <SelectItem value="pastor">Pastor - District oversight</SelectItem>
+                  <SelectItem value="field_secretary">Field Secretary - Field oversight</SelectItem>
                   <SelectItem value="coordinator">Coordinator - Event coordination</SelectItem>
                   <SelectItem value="superadmin">Superadmin - Full system access</SelectItem>
                 </SelectContent>
@@ -151,6 +157,30 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
                 />
                 <p className="text-xs text-muted-foreground">
                   Church Secretary users manage a specific church
+                </p>
+              </div>
+            </div>
+          )}
+
+          {role === 'field_secretary' && (
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="text-sm font-medium">Field Secretary Assignment</h4>
+              <div className="grid gap-2">
+                <Label htmlFor="field">Field *</Label>
+                <Select value={fieldId} onValueChange={setFieldId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select field" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fields.map((field) => (
+                      <SelectItem key={field} value={field}>
+                        {field}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Field Secretary manages all churches and districts in their field
                 </p>
               </div>
             </div>

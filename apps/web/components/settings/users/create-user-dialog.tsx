@@ -87,6 +87,11 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
       return
     }
 
+    if (role === 'field_secretary' && !fieldId) {
+      toast.error('Field Secretary must be assigned to a field')
+      return
+    }
+
     startTransition(async () => {
       const result = await createUser({
         email,
@@ -192,6 +197,30 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                 />
                 <p className="text-xs text-muted-foreground">
                   Church Secretary users manage a specific church
+                </p>
+              </div>
+            </div>
+          )}
+
+          {role === 'field_secretary' && (
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="text-sm font-medium">Field Secretary Assignment</h4>
+              <div className="grid gap-2">
+                <Label htmlFor="field">Field *</Label>
+                <Select value={fieldId} onValueChange={setFieldId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select field" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fields.map((field) => (
+                      <SelectItem key={field} value={field}>
+                        {field}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Field Secretary manages all churches and districts in their field
                 </p>
               </div>
             </div>
