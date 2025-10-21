@@ -21,28 +21,33 @@ import { LineChart } from '@/components/shared'
 import { AgeDistributionChart } from '@/components/reports/age-distribution-chart'
 import { createClient } from '@/lib/supabase/server'
 import { getPastorAccessibleChurches } from '@/lib/utils/pastor-helpers'
-import { getAuthUserRole } from '@/lib/utils/auth-helpers'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Use cached auth user helper to avoid duplicate queries
-  const userData = await getAuthUserRole()
+  // Get user info for filtering
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // Bibleworkers don't have access to dashboard
+  if (!user) {
+    redirect('/login')
+  }
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role, church_id, field_id, district_id')
+    .eq('id', user.id)
+    .single()
+
+  // Bibleworkers don't have access to dashboard (middleware should handle this, but double-check)
   if (userData?.role === 'bibleworker') {
     redirect('/events')
   }
 
-  if (!userData) {
-    redirect('/login')
-  }
-
   // Get pastor's accessible churches
-  const pastorChurchIds = userData?.role === 'pastor'
-    ? await getPastorAccessibleChurches(userData.id)
+  const pastorChurchIds = userData?.role === 'pastor' && user
+    ? await getPastorAccessibleChurches(user.id)
     : null
 
   // Fetch all data in parallel

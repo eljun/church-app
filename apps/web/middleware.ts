@@ -112,7 +112,7 @@ export async function middleware(request: NextRequest) {
           pastor: '/',
           church_secretary: '/',
           coordinator: '/events',
-          bibleworker: '/',
+          bibleworker: '/events', // Changed from '/' to '/events' to prevent loop
         }
 
         const defaultPage = defaultPages[userRole] || '/'
