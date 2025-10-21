@@ -44,7 +44,7 @@ export const getAuthUserRole = cache(async () => {
 
   const { data: userData } = await supabase
     .from('users')
-    .select('id, role, church_id, assigned_church_ids, field, district')
+    .select('id, role, church_id, assigned_church_ids, field, district, field_id, district_id')
     .eq('id', user.id)
     .single()
 
