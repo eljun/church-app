@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get all transfer requests with filtering
@@ -22,6 +23,9 @@ export async function getTransferRequests(status?: 'pending' | 'approved' | 'rej
 
   if (!userData) throw new Error('User not found')
 
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   // Build query
   let query = supabase
     .from('transfer_requests')
@@ -33,10 +37,10 @@ export async function getTransferRequests(status?: 'pending' | 'approved' | 'rej
       approver:users!transfer_requests_approved_by_fkey(email, role)
     `)
 
-  // Role-based filtering
-  if (userData.role === 'church_secretary' && userData.church_id) {
-    // Church Secretaries see requests from or to their church
-    query = query.or(`from_church_id.eq.${userData.church_id},to_church_id.eq.${userData.church_id}`)
+  // Apply scope filter (CRITICAL)
+  // For transfers, we need to see transfers where either from_church OR to_church is in allowed scope
+  if (allowedChurchIds !== null) {
+    query = query.or(`from_church_id.in.(${allowedChurchIds.join(',')}),to_church_id.in.(${allowedChurchIds.join(',')})`)
   }
 
   // Status filter
@@ -150,6 +154,9 @@ export async function getTransferHistory(limit = 50) {
 
   if (!userData) throw new Error('User not found')
 
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   // Build query
   let query = supabase
     .from('transfer_history')
@@ -157,9 +164,10 @@ export async function getTransferHistory(limit = 50) {
     .order('transfer_date', { ascending: false })
     .limit(limit)
 
-  // Role-based filtering
-  if (userData.role === 'church_secretary' && userData.church_id) {
-    query = query.or(`from_church_id.eq.${userData.church_id},to_church_id.eq.${userData.church_id}`)
+  // Apply scope filter (CRITICAL)
+  // For transfer history, we need to see transfers where either from_church OR to_church is in allowed scope
+  if (allowedChurchIds !== null) {
+    query = query.or(`from_church_id.in.(${allowedChurchIds.join(',')}),to_church_id.in.(${allowedChurchIds.join(',')})`)
   }
 
   const { data, error } = await query

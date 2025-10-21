@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { EventRegistration } from '@church-app/database'
+import { getScopeChurches } from '@/lib/rbac'
 
 // Extended type with joined data (supports both members and visitors)
 export interface EventRegistrationWithDetails extends EventRegistration {
@@ -223,16 +224,22 @@ export async function isAlreadyRegistered(eventId: string, memberId: string) {
 export async function getAvailableMembersForEvent(eventId: string) {
   const supabase = await createClient()
 
-  // Get current user's church_id
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   const { data: userData } = await supabase
     .from('users')
-    .select('church_id, role')
-    .eq('id', (await supabase.auth.getUser()).data.user?.id || '')
+    .select('role')
+    .eq('id', user.id)
     .single()
 
   if (!userData) {
     throw new Error('User not found')
   }
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Build query based on role
   let membersQuery = supabase
@@ -250,9 +257,9 @@ export async function getAvailableMembersForEvent(eventId: string) {
     `)
     .eq('status', 'active')
 
-  // Church Secretaries can only see their church members
-  if (userData.role === 'church_secretary' && userData.church_id) {
-    membersQuery = membersQuery.eq('church_id', userData.church_id)
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    membersQuery = membersQuery.in('church_id', allowedChurchIds)
   }
 
   const { data: allMembers, error: membersError } = await membersQuery

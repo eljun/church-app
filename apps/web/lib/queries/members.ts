@@ -5,7 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { SearchMembersInput } from '@/lib/validations/member'
-import { getPastorAccessibleChurches } from '@/lib/utils/pastor-helpers'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get all members with pagination and filtering
@@ -25,23 +25,17 @@ export async function getMembers(params?: SearchMembersInput) {
 
   if (!userData) throw new Error('User not found')
 
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   // Build query
   let query = supabase
     .from('members')
     .select('*, churches(*)', { count: 'exact' })
 
-  // Role-based filtering
-  if (userData.role === 'church_secretary' && userData.church_id) {
-    query = query.eq('church_id', userData.church_id)
-  }
-
-  // Pastor filtering - show members from their assigned churches
-  if (userData.role === 'pastor') {
-    const pastorChurchIds = await getPastorAccessibleChurches(user.id)
-    if (pastorChurchIds === null || pastorChurchIds.length === 0) {
-      return { data: [], count: 0, limit: params?.limit || 50, offset: params?.offset || 0 }
-    }
-    query = query.in('church_id', pastorChurchIds)
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
   }
 
   // Apply filters

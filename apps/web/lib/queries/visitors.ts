@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { FilterVisitorsInput } from '@/lib/validations/visitor'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get a single visitor by ID with related data
@@ -49,6 +50,21 @@ export async function getVisitors(filters?: FilterVisitorsInput) {
   const limit = filters?.limit || 20
   const offset = filters?.offset || 0
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   // Build query
   let query = supabase
     .from('visitors')
@@ -61,6 +77,11 @@ export async function getVisitors(filters?: FilterVisitorsInput) {
         field
       )
     `, { count: 'exact' })
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('associated_church_id', allowedChurchIds)
+  }
 
   // Apply filters
   if (filters?.church_id) {
@@ -141,6 +162,21 @@ export async function getVisitorsByChurch(churchId: string) {
 export async function getVisitorsPendingFollowUp(churchId?: string) {
   const supabase = await createClient()
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   let query = supabase
     .from('visitors')
     .select(`
@@ -157,6 +193,11 @@ export async function getVisitorsPendingFollowUp(churchId?: string) {
       )
     `)
     .in('follow_up_status', ['pending', 'contacted'])
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('associated_church_id', allowedChurchIds)
+  }
 
   if (churchId) {
     query = query.eq('associated_church_id', churchId)
@@ -203,9 +244,29 @@ export async function getAccompaniedChildren(parentId: string, parentType: 'memb
 export async function getVisitorStats(churchId?: string) {
   const supabase = await createClient()
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   let query = supabase
     .from('visitors')
     .select('visitor_type, is_baptized, follow_up_status')
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('associated_church_id', allowedChurchIds)
+  }
 
   if (churchId) {
     query = query.eq('associated_church_id', churchId)
@@ -240,10 +301,30 @@ export async function getVisitorStats(churchId?: string) {
 export async function checkVisitorExists(fullName: string, churchId?: string) {
   const supabase = await createClient()
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   let query = supabase
     .from('visitors')
     .select('id, full_name, phone')
     .ilike('full_name', fullName)
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('associated_church_id', allowedChurchIds)
+  }
 
   if (churchId) {
     query = query.eq('associated_church_id', churchId)
@@ -303,6 +384,21 @@ export async function getVisitorsForEvent(eventId: string) {
 export async function getAvailableVisitorsForEvent(eventId: string, churchId?: string) {
   const supabase = await createClient()
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   // Get all visitors (filtered by church if admin)
   let visitorsQuery = supabase
     .from('visitors')
@@ -318,6 +414,11 @@ export async function getAvailableVisitorsForEvent(eventId: string, churchId?: s
         field
       )
     `)
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    visitorsQuery = visitorsQuery.in('associated_church_id', allowedChurchIds)
+  }
 
   if (churchId) {
     visitorsQuery = visitorsQuery.eq('associated_church_id', churchId)

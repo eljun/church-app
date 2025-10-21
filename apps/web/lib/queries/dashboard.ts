@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get dashboard statistics
@@ -18,59 +19,83 @@ export async function getDashboardStats() {
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
 
-  // Build query based on role
-  const isSuperadmin = userData.role === 'superadmin'
-  const churchFilter = isSuperadmin ? {} : { church_id: userData.church_id }
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
+  // Helper to apply scope filter
+  const applyScope = <T>(query: T): T => {
+    if (allowedChurchIds !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (query as any).in('church_id', allowedChurchIds)
+    }
+    return query
+  }
 
   // Total members
-  const { count: totalMembers } = await supabase
-    .from('members')
-    .select('*', { count: 'exact', head: true })
-    .match(churchFilter)
+  const { count: totalMembers } = await applyScope(
+    supabase
+      .from('members')
+      .select('*', { count: 'exact', head: true })
+  )
 
   // Active members
-  const { count: activeMembers } = await supabase
-    .from('members')
-    .select('*', { count: 'exact', head: true })
-    .match({ ...churchFilter, spiritual_condition: 'active', status: 'active' })
+  const { count: activeMembers } = await applyScope(
+    supabase
+      .from('members')
+      .select('*', { count: 'exact', head: true })
+      .eq('spiritual_condition', 'active')
+      .eq('status', 'active')
+  )
 
   // Inactive members
-  const { count: inactiveMembers } = await supabase
-    .from('members')
-    .select('*', { count: 'exact', head: true })
-    .match({ ...churchFilter, spiritual_condition: 'inactive' })
+  const { count: inactiveMembers } = await applyScope(
+    supabase
+      .from('members')
+      .select('*', { count: 'exact', head: true })
+      .eq('spiritual_condition', 'inactive')
+  )
 
-  // Total churches (superadmin only)
+  // Total churches (only for national scope)
   let totalChurches = 0
-  if (isSuperadmin) {
+  if (allowedChurchIds === null) {
     const { count } = await supabase
       .from('churches')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true)
     totalChurches = count || 0
+  } else {
+    // For scoped users, show the count of their allowed churches
+    totalChurches = allowedChurchIds.length
   }
 
-  // Pending transfer requests
-  const { count: pendingTransfers } = await supabase
+  // Pending transfer requests - filter by to_church_id to show incoming transfers
+  let pendingTransfersQuery = supabase
     .from('transfer_requests')
     .select('*', { count: 'exact', head: true })
-    .match(isSuperadmin ? { status: 'pending' } : { to_church_id: userData.church_id, status: 'pending' })
+    .eq('status', 'pending')
+
+  if (allowedChurchIds !== null) {
+    pendingTransfersQuery = pendingTransfersQuery.in('to_church_id', allowedChurchIds)
+  }
+
+  const { count: pendingTransfers } = await pendingTransfersQuery
 
   // Recent baptisms (last 30 days)
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const { count: recentBaptisms } = await supabase
-    .from('members')
-    .select('*', { count: 'exact', head: true })
-    .match(churchFilter)
-    .gte('date_of_baptism', thirtyDaysAgo.toISOString().split('T')[0])
+  const { count: recentBaptisms } = await applyScope(
+    supabase
+      .from('members')
+      .select('*', { count: 'exact', head: true })
+      .gte('date_of_baptism', thirtyDaysAgo.toISOString().split('T')[0])
+  )
 
   return {
     totalMembers: totalMembers || 0,
@@ -94,25 +119,31 @@ export async function getMembershipGrowth() {
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
 
-  const isSuperadmin = userData.role === 'superadmin'
-  const churchFilter = isSuperadmin ? {} : { church_id: userData.church_id }
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Get members with baptism dates from last 12 months
   const oneYearAgo = new Date()
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
 
-  const { data: members } = await supabase
+  let query = supabase
     .from('members')
     .select('date_of_baptism')
-    .match(churchFilter)
     .gte('date_of_baptism', oneYearAgo.toISOString().split('T')[0])
     .order('date_of_baptism', { ascending: true })
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
+  }
+
+  const { data: members } = await query
 
   // Group by month
   const monthlyData = new Map<string, number>()

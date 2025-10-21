@@ -5,6 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { CustomReportFilters, MemberField, MemberReportRow } from '@/lib/types/custom-reports'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get member growth data over time
@@ -24,11 +25,14 @@ export async function getMemberGrowthData(params?: {
   // Get user's role and church
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Build date range - default to last 5 years to capture more baptism data
   const endDate = params?.end_date || new Date().toISOString().split('T')[0]
@@ -43,10 +47,13 @@ export async function getMemberGrowthData(params?: {
     .gte('date_of_baptism', startDate)
     .lte('date_of_baptism', endDate)
 
-  // Role-based filtering
-  if (userData.role === 'church_secretary' && userData.church_id) {
-    query = query.eq('church_id', userData.church_id)
-  } else if (params?.church_ids && params.church_ids.length > 0) {
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
+  }
+
+  // Apply additional filters if provided
+  if (params?.church_ids && params.church_ids.length > 0) {
     query = query.in('church_id', params.church_ids)
   } else if (params?.church_id) {
     query = query.eq('church_id', params.church_id)
@@ -70,26 +77,34 @@ export async function getMemberStatistics(churchId?: string, churchIds?: string[
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
 
-  const targetChurchId = userData.role === 'church_secretary'
-    ? userData.church_id
-    : churchId
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Build base queries with optional church filtering
   const buildQuery = <T>(baseQuery: T): T => {
-    if (targetChurchId) {
+    let query = baseQuery
+
+    // Apply scope filter (CRITICAL)
+    if (allowedChurchIds !== null) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (baseQuery as any).eq('church_id', targetChurchId)
-    } else if (churchIds && churchIds.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (baseQuery as any).in('church_id', churchIds)
+      query = (query as any).in('church_id', allowedChurchIds)
     }
-    return baseQuery
+
+    // Apply additional filters if provided
+    if (churchIds && churchIds.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (query as any).in('church_id', churchIds)
+    } else if (churchId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (query as any).eq('church_id', churchId)
+    }
+    return query
   }
 
   // Get counts for different categories
@@ -175,11 +190,14 @@ export async function getTransferStatistics(params?: {
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Build date range
   const endDate = params?.end_date || new Date().toISOString().split('T')[0]
@@ -211,17 +229,23 @@ export async function getTransferStatistics(params?: {
     .from('transfer_requests')
     .select('*', { count: 'exact', head: true })
 
-  // Apply church filtering
-  const targetChurchId = userData.role === 'church_secretary'
-    ? userData.church_id
-    : params?.church_id
+  // Apply scope filter (CRITICAL) - transfers involve both from and to churches
+  if (allowedChurchIds !== null) {
+    const orFilter = allowedChurchIds.map(id => `from_church_id.eq.${id},to_church_id.eq.${id}`).join(',')
+    fromQuery = fromQuery.in('from_church_id', allowedChurchIds)
+    toQuery = toQuery.in('to_church_id', allowedChurchIds)
+    pendingQuery = pendingQuery.or(orFilter)
+    approvedQuery = approvedQuery.or(orFilter)
+    rejectedQuery = rejectedQuery.or(orFilter)
+  }
 
-  if (targetChurchId) {
-    fromQuery = fromQuery.eq('from_church_id', targetChurchId)
-    toQuery = toQuery.eq('to_church_id', targetChurchId)
-    pendingQuery = pendingQuery.or(`from_church_id.eq.${targetChurchId},to_church_id.eq.${targetChurchId}`)
-    approvedQuery = approvedQuery.or(`from_church_id.eq.${targetChurchId},to_church_id.eq.${targetChurchId}`)
-    rejectedQuery = rejectedQuery.or(`from_church_id.eq.${targetChurchId},to_church_id.eq.${targetChurchId}`)
+  // Apply additional filter if specific church provided
+  if (params?.church_id) {
+    fromQuery = fromQuery.eq('from_church_id', params.church_id)
+    toQuery = toQuery.eq('to_church_id', params.church_id)
+    pendingQuery = pendingQuery.or(`from_church_id.eq.${params.church_id},to_church_id.eq.${params.church_id}`)
+    approvedQuery = approvedQuery.or(`from_church_id.eq.${params.church_id},to_church_id.eq.${params.church_id}`)
+    rejectedQuery = rejectedQuery.or(`from_church_id.eq.${params.church_id},to_church_id.eq.${params.church_id}`)
   }
 
   pendingQuery = pendingQuery.eq('status', 'pending')
@@ -260,11 +284,14 @@ export async function getUpcomingBaptismAnniversaries(params?: {
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   const monthsAhead = params?.months_ahead || 3
   const today = new Date()
@@ -278,15 +305,16 @@ export async function getUpcomingBaptismAnniversaries(params?: {
     .not('date_of_baptism', 'is', null)
     .eq('status', 'active')
 
-  // Role-based filtering
-  const targetChurchId = userData.role === 'church_secretary'
-    ? userData.church_id
-    : params?.church_id
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
+  }
 
-  if (targetChurchId) {
-    query = query.eq('church_id', targetChurchId)
-  } else if (params?.church_ids && params.church_ids.length > 0) {
+  // Apply additional filters if provided
+  if (params?.church_ids && params.church_ids.length > 0) {
     query = query.in('church_id', params.church_ids)
+  } else if (params?.church_id) {
+    query = query.eq('church_id', params.church_id)
   }
 
   const { data, error } = await query
@@ -333,11 +361,14 @@ export async function getUpcomingBirthdays(params?: {
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   const monthsAhead = params?.months_ahead || 3
   const today = new Date()
@@ -351,15 +382,16 @@ export async function getUpcomingBirthdays(params?: {
     .not('birthday', 'is', null)
     .eq('status', 'active')
 
-  // Role-based filtering
-  const targetChurchId = userData.role === 'church_secretary'
-    ? userData.church_id
-    : params?.church_id
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
+  }
 
-  if (targetChurchId) {
-    query = query.eq('church_id', targetChurchId)
-  } else if (params?.church_ids && params.church_ids.length > 0) {
+  // Apply additional filters if provided
+  if (params?.church_ids && params.church_ids.length > 0) {
     query = query.in('church_id', params.church_ids)
+  } else if (params?.church_id) {
+    query = query.eq('church_id', params.church_id)
   }
 
   const { data, error } = await query
@@ -409,11 +441,14 @@ export async function getTransferHistory(params?: {
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Build query
   let query = supabase
@@ -425,13 +460,15 @@ export async function getTransferHistory(params?: {
       to_church:churches!to_church_id(name)
     `, { count: 'exact' })
 
-  // Role-based filtering
-  const targetChurchId = userData.role === 'church_secretary'
-    ? userData.church_id
-    : params?.church_id
+  // Apply scope filter (CRITICAL) - transfers involve both from and to churches
+  if (allowedChurchIds !== null) {
+    const orFilter = allowedChurchIds.map(id => `from_church_id.eq.${id},to_church_id.eq.${id}`).join(',')
+    query = query.or(orFilter)
+  }
 
-  if (targetChurchId) {
-    query = query.or(`from_church_id.eq.${targetChurchId},to_church_id.eq.${targetChurchId}`)
+  // Apply additional filter if specific church provided
+  if (params?.church_id) {
+    query = query.or(`from_church_id.eq.${params.church_id},to_church_id.eq.${params.church_id}`)
   }
 
   // Apply filters
@@ -481,11 +518,14 @@ export async function generateCustomMemberReport(
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Build select clause with requested fields
   const selectFields = ['id', ...fields.filter(f => f !== 'church_name')]
@@ -498,13 +538,14 @@ export async function generateCustomMemberReport(
     .from('members')
     .select(selectFields.join(', '))
 
-  // Apply role-based filtering
-  const targetChurchId = userData.role === 'church_secretary'
-    ? userData.church_id
-    : filters.church_id
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
+  }
 
-  if (targetChurchId) {
-    query = query.eq('church_id', targetChurchId)
+  // Apply additional filter if specific church provided
+  if (filters.church_id) {
+    query = query.eq('church_id', filters.church_id)
   }
 
   // Apply status filter
@@ -599,15 +640,14 @@ export async function getAgeDistribution(churchId?: string, churchIds?: string[]
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!userData) throw new Error('User not found')
 
-  const targetChurchId = userData.role === 'church_secretary'
-    ? userData.church_id
-    : churchId
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Build query
   let query = supabase
@@ -615,10 +655,16 @@ export async function getAgeDistribution(churchId?: string, churchIds?: string[]
     .select('age')
     .eq('status', 'active')
 
-  if (targetChurchId) {
-    query = query.eq('church_id', targetChurchId)
-  } else if (churchIds && churchIds.length > 0) {
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
+  }
+
+  // Apply additional filters if provided
+  if (churchIds && churchIds.length > 0) {
     query = query.in('church_id', churchIds)
+  } else if (churchId) {
+    query = query.eq('church_id', churchId)
   }
 
   const { data, error } = await query

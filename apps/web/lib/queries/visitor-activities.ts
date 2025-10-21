@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { ActivityType, Visitor } from '@church-app/database'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get all activities for a specific visitor
@@ -33,6 +34,21 @@ export async function getVisitorActivities(visitorId: string) {
 export async function getUpcomingFollowUps(userId?: string, churchId?: string) {
   const supabase = await createClient()
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   let query = supabase
     .from('visitor_activities')
     .select(`
@@ -64,15 +80,24 @@ export async function getUpcomingFollowUps(userId?: string, churchId?: string) {
     throw new Error(`Failed to fetch follow-ups: ${error.message}`)
   }
 
-  // If churchId is provided, filter visitors by church
-  if (churchId && data) {
-    return data.filter(activity => {
+  // Apply scope filter by checking visitor's associated_church_id (CRITICAL)
+  let filteredData = data || []
+  if (allowedChurchIds !== null) {
+    filteredData = filteredData.filter(activity => {
+      const visitor = activity.visitor as Visitor | null
+      return visitor?.associated_church_id && allowedChurchIds.includes(visitor.associated_church_id)
+    })
+  }
+
+  // Apply additional filter if specific church provided
+  if (churchId && filteredData) {
+    return filteredData.filter(activity => {
       const visitor = activity.visitor as Visitor | null
       return visitor?.associated_church_id === churchId
     })
   }
 
-  return data || []
+  return filteredData
 }
 
 /**
@@ -85,6 +110,21 @@ export async function getCompletedActivities(
 ) {
   const supabase = await createClient()
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   let query = supabase
     .from('visitor_activities')
     .select(`
@@ -92,6 +132,7 @@ export async function getCompletedActivities(
       visitor:visitor_id (
         id,
         full_name,
+        associated_church_id,
         associated_church:associated_church_id (
           id,
           name
@@ -126,7 +167,16 @@ export async function getCompletedActivities(
     throw new Error(`Failed to fetch activities: ${error.message}`)
   }
 
-  return data || []
+  // Apply scope filter by checking visitor's associated_church_id (CRITICAL)
+  let filteredData = data || []
+  if (allowedChurchIds !== null) {
+    filteredData = filteredData.filter(activity => {
+      const visitor = activity.visitor as Visitor | null
+      return visitor?.associated_church_id && allowedChurchIds.includes(visitor.associated_church_id)
+    })
+  }
+
+  return filteredData
 }
 
 /**
@@ -134,6 +184,21 @@ export async function getCompletedActivities(
  */
 export async function getActivityStats(userId?: string, churchId?: string) {
   const supabase = await createClient()
+
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   let query = supabase
     .from('visitor_activities')
@@ -157,7 +222,15 @@ export async function getActivityStats(userId?: string, churchId?: string) {
 
   let activities = data || []
 
-  // Filter by church if provided
+  // Apply scope filter by checking visitor's associated_church_id (CRITICAL)
+  if (allowedChurchIds !== null) {
+    activities = activities.filter(activity => {
+      const visitor = activity.visitor as Visitor | null
+      return visitor?.associated_church_id && allowedChurchIds.includes(visitor.associated_church_id)
+    })
+  }
+
+  // Apply additional filter if specific church provided
   if (churchId && activities) {
     activities = activities.filter(activity => {
       const visitor = activity.visitor as Visitor | null
@@ -205,6 +278,21 @@ export async function getActivityStats(userId?: string, churchId?: string) {
 export async function getRecentActivities(limit = 10, churchId?: string) {
   const supabase = await createClient()
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   const query = supabase
     .from('visitor_activities')
     .select(`
@@ -233,15 +321,24 @@ export async function getRecentActivities(limit = 10, churchId?: string) {
     throw new Error(`Failed to fetch activities: ${error.message}`)
   }
 
-  // Filter by church if provided
-  if (churchId && data) {
-    return data.filter(activity => {
+  // Apply scope filter by checking visitor's associated_church_id (CRITICAL)
+  let filteredData = data || []
+  if (allowedChurchIds !== null) {
+    filteredData = filteredData.filter(activity => {
+      const visitor = activity.visitor as Visitor | null
+      return visitor?.associated_church_id && allowedChurchIds.includes(visitor.associated_church_id)
+    })
+  }
+
+  // Apply additional filter if specific church provided
+  if (churchId && filteredData) {
+    return filteredData.filter(activity => {
       const visitor = activity.visitor as Visitor | null
       return visitor?.associated_church_id === churchId
     })
   }
 
-  return data || []
+  return filteredData
 }
 
 /**
@@ -249,6 +346,21 @@ export async function getRecentActivities(limit = 10, churchId?: string) {
  */
 export async function getOverdueFollowUps(userId?: string, churchId?: string) {
   const supabase = await createClient()
+
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   const now = new Date().toISOString()
 
@@ -283,15 +395,24 @@ export async function getOverdueFollowUps(userId?: string, churchId?: string) {
     throw new Error(`Failed to fetch follow-ups: ${error.message}`)
   }
 
-  // Filter by church if provided
-  if (churchId && data) {
-    return data.filter(activity => {
+  // Apply scope filter by checking visitor's associated_church_id (CRITICAL)
+  let filteredData = data || []
+  if (allowedChurchIds !== null) {
+    filteredData = filteredData.filter(activity => {
+      const visitor = activity.visitor as Visitor | null
+      return visitor?.associated_church_id && allowedChurchIds.includes(visitor.associated_church_id)
+    })
+  }
+
+  // Apply additional filter if specific church provided
+  if (churchId && filteredData) {
+    return filteredData.filter(activity => {
       const visitor = activity.visitor as Visitor | null
       return visitor?.associated_church_id === churchId
     })
   }
 
-  return data || []
+  return filteredData
 }
 
 /**

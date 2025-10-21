@@ -5,7 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { SearchChurchesInput } from '@/lib/validations/church'
-import { getPastorAccessibleChurches } from '@/lib/utils/pastor-helpers'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get all churches with pagination and filtering
@@ -16,21 +16,31 @@ export async function getChurches(params?: SearchChurchesInput) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  // Check if user is pastor - filter by accessible churches
-  const pastorChurchIds = await getPastorAccessibleChurches(user.id)
+  // Get user's role
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
 
   // Build query
   let query = supabase
     .from('churches')
     .select('*', { count: 'exact' })
 
-  // Filter by pastor's accessible churches
-  if (pastorChurchIds !== null) {
-    if (pastorChurchIds.length === 0) {
-      // Pastor has no churches assigned - return empty
+  // Apply scope filter (CRITICAL)
+  // For churches, we filter by the church IDs themselves
+  if (allowedChurchIds !== null) {
+    if (allowedChurchIds.length === 0) {
+      // User has no churches assigned - return empty
       return { data: [], count: 0, limit: params?.limit || 50, offset: params?.offset || 0 }
     }
-    query = query.in('id', pastorChurchIds)
+    query = query.in('id', allowedChurchIds)
   }
 
   // Apply filters
@@ -97,10 +107,32 @@ export async function getChurchById(id: string) {
 export async function getCountries() {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
+  let query = supabase
     .from('churches')
     .select('country')
     .order('country', { ascending: true })
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('id', allowedChurchIds)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 
@@ -116,10 +148,32 @@ export async function getCountries() {
 export async function getFields() {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
+  let query = supabase
     .from('churches')
     .select('field')
     .order('field', { ascending: true })
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('id', allowedChurchIds)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 
@@ -135,10 +189,32 @@ export async function getFields() {
 export async function getDistricts() {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
+  let query = supabase
     .from('churches')
     .select('district')
     .order('district', { ascending: true })
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('id', allowedChurchIds)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 
@@ -154,12 +230,34 @@ export async function getDistricts() {
 export async function getChurchesByDistrict(district: string) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
+  let query = supabase
     .from('churches')
     .select('*')
     .eq('district', district)
     .eq('is_active', true)
     .order('name', { ascending: true })
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('id', allowedChurchIds)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 
@@ -172,12 +270,34 @@ export async function getChurchesByDistrict(district: string) {
 export async function getChurchesByField(field: string) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
+  let query = supabase
     .from('churches')
     .select('*')
     .eq('field', field)
     .eq('is_active', true)
     .order('name', { ascending: true })
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('id', allowedChurchIds)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { ReportType } from '@church-app/database'
 import type { FilterMissionaryReportsInput } from '@/lib/validations/missionary-report'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get a single missionary report by ID
@@ -50,6 +51,21 @@ export async function getMissionaryReports(filters: FilterMissionaryReportsInput
     limit = 20,
   } = filters
 
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   let query = supabase
     .from('missionary_reports')
     .select(`
@@ -65,6 +81,11 @@ export async function getMissionaryReports(filters: FilterMissionaryReportsInput
         email
       )
     `, { count: 'exact' })
+
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
+  }
 
   // Apply filters
   // Prioritize church_ids array over single church_id

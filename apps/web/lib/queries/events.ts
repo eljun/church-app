@@ -5,6 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { SearchEventsInput } from '@/lib/validations/event'
+import { getScopeChurches } from '@/lib/rbac'
 
 /**
  * Get all events with pagination and filtering
@@ -263,6 +264,9 @@ export async function getEventsByDateRange(startDate: string, endDate: string) {
 
   if (!userData) throw new Error('User not found')
 
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   let query = supabase
     .from('events')
     .select('*, churches(*)')
@@ -270,9 +274,9 @@ export async function getEventsByDateRange(startDate: string, endDate: string) {
     .lte('start_date', endDate)
     .order('start_date', { ascending: true })
 
-  // Role-based filtering
-  if (userData.role === 'church_secretary' && userData.church_id) {
-    query = query.eq('church_id', userData.church_id)
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    query = query.in('church_id', allowedChurchIds)
   }
 
   const { data, error } = await query
@@ -299,6 +303,9 @@ export async function getEventStats() {
 
   if (!userData) throw new Error('User not found')
 
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   const now = new Date().toISOString()
 
   let totalQuery = supabase
@@ -315,11 +322,11 @@ export async function getEventStats() {
     .select('*', { count: 'exact', head: true })
     .lt('start_date', now)
 
-  // Role-based filtering
-  if (userData.role === 'church_secretary' && userData.church_id) {
-    totalQuery = totalQuery.eq('church_id', userData.church_id)
-    upcomingQuery = upcomingQuery.eq('church_id', userData.church_id)
-    pastQuery = pastQuery.eq('church_id', userData.church_id)
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null) {
+    totalQuery = totalQuery.in('church_id', allowedChurchIds)
+    upcomingQuery = upcomingQuery.in('church_id', allowedChurchIds)
+    pastQuery = pastQuery.in('church_id', allowedChurchIds)
   }
 
   const [total, upcoming, past] = await Promise.all([

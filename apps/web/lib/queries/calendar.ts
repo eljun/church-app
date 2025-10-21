@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getScopeChurches } from '@/lib/rbac'
 
 export type CalendarItemType = 'event' | 'birthday' | 'baptism'
 
@@ -30,7 +31,8 @@ export interface CalendarFilters {
 async function getEventsForCalendar(
   startDate: string,
   endDate: string,
-  churchId?: string
+  churchId?: string,
+  allowedChurchIds?: string[] | null
 ): Promise<CalendarItem[]> {
   const supabase = await createClient()
 
@@ -52,6 +54,12 @@ async function getEventsForCalendar(
     .lte('start_date', endDate)
     .order('start_date', { ascending: true })
 
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null && allowedChurchIds !== undefined) {
+    query = query.in('church_id', allowedChurchIds)
+  }
+
+  // Apply additional filter if specific church provided
   if (churchId) {
     query = query.eq('church_id', churchId)
   }
@@ -85,7 +93,8 @@ async function getEventsForCalendar(
 async function getBirthdaysForCalendar(
   startDate: string,
   endDate: string,
-  churchId?: string
+  churchId?: string,
+  allowedChurchIds?: string[] | null
 ): Promise<CalendarItem[]> {
   const supabase = await createClient()
 
@@ -105,6 +114,12 @@ async function getBirthdaysForCalendar(
     .not('birthday', 'is', null)
     .eq('status', 'active')
 
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null && allowedChurchIds !== undefined) {
+    query = query.in('church_id', allowedChurchIds)
+  }
+
+  // Apply additional filter if specific church provided
   if (churchId) {
     query = query.eq('church_id', churchId)
   }
@@ -152,7 +167,8 @@ async function getBirthdaysForCalendar(
 async function getBaptismsForCalendar(
   startDate: string,
   endDate: string,
-  churchId?: string
+  churchId?: string,
+  allowedChurchIds?: string[] | null
 ): Promise<CalendarItem[]> {
   const supabase = await createClient()
 
@@ -171,6 +187,12 @@ async function getBaptismsForCalendar(
     .not('date_of_baptism', 'is', null)
     .eq('status', 'active')
 
+  // Apply scope filter (CRITICAL)
+  if (allowedChurchIds !== null && allowedChurchIds !== undefined) {
+    query = query.in('church_id', allowedChurchIds)
+  }
+
+  // Apply additional filter if specific church provided
   if (churchId) {
     query = query.eq('church_id', churchId)
   }
@@ -256,6 +278,23 @@ export async function getCalendarItems(
   endDate: string,
   filters: CalendarFilters = {}
 ): Promise<CalendarItem[]> {
+  const supabase = await createClient()
+
+  // Get current user and their allowed churches
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Get allowed church IDs based on role
+  const allowedChurchIds = await getScopeChurches(user.id, userData.role)
+
   const {
     showEvents = true,
     showBirthdays = true,
@@ -265,9 +304,9 @@ export async function getCalendarItems(
 
   // Fetch all data types in parallel
   const [events, birthdays, baptisms] = await Promise.all([
-    showEvents ? getEventsForCalendar(startDate, endDate, churchId) : [],
-    showBirthdays ? getBirthdaysForCalendar(startDate, endDate, churchId) : [],
-    showBaptisms ? getBaptismsForCalendar(startDate, endDate, churchId) : [],
+    showEvents ? getEventsForCalendar(startDate, endDate, churchId, allowedChurchIds) : [],
+    showBirthdays ? getBirthdaysForCalendar(startDate, endDate, churchId, allowedChurchIds) : [],
+    showBaptisms ? getBaptismsForCalendar(startDate, endDate, churchId, allowedChurchIds) : [],
   ])
 
   // Combine and sort by date
