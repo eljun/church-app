@@ -4,9 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 import { getUsers } from '@/lib/queries/users'
 import { getChurches } from '@/lib/queries/churches'
 import { UsersTable } from '@/components/settings/users/users-table'
-import { CreateUserDialog } from '@/components/settings/users/create-user-dialog'
 import { PageFilters } from '@/components/shared/page-filters'
 import { PageHeader } from '@/components/shared'
+import { Button } from '@/components/ui/button'
+import { UserPlus } from 'lucide-react'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'User Management',
@@ -53,7 +55,14 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         backHref="/"
         title="User Management"
         description="Manage users, roles, and permissions across the system"
-        actions={<CreateUserDialog churches={churches} />}
+        actions={
+          <Link href="/settings/users/new">
+            <Button>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </Link>
+        }
       />
 
       {/* Search and Filters */}

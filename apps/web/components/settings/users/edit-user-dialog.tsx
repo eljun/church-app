@@ -60,9 +60,19 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
       return
     }
 
-    if (role === 'pastor' && assignedChurchIds.length === 0) {
-      toast.error('Pastor must be assigned to at least one church')
-      return
+    if (role === 'pastor') {
+      if (!fieldId) {
+        toast.error('Pastor must be assigned to a field')
+        return
+      }
+      if (!districtId) {
+        toast.error('Pastor must be assigned to a district')
+        return
+      }
+      if (assignedChurchIds.length === 0) {
+        toast.error('Pastor must be assigned to at least one church')
+        return
+      }
     }
 
     if (role === 'bibleworker' && assignedChurchIds.length === 0) {
@@ -97,9 +107,18 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
     })
   }
 
-  // Get unique districts and fields from churches
-  const districts = [...new Set(churches.map((c) => c.district).filter(Boolean))]
+  // Get unique fields from churches
   const fields = [...new Set(churches.map((c) => c.field).filter(Boolean))]
+
+  // Get districts filtered by selected field
+  const filteredDistricts = fieldId
+    ? [...new Set(churches.filter((c) => c.field === fieldId).map((c) => c.district).filter(Boolean))]
+    : []
+
+  // Get churches filtered by selected district
+  const filteredChurches = districtId
+    ? churches.filter((c) => c.district === districtId && c.field === fieldId)
+    : []
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -189,32 +208,19 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
           {role === 'pastor' && (
             <div className="space-y-4 border-t pt-4">
               <h4 className="text-sm font-medium">Pastor Assignment</h4>
+
+              {/* Field Selection - First */}
               <div className="grid gap-2">
-                <Label htmlFor="churches">Assigned Churches *</Label>
-                <ChurchMultiSelect
-                  churches={churches}
-                  selectedIds={assignedChurchIds}
-                  onChange={setAssignedChurchIds}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="district">District (Optional)</Label>
-                <Select value={districtId} onValueChange={setDistrictId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select district" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {districts.map((district) => (
-                      <SelectItem key={district} value={district}>
-                        {district}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="field">Field (Optional)</Label>
-                <Select value={fieldId} onValueChange={setFieldId}>
+                <Label htmlFor="field">Field *</Label>
+                <Select
+                  value={fieldId}
+                  onValueChange={(value) => {
+                    setFieldId(value)
+                    // Reset dependent fields when field changes
+                    setDistrictId('')
+                    setAssignedChurchIds([])
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select field" />
                   </SelectTrigger>
@@ -227,9 +233,47 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Assign specific churches, or optionally add district/field for broader oversight
-              </p>
+
+              {/* District Selection - Second */}
+              <div className="grid gap-2">
+                <Label htmlFor="district">District *</Label>
+                <Select
+                  value={districtId}
+                  onValueChange={(value) => {
+                    setDistrictId(value)
+                    // Reset churches when district changes
+                    setAssignedChurchIds([])
+                  }}
+                  disabled={!fieldId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={fieldId ? "Select district" : "Select field first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredDistricts.map((district) => (
+                      <SelectItem key={district} value={district}>
+                        {district}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Church Selection - Third (last) */}
+              <div className="grid gap-2">
+                <Label htmlFor="churches">Assigned Churches *</Label>
+                <ChurchMultiSelect
+                  churches={filteredChurches}
+                  selectedIds={assignedChurchIds}
+                  onChange={setAssignedChurchIds}
+                  disabled={!districtId}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {!fieldId && 'Select field first'}
+                  {fieldId && !districtId && 'Select district to enable church selection'}
+                  {fieldId && districtId && 'Select one or more churches from the district'}
+                </p>
+              </div>
             </div>
           )}
 

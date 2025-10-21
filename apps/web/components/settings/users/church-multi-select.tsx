@@ -30,12 +30,14 @@ interface ChurchMultiSelectProps {
   churches: Church[]
   selectedIds: string[]
   onChange: (selectedIds: string[]) => void
+  disabled?: boolean
 }
 
 export function ChurchMultiSelect({
   churches,
   selectedIds,
   onChange,
+  disabled = false,
 }: ChurchMultiSelectProps) {
   const [open, setOpen] = useState(false)
 
@@ -62,9 +64,12 @@ export function ChurchMultiSelect({
             role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
+            disabled={disabled}
           >
             {selectedIds.length === 0 ? (
-              <span className="text-muted-foreground">Select churches...</span>
+              <span className="text-muted-foreground">
+                {disabled ? 'Select district first...' : 'Select churches...'}
+              </span>
             ) : (
               <span>{selectedIds.length} church(es) selected</span>
             )}

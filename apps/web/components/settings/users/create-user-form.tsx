@@ -2,17 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserPlus, Loader2 } from 'lucide-react'
+import { Loader2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -22,18 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { createUser } from '@/lib/actions/users'
 import { ChurchSelect } from '@/components/shared'
 import { ChurchMultiSelect } from './church-multi-select'
 import type { UserRole } from '@/lib/validations/user'
+import Link from 'next/link'
 
-interface CreateUserDialogProps {
+interface CreateUserFormProps {
   churches: Array<{ id: string; name: string; district: string; field: string }>
 }
 
-export function CreateUserDialog({ churches }: CreateUserDialogProps) {
-  const [open, setOpen] = useState(false)
+export function CreateUserForm({ churches }: CreateUserFormProps) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -44,19 +36,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
   const [churchId, setChurchId] = useState<string>('')
   const [districtId, setDistrictId] = useState('')
   const [fieldId, setFieldId] = useState('')
-  const [assignedMemberIds, setAssignedMemberIds] = useState<string[]>([])
   const [assignedChurchIds, setAssignedChurchIds] = useState<string[]>([])
-
-  const resetForm = () => {
-    setEmail('')
-    setPassword('')
-    setRole('bibleworker')
-    setChurchId('')
-    setDistrictId('')
-    setFieldId('')
-    setAssignedMemberIds([])
-    setAssignedChurchIds([])
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -110,7 +90,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
         church_id: churchId || null,
         district_id: districtId || null,
         field_id: fieldId || null,
-        assigned_member_ids: assignedMemberIds,
+        assigned_member_ids: [],
         assigned_church_ids: assignedChurchIds,
       })
 
@@ -118,8 +98,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
         toast.error(result.error)
       } else {
         toast.success('User created successfully')
-        resetForm()
-        setOpen(false)
+        router.push('/settings/users')
         router.refresh()
       }
     })
@@ -139,23 +118,28 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
     : []
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New User</DialogTitle>
-          <DialogDescription>
-            Add a new user to the system with role-based permissions
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Basic Info */}
-          <div className="space-y-4">
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Link href="/settings/users">
+          <Button variant="outline" size="icon">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Create New User</h1>
+          <p className="text-muted-foreground">Add a new user to the system with role-based permissions</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+            <CardDescription>Enter the user&apos;s email and password</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email Address *</Label>
               <Input
@@ -200,12 +184,17 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Role-specific fields */}
-          {role === 'church_secretary' && (
-            <div className="space-y-4 border-t pt-4">
-              <h4 className="text-sm font-medium">Church Secretary Assignment</h4>
+        {/* Role-specific assignment cards */}
+        {role === 'church_secretary' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Church Secretary Assignment</CardTitle>
+              <CardDescription>Assign the user to a specific church</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="grid gap-2">
                 <Label htmlFor="church">Church *</Label>
                 <ChurchSelect
@@ -218,12 +207,17 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                   Church Secretary users manage a specific church
                 </p>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {role === 'field_secretary' && (
-            <div className="space-y-4 border-t pt-4">
-              <h4 className="text-sm font-medium">Field Secretary Assignment</h4>
+        {role === 'field_secretary' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Field Secretary Assignment</CardTitle>
+              <CardDescription>Assign the user to a field</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="grid gap-2">
                 <Label htmlFor="field">Field *</Label>
                 <Select value={fieldId} onValueChange={setFieldId}>
@@ -242,28 +236,18 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                   Field Secretary manages all churches and districts in their field
                 </p>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {role === 'pastor' && (
-            <div className="space-y-4 border-t pt-4">
-              <h4 className="text-sm font-medium">Pastor Assignment</h4>
-
-              {/* Church Selection - First (for better scrolling), but disabled until district is selected */}
-              <div className="grid gap-2">
-                <Label htmlFor="churches">Assigned Churches *</Label>
-                <ChurchMultiSelect
-                  churches={filteredChurches}
-                  selectedIds={assignedChurchIds}
-                  onChange={setAssignedChurchIds}
-                  disabled={!districtId}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Select field and district below to enable church selection
-                </p>
-              </div>
-
-              {/* Field Selection - Second */}
+        {role === 'pastor' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Pastor Assignment</CardTitle>
+              <CardDescription>Assign field, district, and churches</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Field Selection - First */}
               <div className="grid gap-2">
                 <Label htmlFor="field">Field *</Label>
                 <Select
@@ -288,7 +272,7 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                 </Select>
               </div>
 
-              {/* District Selection - Third, enabled only after field */}
+              {/* District Selection - Second */}
               <div className="grid gap-2">
                 <Label htmlFor="district">District *</Label>
                 <Select
@@ -312,12 +296,33 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-          )}
 
-          {role === 'bibleworker' && (
-            <div className="space-y-4 border-t pt-4">
-              <h4 className="text-sm font-medium">Bible Worker Assignment</h4>
+              {/* Church Selection - Third (last) */}
+              <div className="grid gap-2">
+                <Label htmlFor="churches">Assigned Churches *</Label>
+                <ChurchMultiSelect
+                  churches={filteredChurches}
+                  selectedIds={assignedChurchIds}
+                  onChange={setAssignedChurchIds}
+                  disabled={!districtId}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {!fieldId && 'Select field first'}
+                  {fieldId && !districtId && 'Select district to enable church selection'}
+                  {fieldId && districtId && 'Select one or more churches from the district'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {role === 'bibleworker' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Bible Worker Assignment</CardTitle>
+              <CardDescription>Assign churches for the bible worker</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="grid gap-2">
                 <Label htmlFor="churches">Assigned Churches *</Label>
                 <ChurchMultiSelect
@@ -329,25 +334,23 @@ export function CreateUserDialog({ churches }: CreateUserDialogProps) {
                   Bible workers can work across multiple churches and areas
                 </p>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isPending}
-            >
+        {/* Form Actions */}
+        <div className="flex justify-end gap-4">
+          <Link href="/settings/users">
+            <Button type="button" variant="outline" disabled={isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create User
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Link>
+          <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Create User
+          </Button>
+        </div>
+      </form>
+    </div>
   )
 }
