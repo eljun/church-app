@@ -80,9 +80,13 @@ export async function createUser(input: CreateUserInput) {
 
     console.log('Auth user created:', authData.user.id)
 
-    // Update user record in users table with role and assignments
-    // Use admin client to bypass RLS and ensure update succeeds
-    const updateData = {
+    // NOTE: admin.createUser() does NOT trigger the handle_new_user() database trigger
+    // We need to manually create the public.users record using the service role client
+    console.log('Creating public.users record...')
+
+    const insertData = {
+      id: authData.user.id,
+      email: validatedInput.email,
       role: validatedInput.role,
       church_id: validatedInput.church_id,
       district_id: validatedInput.district_id,
@@ -90,20 +94,28 @@ export async function createUser(input: CreateUserInput) {
       assigned_church_ids: validatedInput.assigned_church_ids,
       assigned_member_ids: validatedInput.assigned_member_ids,
     }
-    console.log('Updating user record with:', JSON.stringify(updateData, null, 2))
 
-    const { error: updateError } = await (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      adminClient.from('users') as any
-    )
-      .update(updateData)
-      .eq('id', authData.user.id)
+    // Insert the user record directly using admin client (bypasses RLS)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: insertResult, error: insertError } = await (adminClient.from('users') as any)
+      .insert(insertData)
+      .select()
 
-    if (updateError) {
-      console.error('User record update error:', updateError)
+    console.log('Insert result:', insertResult)
+    console.log('Insert error:', insertError)
+
+    if (insertError) {
+      console.error('User record insert error:', insertError)
       // Rollback: Delete auth user
       await adminClient.auth.admin.deleteUser(authData.user.id)
-      return { error: `Failed to update user record: ${updateError.message}` }
+      return { error: `Failed to create user record: ${insertError.message}` }
+    }
+
+    if (!insertResult || insertResult.length === 0) {
+      console.error('No user record created')
+      // Rollback: Delete auth user
+      await adminClient.auth.admin.deleteUser(authData.user.id)
+      return { error: 'Failed to create user record: Insert returned no data' }
     }
 
     console.log('User record updated successfully')
