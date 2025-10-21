@@ -4225,3 +4225,345 @@ const routeToModule: Record<string, ModuleName> = {
 - Middleware now uses centralized RBAC for consistent route protection
 - Field Secretary role fully integrated in navigation and access control
 
+---
+
+## ✅ Phase 11 COMPLETE (2025-10-21)
+
+### Summary
+Phase 11 successfully overhauled the RBAC system from a 2-role structure (admin/superadmin) to a comprehensive 6-role hierarchy with proper permissions, data scoping, and middleware protection.
+
+### Completed Sub-phases:
+- ✅ **Phase 11.1:** Database structure (roles table, migrations)
+- ✅ **Phase 11.2:** Role migration (admin → role mappings)
+- ✅ **Phase 11.3:** RBAC permission system (centralized config)
+- ✅ **Phase 11.4:** Global role reference updates
+- ✅ **Phase 11.5:** Scope filtering added to queries
+- ✅ **Phase 11.6:** User forms updated (cascading dropdowns)
+- ✅ **Phase 11.7:** Middleware & sidebar updates
+- ✅ **Phase 11.8:** Testing & verification
+
+### Final Role Structure:
+1. **superadmin** - Full system access (national scope)
+2. **field_secretary** - Field-level access (Luzon/Visayan/Mindanao)
+3. **pastor** - District-level access (multiple churches)
+4. **church_secretary** - Single church access
+5. **coordinator** - Events and calendar only
+6. **bibleworker** - Limited read access + specific write permissions
+
+### Key Deliverables:
+- 10 database migrations
+- Centralized RBAC configuration (`lib/rbac/`)
+- Module-based access control (11 modules)
+- Data scope helpers (church/district/field/national)
+- Route protection in middleware
+- Role-specific navigation menus
+
+---
+
+## 🎯 Phase 12: Performance Optimization & Security Hardening (2025-10-21)
+
+### Goals
+1. **Improve UX responsiveness** - Add immediate feedback for user actions
+2. **Optimize navigation** - Implement loading states and progressive rendering
+3. **Enhance security** - Fix critical vulnerabilities and harden authentication
+4. **Performance tuning** - Cache optimization and data fetching strategies
+
+### Identified Issues
+
+#### Performance Issues:
+1. **Login - No Immediate Feedback**
+   - 2-4 second delay with no visual feedback
+   - Server action blocks UI until completion
+   - Needs optimistic UI updates
+
+2. **Navigation - Slow Page Transitions**
+   - No `loading.tsx` files for route segments
+   - Server components fetch ALL data before rendering
+   - Layout re-fetches user data on every navigation
+   - Dashboard queries 7 datasets in parallel (blocks render)
+
+3. **Data Fetching Bottlenecks**
+   - Heavy aggregation queries (pastor role)
+   - No caching for frequently accessed data
+   - `getScopeChurches()` queries DB on every RBAC check
+
+#### Security Issues (CRITICAL):
+1. **Service Role Key Exposed** - `.env.local` may contain secrets
+2. **API Routes** - Missing comprehensive RBAC validation
+3. **RLS Policies** - Outdated (reference old 'admin' role)
+4. **Session Management** - No explicit timeout configuration
+5. **Performance Attack Vector** - `getScopeChurches()` susceptible to DoS
+
+### Phase 12 Sub-phases
+
+#### Phase 12.1: Documentation & Environment Setup ✅
+**Status:** COMPLETE
+**Time:** 15 minutes
+
+**Tasks:**
+- ✅ Update NEXT_STEPS.md with Phase 11 completion
+- ✅ Add Phase 12 documentation
+- ✅ Create `.env.example` template
+- ✅ Add `.env.local` to `.gitignore`
+
+**Deliverables:**
+- Updated NEXT_STEPS.md
+- Environment variable template
+- Git ignore rules
+
+---
+
+#### Phase 12.2: Login Immediate Feedback ⏳
+**Status:** IN PROGRESS
+**Time:** 30 minutes
+
+**Tasks:**
+- [ ] Add `useTransition()` hook to login form
+- [ ] Implement optimistic "Redirecting..." state
+- [ ] Show loading animation during authentication
+- [ ] Prevent multiple form submissions
+
+**Files to Modify:**
+- `apps/web/app/(auth)/login/page.tsx`
+
+**Implementation Approach:**
+```tsx
+// Use React useTransition for optimistic updates
+const [isPending, startTransition] = useTransition()
+const [isAuthenticating, setIsAuthenticating] = useState(false)
+
+function handleSubmit(formData: FormData) {
+  setIsAuthenticating(true)
+  startTransition(async () => {
+    await login(formData)
+  })
+}
+```
+
+---
+
+#### Phase 12.3: Navigation Loading States ⏳
+**Status:** PENDING
+**Time:** 1 hour
+
+**Tasks:**
+- [ ] Create global `loading.tsx` for protected layout
+- [ ] Create route-specific loading states:
+  - [ ] `/members/loading.tsx`
+  - [ ] `/events/loading.tsx`
+  - [ ] `/churches/loading.tsx`
+  - [ ] `/reports/loading.tsx`
+  - [ ] `/attendance/loading.tsx`
+- [ ] Design skeleton loaders matching page layouts
+- [ ] Test instant navigation with progressive rendering
+
+**Files to Create:**
+- `apps/web/app/(protected)/loading.tsx`
+- `apps/web/app/(protected)/members/loading.tsx`
+- `apps/web/app/(protected)/events/loading.tsx`
+- `apps/web/app/(protected)/churches/loading.tsx`
+- `apps/web/app/(protected)/reports/loading.tsx`
+
+**Expected Impact:**
+- Instant page navigation (no blank screen)
+- Visual feedback during data fetching
+- Improved perceived performance
+
+---
+
+#### Phase 12.4: Layout Data Fetching Optimization ⏳
+**Status:** PENDING
+**Time:** 45 minutes
+
+**Tasks:**
+- [ ] Implement React `cache()` for user data
+- [ ] Create shared `getAuthUser()` helper
+- [ ] Eliminate duplicate queries in layout
+- [ ] Stream layout components independently
+
+**Files to Modify:**
+- `apps/web/app/(protected)/layout.tsx`
+- `apps/web/lib/utils/auth-helpers.ts` (new file)
+
+**Implementation:**
+```ts
+// lib/utils/auth-helpers.ts
+import { cache } from 'react'
+
+export const getAuthUser = cache(async () => {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('*, churches(name)')
+    .eq('id', user.id)
+    .single()
+
+  return userData
+})
+```
+
+---
+
+#### Phase 12.5: Dashboard Progressive Loading ⏳
+**Status:** PENDING
+**Time:** 1 hour
+
+**Tasks:**
+- [ ] Wrap statistics cards in `<Suspense>`
+- [ ] Wrap charts in separate `<Suspense>` boundaries
+- [ ] Lazy-load heavy chart components
+- [ ] Show stats immediately, load charts progressively
+- [ ] Consider Redis caching for aggregated stats (future)
+
+**Files to Modify:**
+- `apps/web/app/(protected)/page.tsx`
+
+**Implementation Strategy:**
+```tsx
+<Suspense fallback={<StatsSkeleton />}>
+  <StatsCards />
+</Suspense>
+
+<Suspense fallback={<ChartSkeleton />}>
+  <GrowthChart />
+</Suspense>
+
+<Suspense fallback={<ChartSkeleton />}>
+  <AgeDistribution />
+</Suspense>
+```
+
+---
+
+#### Phase 12.6: Critical Security Fixes ⏳
+**Status:** PENDING
+**Time:** 2 hours
+**PRIORITY:** HIGH
+
+**Tasks:**
+
+**Immediate (P0):**
+- [ ] Add `.env.local` to `.gitignore`
+- [ ] Create `.env.example` template
+- [ ] Document Supabase key rotation procedure
+- [ ] Remove `.env.local` from git history (if committed)
+
+**API Security (P1):**
+- [ ] Add `canAccessModule()` to `/api/calendar` route
+- [ ] Add `canAccessModule()` to `/api/reports/custom` route
+- [ ] Implement consistent error responses (401/403)
+- [ ] Add request validation middleware
+
+**RLS Updates (P2):**
+- [ ] Audit RLS policies for 6-role compatibility
+- [ ] Remove deprecated 'admin' role references
+- [ ] Add field_secretary, pastor, coordinator policies
+- [ ] Test bibleworker read/write permissions
+
+**Performance Security (P3):**
+- [ ] Cache `getScopeChurches()` using React cache
+- [ ] Add request-level caching for permissions
+- [ ] Implement rate limiting on auth endpoints (future)
+- [ ] Add session timeout configuration
+
+**Files to Modify:**
+- `.gitignore`
+- `apps/web/app/api/calendar/route.ts`
+- `apps/web/app/api/reports/custom/route.ts`
+- `apps/web/lib/rbac/helpers.ts`
+- `packages/database/migrations/*.sql` (audit)
+
+---
+
+#### Phase 12.7: Security Documentation ⏳
+**Status:** PENDING
+**Time:** 30 minutes
+
+**Tasks:**
+- [ ] Create `SECURITY_AUDIT_2025-10-21.md`
+- [ ] Document all vulnerabilities found
+- [ ] Track remediation status
+- [ ] Add security best practices guide
+- [ ] Create incident response procedures
+
+**File to Create:**
+- `SECURITY_AUDIT_2025-10-21.md`
+
+**Contents:**
+- Executive summary
+- Critical vulnerabilities list
+- Remediation timeline
+- Security checklist
+- Deployment security guide
+
+---
+
+#### Phase 12.8: Testing & Verification ⏳
+**Status:** PENDING
+**Time:** 1 hour
+
+**Tasks:**
+- [ ] Test login performance (measure before/after)
+- [ ] Test navigation across all routes
+- [ ] Verify loading states render correctly
+- [ ] Test RBAC on API routes with different roles
+- [ ] Verify RLS policies with test users
+- [ ] Run production build
+- [ ] Fix any TypeScript/ESLint errors
+
+**Test Checklist:**
+- Login feedback appears instantly
+- Navigation shows loading skeletons
+- Dashboard loads progressively
+- API routes reject unauthorized access
+- All roles have appropriate permissions
+- Build completes without errors
+
+---
+
+### Phase 12 Timeline
+
+| Sub-phase | Status | Time | Priority |
+|-----------|--------|------|----------|
+| 12.1 Documentation | ✅ | 15 min | High |
+| 12.2 Login Feedback | ⏳ | 30 min | High |
+| 12.3 Loading States | ⏳ | 1 hour | High |
+| 12.4 Layout Optimization | ⏳ | 45 min | Medium |
+| 12.5 Dashboard Progressive | ⏳ | 1 hour | Medium |
+| 12.6 Security Fixes | ⏳ | 2 hours | **CRITICAL** |
+| 12.7 Security Docs | ⏳ | 30 min | High |
+| 12.8 Testing | ⏳ | 1 hour | High |
+
+**Total Estimated Time:** 6 hours 30 minutes
+
+---
+
+### Success Criteria
+
+**Performance:**
+- ✅ Login shows feedback within 100ms of click
+- ✅ Navigation transitions instant (<50ms)
+- ✅ Loading skeletons appear during data fetch
+- ✅ Dashboard stats visible within 500ms
+- ✅ Charts load progressively (non-blocking)
+
+**Security:**
+- ✅ No secrets committed to git
+- ✅ API routes enforce RBAC
+- ✅ RLS policies support all 6 roles
+- ✅ Permission checks cached (no DB query spam)
+- ✅ Session timeout configured
+
+**Quality:**
+- ✅ 0 TypeScript errors
+- ✅ 0 ESLint warnings
+- ✅ Production build succeeds
+- ✅ All tests pass
+
+---
+
+**Next Phase:** Phase 13 - TBD (Mobile Optimization / Advanced Features)
+

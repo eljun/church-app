@@ -7,7 +7,7 @@
 
 import { login } from '@/app/actions/auth'
 import Link from 'next/link'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useTransition } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ import { Loader2, Eye, EyeOff, AlertTriangle } from 'lucide-react'
 function LoginForm() {
   const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [showPassword, setShowPassword] = useState(false)
   const [deactivatedMessage, setDeactivatedMessage] = useState(false)
 
@@ -31,13 +31,13 @@ function LoginForm() {
   }, [searchParams])
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true)
     setError(null)
-    const result = await login(formData)
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    }
+    startTransition(async () => {
+      const result = await login(formData)
+      if (result?.error) {
+        setError(result.error)
+      }
+    })
   }
 
   return (
@@ -83,7 +83,7 @@ function LoginForm() {
                 placeholder="Enter your email"
                 autoComplete="email"
                 required
-                disabled={loading}
+                disabled={isPending}
                 className="border border-white/70 py-5  placeholder:text-white/60"
               />
             </div>
@@ -98,13 +98,13 @@ function LoginForm() {
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   required
-                  disabled={loading}
+                  disabled={isPending}
                   className="border border-white/70 py-5  placeholder:text-white/60 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
+                  disabled={isPending}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/80 focus:outline-none disabled:opacity-50"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -130,9 +130,9 @@ function LoginForm() {
               variant="secondary"
               size="lg"
               className="w-full"
-              disabled={loading}
+              disabled={isPending}
             >
-              {loading ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...

@@ -7,12 +7,14 @@
  * @see Phase 11: RBAC System Overhaul
  */
 
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type { UserRole, ModuleName, DataScope } from './permissions'
 import { ROLE_PERMISSIONS } from './permissions'
 
 /**
  * Get the list of church IDs a user can access based on their role
+ * Cached per-request to avoid duplicate database queries
  *
  * @param userId - The user's ID
  * @param role - The user's role
@@ -27,10 +29,10 @@ import { ROLE_PERMISSIONS } from './permissions'
  * }
  * ```
  */
-export async function getScopeChurches(
+export const getScopeChurches = cache(async (
   userId: string,
   role: UserRole
-): Promise<string[] | null> {
+): Promise<string[] | null> => {
   const supabase = await createClient()
 
   // Get user's assignments
@@ -85,7 +87,7 @@ export async function getScopeChurches(
     default:
       return []
   }
-}
+})
 
 /**
  * Check if a user can access a specific module

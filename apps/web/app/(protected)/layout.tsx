@@ -1,28 +1,20 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import { DashboardSidebar } from '@/components/dashboard/sidebar'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { Toaster } from 'sonner'
+import { getAuthUser } from '@/lib/utils/auth-helpers'
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
+  // Use cached auth user helper to avoid duplicate queries
+  const userData = await getAuthUser()
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
+  if (!userData) {
     redirect('/login')
   }
-
-  // Get user data with role and church
-  const { data: userData } = await supabase
-    .from('users')
-    .select('*, churches(name)')
-    .eq('id', user.id)
-    .single()
 
   return (
     <>
