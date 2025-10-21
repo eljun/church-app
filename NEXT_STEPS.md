@@ -4565,5 +4565,219 @@ export const getAuthUser = cache(async () => {
 
 ---
 
+## ✅ Phase 12.9: Critical Bug Fixes (2025-10-22) - COMPLETE
+
+### What Was Fixed
+
+#### 1. User Creation Issue - Admin API Trigger Problem
+**Problem:** When creating users (pastor, bibleworker, etc.), the user was created in `auth.users` but not appearing in `public.users` table.
+
+**Root Cause:**
+- The `adminClient.auth.admin.createUser()` API **does NOT fire database triggers**
+- The `handle_new_user()` trigger on `auth.users` table only fires for regular signups, not admin-created users
+- The code was waiting for the trigger with retry logic, but it would never run
+
+**Solution Applied:**
+- Changed from "trigger + update" approach to "direct insert" approach
+- After creating auth user, directly INSERT into `public.users` table using service role client
+- Service role client bypasses RLS, allowing the insert to succeed
+- Proper rollback on failure (delete auth user if public.users insert fails)
+
+**Files Modified:**
+- [`apps/web/lib/actions/users.ts`](apps/web/lib/actions/users.ts#L81-L119) - Changed to direct INSERT instead of waiting for trigger + UPDATE
+- [`apps/web/lib/supabase/admin.ts`](apps/web/lib/supabase/admin.ts#L30-L32) - Added schema config
+
+**Code Changes:**
+```typescript
+// Before (broken):
+// 1. Create auth user
+// 2. Wait for trigger to create public.users record (never fires!)
+// 3. Try to UPDATE record (fails - record doesn't exist)
+
+// After (working):
+// 1. Create auth user with admin API
+// 2. Directly INSERT into public.users using service role
+// 3. Return success with proper error handling and rollback
+```
+
+**Testing:** ✅ User creation now works for all roles (pastor, bibleworker, church_secretary, etc.)
+
+---
+
+#### 2. Pastor Role Access Issues - Incorrect Scope Implementation
+**Problem:** Pastors were seeing incorrect data:
+1. Dashboard showing empty (no stats, no members)
+2. Members page showing empty
+3. Churches page showing ALL churches in the district instead of only assigned churches
+
+**Root Cause:**
+- The `getScopeChurches()` function in `lib/rbac/helpers.ts` was incorrectly using `district_id` to get ALL churches in the district
+- According to requirements: **Pastors should ONLY see their assigned churches** (`assigned_church_ids`), NOT all churches in the district
+- The `district_id` and `field_id` fields are meant to be **optional metadata** for context, NOT for granting access
+- Multiple pastors can be assigned to the same district with different church assignments
+
+**Solution Applied:**
+- Updated `getScopeChurches()` to return ONLY `assigned_church_ids` for pastors
+- Updated `pastor-helpers.ts` helper function to use only assigned churches
+- Removed district/field church queries that were granting broader access than intended
+
+**Files Modified:**
+- [`apps/web/lib/rbac/helpers.ts`](apps/web/lib/rbac/helpers.ts#L63-L71) - Fixed district scope to use assigned_church_ids only
+- [`apps/web/lib/utils/pastor-helpers.ts`](apps/web/lib/utils/pastor-helpers.ts#L8-L30) - Simplified to return assigned churches only
+
+**Code Changes:**
+```typescript
+// Before (incorrect):
+case 'district':
+  // Pastor - get ALL churches in their district
+  if (!user.district_id) return []
+  const { data: districtChurches } = await supabase
+    .from('churches')
+    .select('id')
+    .eq('district', user.district_id)
+  return districtChurches?.map((c) => c.id) || []
+
+// After (correct):
+case 'district':
+  // Pastor - return their assigned churches only
+  // assigned_church_ids is the PRIMARY filter
+  // district_id/field_id are optional metadata, don't grant access
+  if (user.assigned_church_ids?.length) {
+    return user.assigned_church_ids
+  }
+  return []
+```
+
+**Key Insight:**
+- `assigned_church_ids` = Churches the pastor has access to (PRIMARY permission)
+- `district_id` = Optional context field showing which district the pastor oversees (metadata only)
+- `field_id` = Optional context field showing which field the pastor oversees (metadata only)
+- Multiple pastors in the same district can have different `assigned_church_ids`
+
+**Testing:** ✅ Pastors now see:
+- Dashboard with stats from their assigned churches only
+- Members from their assigned churches only
+- Churches list showing only their assigned churches
+
+---
+
+#### 3. RLS Policy Fixes - Comprehensive Migration 022
+**Problem:** After fixing the application code (`getScopeChurches()`) for pastors, the pages were still showing empty data even though debug logs confirmed correct church IDs were being returned.
+
+**Root Causes Discovered:**
+1. **Migration 020 broke church_secretary access**: When renaming 'admin' role to 'church_secretary', the RLS policies were NEVER updated - they still referenced the non-existent 'admin' role
+2. **Migration 013 used wrong pastor logic**: Pastor policies were using district/field queries (`c.district = get_pastor_district()`) instead of `assigned_church_ids`
+3. **Inconsistent policy implementation**: Bibleworker policies (migration 016) were working correctly using `assigned_church_ids`, but pastor/church_secretary were broken
+
+**Why Application Code Was Correct But Data Still Empty:**
+- Application code (`getScopeChurches()`) was filtering correctly using `assigned_church_ids`
+- BUT Supabase queries use regular client (not admin client), so RLS policies are enforced at database level
+- RLS policies were either broken (church_secretary) or using wrong logic (pastor)
+- Result: Application code returned correct church IDs, but database blocked everything via RLS
+
+**Solution Applied:**
+Created comprehensive migration 022 to fix ALL broken RLS policies across all 6 roles:
+
+**Files Created:**
+- [`packages/database/migrations/022_fix_rls_policies_for_all_roles.sql`](packages/database/migrations/022_fix_rls_policies_for_all_roles.sql) - Complete RLS overhaul
+
+**Changes Made:**
+```sql
+-- Dropped old broken policies:
+- "Admins can read their church members" (references non-existent 'admin' role)
+- "Pastor can read members in district" (uses wrong district/field logic)
+- Existing bibleworker policies (to recreate them cleanly)
+
+-- Created new correct policies for all roles:
+- Church Secretary: Uses 'church_secretary' role + church_id (fixed from 'admin')
+- Field Secretary: Uses 'field_secretary' role + field_id for field-wide access
+- Pastor: Uses 'pastor' role + assigned_church_ids ONLY (fixed from district queries)
+- Bibleworker: Uses 'bibleworker' role + assigned_church_ids (recreated cleanly)
+
+-- Tables covered:
+- members (read policies for all roles)
+- churches (read policies for all roles)
+- attendance (read policies for all roles)
+- transfer_requests (read policies for all roles)
+```
+
+**Key Policy Examples:**
+```sql
+-- Pastor: Assigned churches access (CORRECT)
+CREATE POLICY "Pastor can read members from assigned churches"
+  ON members FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id = auth.uid()
+        AND users.role = 'pastor'
+        AND members.church_id = ANY(users.assigned_church_ids)
+    )
+  );
+
+-- Church Secretary: Single church access (FIXED from 'admin')
+CREATE POLICY "Church Secretary can read their church members"
+  ON members FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id = auth.uid()
+        AND users.role = 'church_secretary'
+        AND members.church_id = users.church_id
+    )
+  );
+
+-- Field Secretary: Field-wide access (NEW)
+CREATE POLICY "Field Secretary can read members from their field"
+  ON members FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM users u
+      JOIN churches c ON members.church_id = c.id
+      WHERE u.id = auth.uid()
+        AND u.role = 'field_secretary'
+        AND c.field = u.field_id
+    )
+  );
+```
+
+**Migration Conflict Fix:**
+- Initial run failed with: `ERROR: 42710: policy "Bibleworker can read assigned churches" for table "churches" already exists`
+- Fixed by adding `DROP POLICY IF EXISTS` statements for existing bibleworker policies from migration 016
+- This ensures clean recreation without conflicts
+
+**Testing Results:**
+- ✅ Superadmin: Can access all data (national scope)
+- ✅ Bibleworker: Can see members from assigned churches (68 members from 2 churches confirmed)
+- ✅ Pastor: Can now see members, churches, dashboard from assigned churches only
+- ✅ Church Secretary: Fixed (previously broken due to 'admin' reference)
+- ✅ Field Secretary: New role with field-wide access implemented
+
+**Key Learnings:**
+1. **Always update RLS policies when renaming roles** - Migration 020 renamed 'admin' but never updated policies
+2. **RLS policies must match application logic** - Application code used `assigned_church_ids`, but RLS used district/field
+3. **Test with regular client, not admin client** - Admin client bypasses RLS, hiding policy issues
+4. **Check ALL migrations for policy conflicts** - Migration 016 had working bibleworker policies that needed to be dropped first
+
+---
+
+### Build Status
+✅ **All builds passing**
+✅ **No TypeScript errors**
+✅ **User creation working for all roles**
+✅ **Pastor role permissions fixed**
+✅ **RLS policies fixed for all 6 roles**
+✅ **Production ready**
+
+### Impact
+- **User Management**: Fixed critical blocker for creating users
+- **Pastor Role**: Fixed data access to match business requirements
+- **Church Secretary Role**: Fixed broken RLS policies from migration 020
+- **Field Secretary Role**: Implemented new RLS policies for field-wide access
+- **RBAC System**: Clarified distinction between assigned churches (permissions) vs district/field (metadata)
+- **Database Security**: Comprehensive RLS coverage across members, churches, attendance, transfers
+
+---
+
 **Next Phase:** Phase 13 - TBD (Mobile Optimization / Advanced Features)
 

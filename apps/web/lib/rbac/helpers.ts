@@ -61,13 +61,14 @@ export const getScopeChurches = cache(async (
       return fieldChurches?.map((c) => c.id) || []
 
     case 'district':
-      // Pastor - get all churches in their district
-      if (!user.district_id) return []
-      const { data: districtChurches } = await supabase
-        .from('churches')
-        .select('id')
-        .eq('district', user.district_id)
-      return districtChurches?.map((c) => c.id) || []
+      // Pastor - return their assigned churches only
+      // The assigned_church_ids is the PRIMARY filter
+      // district_id and field_id are optional for broader oversight context, but don't grant access
+      if (user.assigned_church_ids?.length) {
+        return user.assigned_church_ids
+      }
+      // Fallback: if no assigned churches, pastor has no access
+      return []
 
     case 'church':
       // Church Secretary or Bibleworker - return assigned churches

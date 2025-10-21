@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/server'
 
 /**
  * Get all church IDs that a pastor has access to
- * Based on: assigned_church_ids, district_id, and field_id
+ * Based on: assigned_church_ids ONLY
+ * Note: district_id and field_id are optional metadata for context, NOT for granting access
  */
 export async function getPastorChurchIds(userId: string): Promise<string[]> {
   const supabase = await createClient()
@@ -15,7 +16,7 @@ export async function getPastorChurchIds(userId: string): Promise<string[]> {
   // Get user's pastor assignments
   const { data: userData, error: userError } = await supabase
     .from('users')
-    .select('role, assigned_church_ids, district_id, field_id')
+    .select('role, assigned_church_ids')
     .eq('id', userId)
     .single()
 
@@ -23,36 +24,9 @@ export async function getPastorChurchIds(userId: string): Promise<string[]> {
     return []
   }
 
-  const assignedChurches = userData.assigned_church_ids || []
-
-  // Get churches from district
-  const districtChurches = userData.district_id
-    ? await supabase
-        .from('churches')
-        .select('id')
-        .eq('district', userData.district_id)
-        .eq('is_active', true)
-        .then(({ data }) => data || [])
-    : []
-
-  // Get churches from field
-  const fieldChurches = userData.field_id
-    ? await supabase
-        .from('churches')
-        .select('id')
-        .eq('field', userData.field_id)
-        .eq('is_active', true)
-        .then(({ data }) => data || [])
-    : []
-
-  // Combine and remove duplicates
-  const allChurchIds = [
-    ...assignedChurches,
-    ...districtChurches.map(c => c.id),
-    ...fieldChurches.map(c => c.id)
-  ]
-
-  return [...new Set(allChurchIds)]
+  // Pastors only have access to their explicitly assigned churches
+  // Multiple pastors can be assigned to the same district with different church assignments
+  return userData.assigned_church_ids || []
 }
 
 /**
