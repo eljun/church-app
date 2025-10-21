@@ -5,7 +5,7 @@ import { Bell } from 'lucide-react'
 interface UserData {
   id: string
   email: string
-  role: 'superadmin' | 'admin' | 'member'
+  role: 'superadmin' | 'church_secretary'
   church_id: string | null
   churches?: {
     name: string

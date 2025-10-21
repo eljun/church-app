@@ -22,8 +22,8 @@ export default async function EditChurchPage({ params }: EditChurchPageProps) {
         .eq('id', authUser.id)
         .single()
 
-      // Admin users can only edit their own church
-      if (userData?.role === 'admin' && userData?.church_id !== id) {
+      // Church Secretary users can only edit their own church
+      if (userData?.role === 'church_secretary' && userData?.church_id !== id) {
         notFound()
       }
     }

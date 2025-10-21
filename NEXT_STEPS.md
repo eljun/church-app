@@ -2111,7 +2111,652 @@ All missionary report features documented in Phase 10 section above.
 ---
 
 **Current State:** Phase 10.5 COMPLETE ✅
-**Next Phase:** Phase 11 - Individual Bible Worker Reports (Future)
+**Next Phase:** Phase 11 - RBAC System Overhaul & Role Structure Finalization
+
+---
+
+## 🔐 Phase 11: RBAC System Overhaul & Role Structure Finalization (2025-10-19)
+
+### Status: Planning Complete ✅ | Ready for Implementation
+
+**Session Date:** 2025-10-19
+**Planning Duration:** 3+ hours
+**Implementation Estimate:** 8-10 hours (split across 2 sessions)
+
+---
+
+## 📋 Planning Summary
+
+After comprehensive analysis of the current RBAC implementation, we identified critical gaps and designed a simplified, maintainable permission system. The current system has scattered role checks across 64 files with inconsistent filtering, leading to security vulnerabilities and maintenance bottlenecks.
+
+**Key Problems Identified:**
+- ❌ Pastor role cannot access member data (incomplete filtering)
+- ❌ 20+ pages have no role checks (direct URL access bypasses navigation)
+- ❌ Attendance queries have NO role filtering (critical security gap)
+- ❌ Visitors/Events queries missing pastor filtering
+- ❌ Manual role checks scattered across codebase (hard to maintain)
+- ❌ Role names confusing (admin vs church_secretary, bibleworker vs worker)
+- ❌ District/field TEXT fields have duplicates/typos from manual entry
+
+---
+
+## 🎯 Finalized Role Structure (6 Roles)
+
+### Role Hierarchy & Data Scope
+
+```
+National Level
+  └── Field Level (3 fields: Luzon, Visayan, Mindanao)
+      └── District Level (multiple districts per field)
+          └── Church Level (multiple churches per district)
+```
+
+| Role | DB Name | Scope | Assignment | Write Access |
+|------|---------|-------|------------|--------------|
+| **Superadmin** | `superadmin` | National | None | Full access everywhere |
+| **Field Secretary** ✨ NEW | `field_secretary` | Field(s) | Single `field_id` (TEXT) | All churches/districts in field |
+| **Pastor** | `pastor` | District(s) | Single `district_id` (TEXT) | All churches in district |
+| **Church Secretary** 🔄 | `church_secretary` | Church | Single `church_id` (FK) | Their church only |
+| **Coordinator** | `coordinator` | Events only | None | Events & calendar (all) |
+| **Bibleworker** | `bibleworker` | Churches | Multiple `assigned_church_ids[]` | Read + visitor updates + reports |
+
+**Changes:**
+- ➕ **NEW:** `field_secretary` role added
+- 🔄 **RENAME:** `admin` → `church_secretary` (clearer name)
+- ❌ **REMOVE:** `member` role (not needed)
+- ✅ **KEEP:** `coordinator` (events specialist)
+- ✅ **KEEP:** `bibleworker` (not changing to "worker")
+
+---
+
+## 📊 User Decisions & Requirements
+
+### 1. Organizational Structure
+**Philippines SDA Church Structure:**
+- **3 Fields:** Luzon, Visayan, Mindanao
+- **Multiple Districts per Field**
+- **Multiple Churches per District**
+
+**Current Issue:** Districts stored as TEXT with typos/duplicates due to manual entry
+
+**Decision:** ✅ Fix NOW during RBAC migration
+- Create `fields` reference table (3 rows)
+- Create `districts` reference table with `field_id` FK
+- Clean up duplicate districts
+- Update churches to use FK instead of TEXT
+- Use TEXT matching for now (field_id/district_id in users → field/district in churches)
+- Future: Can normalize to full FK relationship
+
+---
+
+### 2. Role Assignment Details
+
+#### Field Secretary (NEW)
+- **Assignment:** Single field (Luzon/Visayan/Mindanao)
+- **Access:** All districts and churches in their field
+- **Count:** 3 field secretaries (one per field)
+- **User Field:** `field_id` TEXT matching `churches.field`
+
+#### Pastor
+- **Assignment:** Single district
+- **Access:** All churches in their district
+- **Multiple Pastors:** Can share same district, assigned to different churches
+- **User Field:** `district_id` TEXT matching `churches.district`
+- **Can Expand Later:** If needed, change to array for multiple districts
+
+#### Church Secretary (renamed from Admin)
+- **Assignment:** Single church via `church_id` FK
+- **Access:** Their church only
+- **Cannot:** Manage multiple churches
+
+#### Bibleworker
+- **Assignment:** Multiple churches via `assigned_church_ids[]` array
+- **Access:** Assigned churches only
+- **Permissions:**
+  - ✅ View members (read-only)
+  - ✅ Create new visitors
+  - ✅ Update visitor activities & follow-up status
+  - ✅ Create missionary reports
+  - ❌ Delete anything
+
+#### Coordinator
+- **Assignment:** None
+- **Access:** Events & Calendar modules only
+- **Scope:** Can create national/field/district events (not church-specific)
+- **Purpose:** Manage biennial/triennial conferences
+- **Permissions:** Full write access to events and registrations
+
+---
+
+### 3. Data Structure Decisions
+
+**Fields:**
+- ✅ Hardcode 3 fields in UI (Luzon, Visayan, Mindanao)
+- ✅ Create reference table for future dynamic management
+- ✅ Use TEXT matching for now
+
+**Districts:**
+- ✅ Create reference table with `field_id` FK
+- ✅ Populate from existing unique districts (clean duplicates)
+- ✅ Church creation form: Dropdown instead of text input
+- ✅ Dynamic dropdown: Query distinct districts per field
+- ✅ Prevents typos and duplicate entries
+
+**Church Form UI:**
+- Field dropdown (select from 3 options)
+- District dropdown (dynamically filtered by selected field)
+- Ensures data consistency
+
+---
+
+## 🛠️ Implementation Plan
+
+### Session 1: Database Migration & Cleanup (3-4 hours)
+
+#### Phase 11.1: Database Structure ✅
+
+**Create Reference Tables:**
+```sql
+-- 019_rbac_overhaul_part1.sql
+
+-- Step 1: Create fields reference table
+CREATE TABLE IF NOT EXISTS fields (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+INSERT INTO fields (name) VALUES
+  ('Luzon'),
+  ('Visayan'),
+  ('Mindanao')
+ON CONFLICT (name) DO NOTHING;
+
+-- Step 2: Create districts reference table
+CREATE TABLE IF NOT EXISTS districts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  field_id UUID REFERENCES fields(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (name, field_id)
+);
+
+-- Step 3: Populate districts from existing churches
+-- Clean duplicates and map to correct field
+INSERT INTO districts (name, field_id)
+SELECT DISTINCT
+  c.district,
+  f.id as field_id
+FROM churches c
+JOIN fields f ON c.field = f.name
+WHERE c.district IS NOT NULL
+ON CONFLICT (name, field_id) DO NOTHING;
+
+-- Step 4: Add field_id and district_id to churches (for future normalization)
+ALTER TABLE churches ADD COLUMN IF NOT EXISTS field_id UUID REFERENCES fields(id);
+ALTER TABLE churches ADD COLUMN IF NOT EXISTS district_id UUID REFERENCES districts(id);
+
+-- Step 5: Update churches with FKs (populate from TEXT fields)
+UPDATE churches c
+SET field_id = f.id
+FROM fields f
+WHERE c.field = f.name;
+
+UPDATE churches c
+SET district_id = d.id
+FROM districts d
+JOIN fields f ON d.field_id = f.id
+WHERE c.district = d.name AND c.field = f.name;
+
+-- Step 6: Create indexes
+CREATE INDEX IF NOT EXISTS idx_churches_field_id ON churches(field_id);
+CREATE INDEX IF NOT EXISTS idx_churches_district_id ON churches(district_id);
+CREATE INDEX IF NOT EXISTS idx_districts_field_id ON districts(field_id);
+```
+
+#### Phase 11.2: Role Migration ✅
+
+**Add New Roles & Update Existing:**
+```sql
+-- 019_rbac_overhaul_part2.sql
+
+-- Step 1: Add field_secretary role
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'field_secretary';
+
+-- Step 2: Add church_secretary role
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'church_secretary';
+
+-- Step 3: Migrate existing admin users to church_secretary
+UPDATE users SET role = 'church_secretary' WHERE role = 'admin';
+
+-- Step 4: Add field_id to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS field_id TEXT;
+
+-- Step 5: Update constraint to use new roles
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+  CHECK (role IN ('superadmin', 'field_secretary', 'pastor', 'church_secretary', 'coordinator', 'bibleworker'));
+
+-- Step 6: Add comments
+COMMENT ON COLUMN users.field_id IS 'For field_secretary - field name (Luzon/Visayan/Mindanao)';
+COMMENT ON COLUMN users.district_id IS 'For pastor - district name';
+COMMENT ON COLUMN users.church_id IS 'For church_secretary - single church assignment';
+COMMENT ON COLUMN users.assigned_church_ids IS 'For bibleworker - multiple church assignments';
+```
+
+**Estimated Time:** 1 hour (migration creation + testing)
+
+---
+
+### Session 2: RBAC Implementation (6-8 hours)
+
+#### Phase 11.3: Create RBAC Permission System ✅
+
+**File:** `apps/web/lib/rbac/permissions.ts` (NEW)
+
+```typescript
+export type UserRole =
+  | 'superadmin'
+  | 'field_secretary'
+  | 'pastor'
+  | 'church_secretary'
+  | 'coordinator'
+  | 'bibleworker'
+
+export type DataScope =
+  | 'national'
+  | 'field'
+  | 'district'
+  | 'church'
+  | 'events_only'
+
+export interface RoleConfig {
+  modules: ModuleName[] | ['*']
+  canWrite: boolean
+  dataScope: DataScope
+  displayName: string
+}
+
+export const ROLE_PERMISSIONS: Record<UserRole, RoleConfig> = {
+  superadmin: {
+    modules: ['*'],
+    canWrite: true,
+    dataScope: 'national',
+    displayName: 'Superadmin'
+  },
+  field_secretary: {
+    modules: ['dashboard', 'members', 'visitors', 'churches', 'events', 'attendance', 'transfers', 'calendar', 'reports', 'missionary-reports'],
+    canWrite: true,
+    dataScope: 'field',
+    displayName: 'Field Secretary'
+  },
+  pastor: {
+    modules: ['dashboard', 'members', 'visitors', 'churches', 'events', 'attendance', 'transfers', 'calendar', 'reports', 'missionary-reports'],
+    canWrite: true,
+    dataScope: 'district',
+    displayName: 'Pastor'
+  },
+  church_secretary: {
+    modules: ['dashboard', 'members', 'visitors', 'events', 'attendance', 'transfers', 'calendar', 'reports', 'missionary-reports'],
+    canWrite: true,
+    dataScope: 'church',
+    displayName: 'Church Secretary'
+  },
+  coordinator: {
+    modules: ['events', 'calendar'],
+    canWrite: true,
+    dataScope: 'events_only',
+    displayName: 'Coordinator'
+  },
+  bibleworker: {
+    modules: ['members', 'visitors', 'events', 'calendar', 'missionary-reports'],
+    canWrite: false,
+    dataScope: 'church',
+    displayName: 'Bible Worker',
+    specialPermissions: {
+      'visitors': 'write',
+      'missionary-reports': 'write'
+    }
+  }
+}
+```
+
+**File:** `apps/web/lib/rbac/helpers.ts` (NEW)
+
+```typescript
+export async function getScopeChurches(
+  userId: string,
+  role: UserRole
+): Promise<string[] | null> {
+  const supabase = await createClient()
+  const { data: user } = await supabase
+    .from('users')
+    .select('field_id, district_id, church_id, assigned_church_ids')
+    .eq('id', userId)
+    .single()
+
+  if (!user) return []
+
+  const scope = ROLE_PERMISSIONS[role].dataScope
+
+  switch (scope) {
+    case 'national':
+      return null // no filter
+
+    case 'field':
+      // Get all churches in their field
+      if (!user.field_id) return []
+      const { data: fieldChurches } = await supabase
+        .from('churches')
+        .select('id')
+        .eq('field', user.field_id)
+      return fieldChurches?.map(c => c.id) || []
+
+    case 'district':
+      // Get all churches in their district
+      if (!user.district_id) return []
+      const { data: districtChurches } = await supabase
+        .from('churches')
+        .select('id')
+        .eq('district', user.district_id)
+      return districtChurches?.map(c => c.id) || []
+
+    case 'church':
+      // Return assigned churches or single church
+      if (user.assigned_church_ids?.length) {
+        return user.assigned_church_ids
+      }
+      return user.church_id ? [user.church_id] : []
+
+    case 'events_only':
+      return null // sees all events
+  }
+}
+
+export function canAccessModule(role: UserRole, module: ModuleName): boolean {
+  const config = ROLE_PERMISSIONS[role]
+  return config.modules.includes('*') || config.modules.includes(module)
+}
+
+export function canWrite(role: UserRole, module?: ModuleName): boolean {
+  const config = ROLE_PERMISSIONS[role]
+  if (module && config.specialPermissions?.[module]) {
+    return config.specialPermissions[module] === 'write'
+  }
+  return config.canWrite
+}
+```
+
+**Estimated Time:** 2 hours
+
+---
+
+#### Phase 11.4: Global Role Reference Updates ✅
+
+**Find & Replace Operations (64 files, ~178 occurrences):**
+
+1. **Rename admin → church_secretary:**
+   ```regex
+   Find: role === ['"]admin['"]
+   Replace: role === 'church_secretary'
+
+   Find: role: ['"]admin['"]
+   Replace: role: 'church_secretary'
+   ```
+
+2. **Remove member role references:**
+   - Delete all `'member'` from role arrays
+   - Remove member-specific logic
+
+**Files to Update:**
+- Type definitions (2 files):
+  - `packages/database/src/types.ts`
+  - `apps/web/lib/validations/user.ts`
+- Query functions (13 files)
+- Action functions (10+ files)
+- Components (30+ files)
+- Pages (20+ files)
+
+**Estimated Time:** 2-3 hours (careful verification needed)
+
+---
+
+#### Phase 11.5: Add Scope Filtering to Queries ✅
+
+**Update All Query Functions:**
+
+```typescript
+// Pattern to apply to all queries
+export async function getMembers() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const userData = await getUserData(user.id)
+
+  const churchIds = await getScopeChurches(user.id, userData.role)
+
+  let query = supabase.from('members').select('*')
+
+  // Apply scope filter
+  if (churchIds !== null) {
+    query = query.in('church_id', churchIds)
+  }
+
+  return query
+}
+```
+
+**Queries to Update:**
+- ❌ **CRITICAL:** `getAttendance()` - NO filtering currently
+- ❌ **CRITICAL:** `getVisitors()` - Missing pastor filtering
+- ❌ **CRITICAL:** `getEvents()` - Missing pastor filtering
+- ⚠️ `getMembers()` - Has pastor filtering, verify consistency
+- ⚠️ `getChurches()` - Has pastor filtering, verify consistency
+- All report queries (8 functions)
+- All dashboard queries (6 functions)
+
+**Estimated Time:** 2 hours
+
+---
+
+#### Phase 11.6: Update User Forms ✅
+
+**Create User Dialog Updates:**
+- Field Secretary: Field dropdown (Luzon/Visayan/Mindanao)
+- Pastor: District dropdown (dynamic from districts table)
+- Church Secretary: Church dropdown (single selection)
+- Bibleworker: Church multi-select (existing component)
+- Coordinator: No assignment needed
+
+**Church Creation Form Updates:**
+- Field dropdown (hardcoded 3 options)
+- District dropdown (query districts by selected field)
+- Remove text inputs, use dropdowns only
+
+**Files to Update:**
+- `components/settings/users/create-user-dialog.tsx`
+- `components/settings/users/edit-user-dialog.tsx`
+- `components/churches/church-form.tsx` (if exists) or church pages
+
+**Estimated Time:** 1.5 hours
+
+---
+
+#### Phase 11.7: Update Middleware & Sidebar ✅
+
+**Middleware Route Protection:**
+```typescript
+// middleware.ts
+const module = getModuleFromPath(request.nextUrl.pathname)
+if (module && !canAccessModule(userData.role, module)) {
+  return NextResponse.redirect(new URL('/events', request.url))
+}
+```
+
+**Sidebar Navigation:**
+- Update role names display
+- Add field_secretary navigation
+- Use `getRoleDisplayName()` helper
+
+**Files to Update:**
+- `apps/web/middleware.ts`
+- `apps/web/components/dashboard/sidebar.tsx`
+
+**Estimated Time:** 1 hour
+
+---
+
+#### Phase 11.8: Testing & Verification ✅
+
+**Test Matrix:**
+
+| Role | Test Case | Expected Result |
+|------|-----------|-----------------|
+| Field Secretary | Access churches | ✅ See all in field |
+| Field Secretary | Access members | ✅ See all in field churches |
+| Pastor | Access churches | ✅ See all in district |
+| Pastor | Access members | ✅ See all in district churches |
+| Pastor | Access other district | ❌ No access |
+| Church Secretary | Access members | ✅ See their church only |
+| Church Secretary | Access other church | ❌ No access |
+| Bibleworker | View members | ✅ See assigned churches |
+| Bibleworker | Create visitor | ✅ Allowed |
+| Bibleworker | Delete member | ❌ Not allowed |
+| Coordinator | Access events | ✅ All events visible |
+| Coordinator | Access members | ❌ Redirected to /events |
+
+**Estimated Time:** 1.5 hours
+
+---
+
+## 📊 Implementation Checklist
+
+### Database & Schema (Session 1)
+- [ ] Create fields reference table (3 rows)
+- [ ] Create districts reference table with field FK
+- [ ] Populate districts from existing churches (clean duplicates)
+- [ ] Add field_id and district_id FK columns to churches
+- [ ] Update churches with FK values
+- [ ] Add field_secretary role to enum
+- [ ] Rename admin → church_secretary role
+- [ ] Remove member role constraint
+- [ ] Add field_id column to users
+- [ ] Update users constraint with new roles
+- [ ] Test migration on dev database
+- [ ] Document duplicate districts found and merged
+
+### RBAC System (Session 2 - Part 1)
+- [ ] Create `lib/rbac/permissions.ts` with role config
+- [ ] Create `lib/rbac/helpers.ts` with utility functions
+- [ ] Update `packages/database/src/types.ts` UserRole
+- [ ] Update `apps/web/lib/validations/user.ts` schemas
+- [ ] Test permission helpers in isolation
+
+### Global Updates (Session 2 - Part 2)
+- [ ] Find & replace: admin → church_secretary (64 files)
+- [ ] Remove member role references
+- [ ] Update all query functions with scope filtering (13 files)
+- [ ] Update action functions with role checks (10+ files)
+- [ ] Update middleware with module access checks
+- [ ] Update sidebar with new role names and field_secretary
+
+### UI Updates (Session 2 - Part 3)
+- [ ] Update create user dialog (role-specific forms)
+- [ ] Update edit user dialog
+- [ ] Update church creation form (field/district dropdowns)
+- [ ] Update church edit form
+- [ ] Test all forms with each role
+
+### Testing (Session 2 - Part 4)
+- [ ] Create test users for each role
+- [ ] Test field_secretary access (field-level filtering)
+- [ ] Test pastor access (district-level filtering)
+- [ ] Test church_secretary access (church-level filtering)
+- [ ] Test bibleworker permissions (assigned churches + write visitors)
+- [ ] Test coordinator restrictions (events only)
+- [ ] Verify all queries filter correctly
+- [ ] Test direct URL access (should redirect)
+- [ ] Test sidebar navigation per role
+- [ ] Document any bugs found
+
+### Documentation
+- [ ] Update NEXT_STEPS.md with completion status
+- [ ] Document migration process
+- [ ] Document any issues encountered
+- [ ] Create user guide for role assignments
+- [ ] Update development setup instructions
+
+---
+
+## 🎯 Success Criteria
+
+### Must Have (Required for Completion)
+✅ All 6 roles properly defined in database
+✅ All role references updated (admin → church_secretary)
+✅ All queries filter by scope (field/district/church)
+✅ Middleware enforces route access per role
+✅ User creation forms work for all roles
+✅ Church creation uses dropdowns (no text input)
+✅ No security vulnerabilities (direct URL access blocked)
+✅ All builds passing with no TypeScript errors
+
+### Should Have (High Priority)
+✅ District duplicates cleaned up
+✅ Fields/districts reference tables created
+✅ Comprehensive testing completed
+✅ Documentation updated
+
+### Nice to Have (Future Enhancement)
+⭕ Full FK normalization (churches.field_id instead of TEXT matching)
+⭕ Field/district management UI for superadmins
+⭕ Multi-district pastor support (array instead of single)
+⭕ Role-based dashboard customization
+
+---
+
+## 📝 Notes & Decisions
+
+### Why Rename admin → church_secretary?
+- "Admin" is ambiguous (system admin vs church admin)
+- "Church Secretary" is clearer and matches real-world role
+- Aligns with organizational structure (Field Secretary, Church Secretary)
+
+### Why Keep bibleworker (not worker)?
+- "Worker" is too generic
+- "Bible Worker" is a recognized church role
+- Maintains consistency with existing terminology
+
+### Why Field Secretary Instead of Coordinator?
+- Coordinator is events-only (biennial/triennial specialist)
+- Field Secretary is field-level administrator (broader scope)
+- These are two distinct roles serving different purposes
+
+### Why Fix Districts NOW?
+- Already have typos/duplicates from manual entry
+- Will only get worse over time
+- Migration is perfect opportunity for cleanup
+- Prevents future data integrity issues
+
+### Why TEXT Matching vs Full FK?
+- Simpler migration path
+- Less risky (no major schema restructuring)
+- Can normalize to full FK later if needed
+- TEXT matching works fine for current use case (3 fields, ~50 districts)
+
+---
+
+## 🚀 Ready for Implementation
+
+All planning complete. All user decisions documented. Clear implementation path defined.
+
+**Next Session (Tomorrow):**
+1. Start with Session 1: Database migration
+2. Review duplicate districts found
+3. Test migration on dev database
+4. Proceed to Session 2 if time permits
+
+**Estimated Total Time:** 8-10 hours across 2 sessions
+
+---
 **Status:** Production ready - Missionary reporting system with advanced analytics fully functional
 
 ---

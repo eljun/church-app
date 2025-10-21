@@ -34,8 +34,8 @@ export async function getTransferRequests(status?: 'pending' | 'approved' | 'rej
     `)
 
   // Role-based filtering
-  if (userData.role === 'admin' && userData.church_id) {
-    // Admins see requests from or to their church
+  if (userData.role === 'church_secretary' && userData.church_id) {
+    // Church Secretaries see requests from or to their church
     query = query.or(`from_church_id.eq.${userData.church_id},to_church_id.eq.${userData.church_id}`)
   }
 
@@ -120,7 +120,7 @@ export async function getTransferRequestById(id: string) {
   if (!transfer) throw new Error('Transfer request not found')
 
   // Check permissions
-  if (userData.role === 'admin') {
+  if (userData.role === 'church_secretary') {
     const hasAccess =
       transfer.from_church_id === userData.church_id ||
       transfer.to_church_id === userData.church_id
@@ -158,7 +158,7 @@ export async function getTransferHistory(limit = 50) {
     .limit(limit)
 
   // Role-based filtering
-  if (userData.role === 'admin' && userData.church_id) {
+  if (userData.role === 'church_secretary' && userData.church_id) {
     query = query.or(`from_church_id.eq.${userData.church_id},to_church_id.eq.${userData.church_id}`)
   }
 

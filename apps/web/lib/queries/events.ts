@@ -42,8 +42,8 @@ export async function getEvents(params?: SearchEventsInput) {
     .select('*, churches(*), users!events_created_by_fkey(email)', { count: 'exact' })
 
   // Scope-based filtering: users see events relevant to their organizational level
-  if (userData.role === 'admin' && userData.church_id && userChurch) {
-    // Admins see:
+  if (userData.role === 'church_secretary' && userData.church_id && userChurch) {
+    // Church Secretaries see:
     // 1. National events (country-wide)
     // 2. Field events for their field
     // 3. District events for their district (supports comma-separated districts)
@@ -139,8 +139,8 @@ export async function getEventById(id: string) {
   if (error) throw error
   if (!event) throw new Error('Event not found')
 
-  // Check scope-based permissions for admins
-  if (userData.role === 'admin' && userData.church_id && userChurch) {
+  // Check scope-based permissions for church_secretaries
+  if (userData.role === 'church_secretary' && userData.church_id && userChurch) {
     // Check if user's district is in the comma-separated list
     const districtMatch = event.event_scope === 'district' && event.scope_value
       ? event.scope_value.split(',').includes(userChurch.district)
@@ -197,7 +197,7 @@ export async function getUpcomingEvents(limit = 10) {
     .limit(limit)
 
   // Scope-based filtering
-  if (userData.role === 'admin' && userData.church_id && userChurch) {
+  if (userData.role === 'church_secretary' && userData.church_id && userChurch) {
     query = query.or(
       `event_scope.eq.national,` +
       `and(event_scope.eq.field,scope_value.eq.${userChurch.field}),` +
@@ -231,7 +231,7 @@ export async function getEventsByChurch(churchId: string) {
   if (!userData) throw new Error('User not found')
 
   // Check permissions
-  if (userData.role === 'admin' && churchId !== userData.church_id) {
+  if (userData.role === 'church_secretary' && churchId !== userData.church_id) {
     throw new Error('Forbidden: Cannot access events from another church')
   }
 
@@ -271,7 +271,7 @@ export async function getEventsByDateRange(startDate: string, endDate: string) {
     .order('start_date', { ascending: true })
 
   // Role-based filtering
-  if (userData.role === 'admin' && userData.church_id) {
+  if (userData.role === 'church_secretary' && userData.church_id) {
     query = query.eq('church_id', userData.church_id)
   }
 
@@ -316,7 +316,7 @@ export async function getEventStats() {
     .lt('start_date', now)
 
   // Role-based filtering
-  if (userData.role === 'admin' && userData.church_id) {
+  if (userData.role === 'church_secretary' && userData.church_id) {
     totalQuery = totalQuery.eq('church_id', userData.church_id)
     upcomingQuery = upcomingQuery.eq('church_id', userData.church_id)
     pastQuery = pastQuery.eq('church_id', userData.church_id)

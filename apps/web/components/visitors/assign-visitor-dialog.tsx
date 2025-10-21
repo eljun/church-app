@@ -48,9 +48,9 @@ export function AssignVisitorDialog({ visitor, currentUser, trigger }: AssignVis
       let query = supabase
         .from('users')
         .select('*')
-        .in('role', ['admin', 'superadmin'])
+        .in('role', ['church_secretary', 'superadmin'])
 
-      if (currentUser.role === 'admin' && currentUser.church_id) {
+      if (currentUser.role === 'church_secretary' && currentUser.church_id) {
         query = query.eq('church_id', currentUser.church_id)
       }
 

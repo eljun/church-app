@@ -250,8 +250,8 @@ export async function getAvailableMembersForEvent(eventId: string) {
     `)
     .eq('status', 'active')
 
-  // Admins can only see their church members
-  if (userData.role === 'admin' && userData.church_id) {
+  // Church Secretaries can only see their church members
+  if (userData.role === 'church_secretary' && userData.church_id) {
     membersQuery = membersQuery.eq('church_id', userData.church_id)
   }
 

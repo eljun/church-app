@@ -25,7 +25,7 @@ import { ShieldCheck } from 'lucide-react'
 interface AttendanceConfirmationFormProps {
   registrations: EventRegistrationWithDetails[]
   eventId: string
-  userRole: 'superadmin' | 'coordinator' | 'admin' | 'member'
+  userRole: 'superadmin' | 'coordinator' | 'church_secretary'
 }
 
 export function AttendanceConfirmationForm({

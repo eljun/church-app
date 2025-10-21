@@ -29,7 +29,6 @@ import type { EventRegistrationWithDetails } from '@/lib/queries/event-registrat
 
 interface RegistrationsTableProps {
   registrations: EventRegistrationWithDetails[]
-  userRole: 'superadmin' | 'coordinator' | 'admin' | 'member'
   currentPage: number
   totalPages: number
   totalCount: number
@@ -38,7 +37,6 @@ interface RegistrationsTableProps {
 
 export function RegistrationsTable({
   registrations,
-  userRole,
   currentPage,
   totalPages,
   totalCount,
@@ -138,7 +136,7 @@ export function RegistrationsTable({
               <TableHead>Status</TableHead>
               <TableHead>Registered At</TableHead>
               <TableHead>Registered By</TableHead>
-              {userRole !== 'member' && <TableHead className="text-right">Actions</TableHead>}
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -194,7 +192,6 @@ export function RegistrationsTable({
                   <TableCell className="text-sm text-muted-foreground">
                     {registration.registered_by_user?.email || 'N/A'}
                   </TableCell>
-                {userRole !== 'member' && (
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       {registration.status === 'registered' && (
@@ -220,7 +217,6 @@ export function RegistrationsTable({
                       )}
                     </div>
                   </TableCell>
-                )}
                 </TableRow>
               )
             })}

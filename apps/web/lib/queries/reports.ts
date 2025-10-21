@@ -44,7 +44,7 @@ export async function getMemberGrowthData(params?: {
     .lte('date_of_baptism', endDate)
 
   // Role-based filtering
-  if (userData.role === 'admin' && userData.church_id) {
+  if (userData.role === 'church_secretary' && userData.church_id) {
     query = query.eq('church_id', userData.church_id)
   } else if (params?.church_ids && params.church_ids.length > 0) {
     query = query.in('church_id', params.church_ids)
@@ -76,7 +76,7 @@ export async function getMemberStatistics(churchId?: string, churchIds?: string[
 
   if (!userData) throw new Error('User not found')
 
-  const targetChurchId = userData.role === 'admin'
+  const targetChurchId = userData.role === 'church_secretary'
     ? userData.church_id
     : churchId
 
@@ -212,7 +212,7 @@ export async function getTransferStatistics(params?: {
     .select('*', { count: 'exact', head: true })
 
   // Apply church filtering
-  const targetChurchId = userData.role === 'admin'
+  const targetChurchId = userData.role === 'church_secretary'
     ? userData.church_id
     : params?.church_id
 
@@ -279,7 +279,7 @@ export async function getUpcomingBaptismAnniversaries(params?: {
     .eq('status', 'active')
 
   // Role-based filtering
-  const targetChurchId = userData.role === 'admin'
+  const targetChurchId = userData.role === 'church_secretary'
     ? userData.church_id
     : params?.church_id
 
@@ -352,7 +352,7 @@ export async function getUpcomingBirthdays(params?: {
     .eq('status', 'active')
 
   // Role-based filtering
-  const targetChurchId = userData.role === 'admin'
+  const targetChurchId = userData.role === 'church_secretary'
     ? userData.church_id
     : params?.church_id
 
@@ -426,7 +426,7 @@ export async function getTransferHistory(params?: {
     `, { count: 'exact' })
 
   // Role-based filtering
-  const targetChurchId = userData.role === 'admin'
+  const targetChurchId = userData.role === 'church_secretary'
     ? userData.church_id
     : params?.church_id
 
@@ -499,7 +499,7 @@ export async function generateCustomMemberReport(
     .select(selectFields.join(', '))
 
   // Apply role-based filtering
-  const targetChurchId = userData.role === 'admin'
+  const targetChurchId = userData.role === 'church_secretary'
     ? userData.church_id
     : filters.church_id
 
@@ -605,7 +605,7 @@ export async function getAgeDistribution(churchId?: string, churchIds?: string[]
 
   if (!userData) throw new Error('User not found')
 
-  const targetChurchId = userData.role === 'admin'
+  const targetChurchId = userData.role === 'church_secretary'
     ? userData.church_id
     : churchId
 

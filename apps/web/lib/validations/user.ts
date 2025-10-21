@@ -1,15 +1,15 @@
 import { z } from 'zod'
 
 /**
- * User role enum
+ * User role enum (updated for Phase 11: RBAC Overhaul)
  */
 export const userRoleSchema = z.enum([
   'superadmin',
-  'coordinator',
+  'field_secretary',
   'pastor',
+  'church_secretary',
+  'coordinator',
   'bibleworker',
-  'admin',
-  'member',
 ])
 
 export type UserRole = z.infer<typeof userRoleSchema>
@@ -28,27 +28,39 @@ export const createUserSchema = z.object({
   assigned_member_ids: z.array(z.string().uuid()).default([]),
 }).refine(
   (data) => {
-    // Admin must have a church_id
-    if (data.role === 'admin' && !data.church_id) {
+    // Church Secretary must have a church_id
+    if (data.role === 'church_secretary' && !data.church_id) {
       return false
     }
     return true
   },
   {
-    message: 'Admin users must be assigned to a church',
+    message: 'Church Secretary must be assigned to a church',
     path: ['church_id'],
   }
 ).refine(
   (data) => {
-    // Pastor should have at least one church assigned
-    if (data.role === 'pastor' && data.assigned_church_ids.length === 0) {
+    // Field Secretary must have a field_id
+    if (data.role === 'field_secretary' && !data.field_id) {
       return false
     }
     return true
   },
   {
-    message: 'Pastor must be assigned to at least one church',
-    path: ['assigned_church_ids'],
+    message: 'Field Secretary must be assigned to a field (Luzon, Visayan, or Mindanao)',
+    path: ['field_id'],
+  }
+).refine(
+  (data) => {
+    // Pastor must have a district_id
+    if (data.role === 'pastor' && !data.district_id) {
+      return false
+    }
+    return true
+  },
+  {
+    message: 'Pastor must be assigned to a district',
+    path: ['district_id'],
   }
 ).refine(
   (data) => {
@@ -80,15 +92,39 @@ export const updateUserSchema = z.object({
   assigned_member_ids: z.array(z.string().uuid()).optional(),
 }).refine(
   (data) => {
-    // Admin must have a church_id
-    if (data.role === 'admin' && data.church_id === null) {
+    // Church Secretary must have a church_id
+    if (data.role === 'church_secretary' && data.church_id === null) {
       return false
     }
     return true
   },
   {
-    message: 'Admin users must be assigned to a church',
+    message: 'Church Secretary must be assigned to a church',
     path: ['church_id'],
+  }
+).refine(
+  (data) => {
+    // Field Secretary must have a field_id
+    if (data.role === 'field_secretary' && data.field_id === null) {
+      return false
+    }
+    return true
+  },
+  {
+    message: 'Field Secretary must be assigned to a field',
+    path: ['field_id'],
+  }
+).refine(
+  (data) => {
+    // Pastor must have a district_id
+    if (data.role === 'pastor' && data.district_id === null) {
+      return false
+    }
+    return true
+  },
+  {
+    message: 'Pastor must be assigned to a district',
+    path: ['district_id'],
   }
 )
 

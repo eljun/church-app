@@ -53,7 +53,7 @@ export default async function CustomReportsPage({ searchParams }: CustomReportsP
           <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-lg" />}>
             <CustomReportBuilder
               churches={churches || []}
-              userRole={userData?.role || 'member'}
+              userRole={userData?.role || 'bibleworker'}
               initialTemplate={params.template}
             />
           </Suspense>

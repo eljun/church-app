@@ -22,8 +22,8 @@ export default async function CalendarPage() {
     .eq('id', user.id)
     .single()
 
-  // Set churchId for admin users only (bibleworkers and others see all)
-  const churchId = userData?.role === 'admin' && userData.church_id
+  // Set churchId for church_secretary users only (bibleworkers and others see all)
+  const churchId = userData?.role === 'church_secretary' && userData.church_id
     ? userData.church_id
     : undefined
 

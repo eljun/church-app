@@ -78,8 +78,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
               { value: 'coordinator', label: 'Coordinator' },
               { value: 'pastor', label: 'Pastor' },
               { value: 'bibleworker', label: 'Bible Worker' },
-              { value: 'admin', label: 'Admin' },
-              { value: 'member', label: 'Member' },
+              { value: 'church_secretary', label: 'Church Secretary' },
             ],
           },
         ]}
@@ -126,7 +125,7 @@ async function UsersTableWrapper({
   const { data: users, count } = await getUsers({
     limit,
     offset,
-    role: roleFilter as 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'admin' | 'member' | undefined,
+    role: roleFilter as 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'church_secretary' | undefined,
     query: searchQuery,
     show_inactive: showInactive,
   })

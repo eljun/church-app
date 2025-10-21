@@ -28,8 +28,8 @@ export default async function AttendancePage() {
     redirect('/login')
   }
 
-  // Only admins, coordinators, pastors, and superadmins can record attendance
-  if (!['admin', 'coordinator', 'pastor', 'superadmin'].includes(currentUser.role)) {
+  // Only church_secretary, coordinators, pastors, and superadmins can record attendance
+  if (!['church_secretary', 'coordinator', 'pastor', 'superadmin'].includes(currentUser.role)) {
     redirect('/')
   }
 

@@ -201,7 +201,7 @@ export function CustomReportBuilder({
         <h3 className="font-medium">2. Apply Filters (Optional)</h3>
         <div className="grid gap-4 md:grid-cols-2 rounded-lg border p-4">
           {/* Church Filter */}
-          {userRole !== 'admin' && (
+          {userRole !== 'church_secretary' && (
             <div className="space-y-2">
               <Label>Church</Label>
               <ChurchSelect

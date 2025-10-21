@@ -420,8 +420,8 @@ export async function getAccessibleChurchIds(userId: string) {
     return churches?.map((c) => c.id) || []
   }
 
-  // Admin: Only their church
-  if (user.role === 'admin' && user.church_id) {
+  // Church Secretary: Only their church
+  if (user.role === 'church_secretary' && user.church_id) {
     return [user.church_id]
   }
 

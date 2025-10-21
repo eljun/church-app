@@ -49,29 +49,29 @@ export default async function DashboardPage() {
   const [memberStats, growthData, upcomingBirthdays, upcomingAnniversaries, ageDistribution, absentMembers, churches] =
     await Promise.all([
       getMemberStatistics(
-        userData?.role === 'admin' ? userData.church_id : undefined,
+        userData?.role === 'church_secretary' ? userData.church_id : undefined,
         pastorChurchIds || undefined
       ),
       getMemberGrowthData({
-        church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+        church_id: userData?.role === 'church_secretary' ? userData.church_id : undefined,
         church_ids: pastorChurchIds || undefined,
       }),
       getUpcomingBirthdays({
-        church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+        church_id: userData?.role === 'church_secretary' ? userData.church_id : undefined,
         church_ids: pastorChurchIds || undefined,
         months_ahead: 1,
       }),
       getUpcomingBaptismAnniversaries({
-        church_id: userData?.role === 'admin' ? userData.church_id : undefined,
+        church_id: userData?.role === 'church_secretary' ? userData.church_id : undefined,
         church_ids: pastorChurchIds || undefined,
         months_ahead: 1,
       }),
       getAgeDistribution(
-        userData?.role === 'admin' ? userData.church_id : undefined,
+        userData?.role === 'church_secretary' ? userData.church_id : undefined,
         pastorChurchIds || undefined
       ),
       getAbsentMembers(
-        userData?.role === 'admin' ? userData.church_id : undefined,
+        userData?.role === 'church_secretary' ? userData.church_id : undefined,
         30,
         pastorChurchIds || undefined
       ),
@@ -83,7 +83,7 @@ export default async function DashboardPage() {
           .eq('status', 'active')
 
         // Apply pastor filtering
-        if (userData?.role === 'admin' && userData.church_id) {
+        if (userData?.role === 'church_secretary' && userData.church_id) {
           query = query.eq('church_id', userData.church_id)
         } else if (pastorChurchIds && pastorChurchIds.length > 0) {
           query = query.in('church_id', pastorChurchIds)

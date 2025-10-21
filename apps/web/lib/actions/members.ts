@@ -38,7 +38,7 @@ export async function createMember(input: CreateMemberInput) {
     const validated = createMemberSchema.parse(input)
 
     // Check permissions
-    if (userData.role === 'admin' && validated.church_id !== userData.church_id) {
+    if (userData.role === 'church_secretary' && validated.church_id !== userData.church_id) {
       return { error: 'Forbidden: Cannot create member for another church' }
     }
 
@@ -117,7 +117,7 @@ export async function updateMember(input: UpdateMemberInput) {
       return { error: 'Forbidden: Bibleworkers have read-only access to members' }
     }
 
-    if (userData.role === 'admin' && currentMember.church_id !== userData.church_id) {
+    if (userData.role === 'church_secretary' && currentMember.church_id !== userData.church_id) {
       return { error: 'Forbidden: Cannot update member from another church' }
     }
 
@@ -266,7 +266,7 @@ export async function bulkImportMembers(members: CreateMemberInput[]) {
     const validated = members.map(m => createMemberSchema.parse(m))
 
     // Check permissions for each member
-    if (userData.role === 'admin') {
+    if (userData.role === 'church_secretary') {
       const unauthorized = validated.some(m => m.church_id !== userData.church_id)
       if (unauthorized) {
         return { error: 'Forbidden: Cannot import members for other churches' }

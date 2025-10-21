@@ -54,7 +54,7 @@ interface MembersTableProps {
   currentPage: number
   totalPages: number
   totalCount: number
-  userRole: 'superadmin' | 'admin' | 'bibleworker' | 'member'
+  userRole: 'superadmin' | 'church_secretary' | 'bibleworker'
 }
 
 export function MembersTable({ members, currentPage, totalPages, totalCount, userRole }: MembersTableProps) {

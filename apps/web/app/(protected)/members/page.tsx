@@ -27,7 +27,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   // Get current user role
   const supabase = await createClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()
-  let userRole: 'superadmin' | 'admin' | 'bibleworker' | 'member' = 'member'
+  let userRole: 'superadmin' | 'church_secretary' | 'bibleworker' = 'bibleworker'
 
   if (authUser) {
     const { data: userData } = await supabase

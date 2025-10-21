@@ -63,7 +63,7 @@ export function MissionaryReportForm({
   const form = useForm<CreateMissionaryReportInput | UpdateMissionaryReportInput>({
     resolver: zodResolver(mode === 'create' ? createMissionaryReportSchema : updateMissionaryReportSchema),
     defaultValues: initialData || {
-      church_id: userRole === 'admin' ? userChurchId || '' : '',
+      church_id: userRole === 'church_secretary' ? userChurchId || '' : '',
       report_date: format(new Date(), 'yyyy-MM-dd'),
       report_type: 'weekly',
       bible_studies_given: 0,
@@ -182,7 +182,7 @@ export function MissionaryReportForm({
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Church Selection */}
-            {userRole === 'admin' ? (
+            {userRole === 'church_secretary' ? (
               <FormField
                 control={form.control}
                 name="church_id"
@@ -196,7 +196,7 @@ export function MissionaryReportForm({
                         className="bg-muted"
                       />
                     </FormControl>
-                    <FormDescription>Admin users can only create reports for their church</FormDescription>
+                    <FormDescription>Church Secretary users can only create reports for their church</FormDescription>
                   </FormItem>
                 )}
               />

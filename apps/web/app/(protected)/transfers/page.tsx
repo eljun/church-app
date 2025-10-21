@@ -23,7 +23,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
   // Get current user role and church
   const supabase = await createClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()
-  let userRole: 'superadmin' | 'admin' | 'member' = 'member'
+  let userRole: 'superadmin' | 'church_secretary' = 'church_secretary'
   let userChurchId: string | null = null
 
   if (authUser) {

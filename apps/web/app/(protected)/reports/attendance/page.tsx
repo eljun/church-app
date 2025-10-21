@@ -48,8 +48,8 @@ export default async function AttendanceReportPage({ searchParams }: AttendanceR
   const churchesData = await getChurches({ limit: 1000, offset: 0 })
   const allChurches = churchesData?.data || []
 
-  // For admin, filter to their church only
-  const availableChurches = currentUser.role === 'admin' && currentUser.church_id
+  // For church_secretary, filter to their church only
+  const availableChurches = currentUser.role === 'church_secretary' && currentUser.church_id
     ? allChurches.filter(c => c.id === currentUser.church_id)
     : allChurches
 
@@ -72,8 +72,8 @@ export default async function AttendanceReportPage({ searchParams }: AttendanceR
         {/* Filters */}
         <div className="flex items-end gap-4">
           <DateFilterSelect selectedRange={selectedRange} />
-          {/* Church Filter - Only show if not admin or if superadmin/coordinator/pastor */}
-          {currentUser.role !== 'admin' && availableChurches.length > 1 && (
+          {/* Church Filter - Only show if not church_secretary or if superadmin/coordinator/pastor */}
+          {currentUser.role !== 'church_secretary' && availableChurches.length > 1 && (
             <ChurchFilterSelect
               churches={availableChurches}
               selectedChurchId={churchToShow?.id}

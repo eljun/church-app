@@ -46,7 +46,7 @@ import {
 interface UserData {
   id: string
   email: string
-  role: 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'admin' | 'member'
+  role: 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'church_secretary'
   church_id: string | null
   district_id?: string | null
   field_id?: string | null
@@ -158,8 +158,8 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
     })
   }
 
-  // Admin: My Church group
-  if (user?.role === 'admin') {
+  // Church Secretary: My Church group
+  if (user?.role === 'church_secretary') {
     groups.push({
       title: 'My Church',
       items: [

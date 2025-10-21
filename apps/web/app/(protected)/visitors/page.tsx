@@ -51,7 +51,7 @@ export default async function VisitorsPage({ searchParams }: VisitorsPageProps) 
   const isBibleworker = currentUser.role === 'bibleworker'
 
   // Get visitors based on role and filters
-  const churchId = currentUser.role === 'admin' ? currentUser.church_id : undefined
+  const churchId = currentUser.role === 'church_secretary' ? currentUser.church_id : undefined
   const visitorsData = await getVisitors({
     query: params.query,
     visitor_type: params.visitor_type,

@@ -46,7 +46,7 @@ export default async function BulkTransferPage({ searchParams }: BulkTransferPag
         <BulkTransferForm
           churches={churches}
           members={members}
-          userRole={userData?.role || 'admin'}
+          userRole={userData?.role || 'church_secretary'}
           userChurchId={userData?.church_id || null}
           preselectedChurchId={fromChurchId}
         />

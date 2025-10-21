@@ -38,17 +38,17 @@ export async function createEvent(input: CreateEventInput) {
     const validated = createEventSchema.parse(input)
 
     // Check permissions based on event scope
-    if (userData.role === 'admin') {
+    if (userData.role === 'church_secretary') {
       if (!userData.church_id) {
-        return { error: 'Admin must be assigned to a church' }
+        return { error: 'Church Secretary must be assigned to a church' }
       }
 
-      // For church-level events, force admin's church_id
+      // For church-level events, force church_secretary's church_id
       if (validated.event_scope === 'church') {
         validated.church_id = userData.church_id
         validated.scope_value = userData.church_id
       }
-      // For non-church scopes (national, field, district), admins should not have church_id set
+      // For non-church scopes (national, field, district), church_secretaries should not have church_id set
       else {
         validated.church_id = null
       }
@@ -132,12 +132,12 @@ export async function updateEvent(input: UpdateEventInput) {
     }
 
     // Check permissions based on scope
-    if (userData.role === 'admin') {
-      // Admins can update church-level events only from their church
+    if (userData.role === 'church_secretary') {
+      // Church Secretaries can update church-level events only from their church
       if (currentEvent.event_scope === 'church' && currentEvent.church_id !== userData.church_id) {
         return { error: 'Forbidden: Cannot update event from another church' }
       }
-      // Admins cannot update events they didn't create for non-church scopes
+      // Church Secretaries cannot update events they didn't create for non-church scopes
       if (currentEvent.event_scope !== 'church' && currentEvent.created_by !== user.id) {
         return { error: 'Forbidden: Cannot update events from higher organizational levels' }
       }
@@ -229,15 +229,15 @@ export async function deleteEvent(id: string) {
     console.log('✅ Event found:', currentEvent.title)
 
     // Check permissions based on scope
-    if (userData.role === 'admin') {
-      // Admins can delete church-level events only from their church
+    if (userData.role === 'church_secretary') {
+      // Church Secretaries can delete church-level events only from their church
       if (currentEvent.event_scope === 'church' && currentEvent.church_id !== userData.church_id) {
-        console.log('❌ Admin cannot delete event from another church')
+        console.log('❌ Church Secretary cannot delete event from another church')
         return { error: 'Forbidden: Cannot delete event from another church' }
       }
       // For non-church scopes, only event creator can delete
       if (currentEvent.event_scope !== 'church' && currentEvent.created_by !== user.id) {
-        console.log('❌ Admin cannot delete higher-level events they did not create')
+        console.log('❌ Church Secretary cannot delete higher-level events they did not create')
         return { error: 'Forbidden: Cannot delete events from higher organizational levels' }
       }
     }

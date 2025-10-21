@@ -71,7 +71,7 @@ export function EventForm({
   const form = useForm<CreateEventInput | UpdateEventInput>({
     resolver: zodResolver(mode === 'create' ? createEventSchema : updateEventSchema),
     defaultValues: initialData || {
-      church_id: userRole === 'admin' ? userChurchId || '' : undefined,
+      church_id: userRole === 'church_secretary' ? userChurchId || '' : undefined,
       title: '',
       description: null,
       event_type: 'service',
@@ -177,7 +177,7 @@ export function EventForm({
           />
 
           {/* Event Scope - 50% width like dates */}
-          {userRole === 'admin' ? (
+          {userRole === 'church_secretary' ? (
             <FormItem>
               <FormLabel>Event Scope</FormLabel>
               <FormControl>
@@ -188,7 +188,7 @@ export function EventForm({
                 />
               </FormControl>
               <FormDescription>
-                Admin users can only create church-specific events
+                Church Secretary users can only create church-specific events
               </FormDescription>
             </FormItem>
           ) : (

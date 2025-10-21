@@ -1,6 +1,6 @@
 // Database types for Church App
 
-export type UserRole = 'superadmin' | 'coordinator' | 'pastor' | 'bibleworker' | 'admin' | 'member';
+export type UserRole = 'superadmin' | 'field_secretary' | 'pastor' | 'church_secretary' | 'coordinator' | 'bibleworker';
 export type PhysicalCondition = 'fit' | 'sickly';
 export type SpiritualCondition = 'active' | 'inactive';
 export type MemberStatus = 'active' | 'transferred_out' | 'resigned' | 'disfellowshipped' | 'deceased';
@@ -20,13 +20,14 @@ export interface User {
   id: string;
   email: string;
   role: UserRole;
-  church_id: string | null;
-  district_id: string | null; // For pastors - district they oversee
-  field_id: string | null; // For pastors - field they oversee
-  assigned_church_ids: string[]; // For pastors - specific churches they oversee
-  assigned_member_ids: string[]; // For bibleworkers - members they support
+  church_id: string | null; // For church_secretary - single church assignment
+  district_id: string | null; // For pastor - district they oversee
+  field_id: string | null; // For field_secretary - field they oversee (Luzon/Visayan/Mindanao)
+  assigned_church_ids: string[]; // For bibleworker - specific churches they support
+  assigned_member_ids: string[]; // For bibleworker - members they support
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 export interface Church {

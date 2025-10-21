@@ -56,7 +56,7 @@ interface TransferRequest {
 
 interface PendingTransfersTableProps {
   transfers: TransferRequest[]
-  userRole: 'superadmin' | 'admin' | 'member'
+  userRole: 'superadmin' | 'church_secretary'
   userChurchId: string | null
 }
 
@@ -69,13 +69,13 @@ export function PendingTransfersTable({ transfers, userRole, userChurchId }: Pen
   const [isProcessing, setIsProcessing] = useState(false)
 
   // Check if user can approve/reject a transfer
-  // Only superadmin or the receiving church admin can approve
+  // Only superadmin or the receiving church secretary can approve
   const canApproveTransfer = (transfer: TransferRequest) => {
     // Cannot approve if member or churches are deleted
     if (!transfer.members || !transfer.from_church || !transfer.to_church) return false
 
     if (userRole === 'superadmin') return true
-    if (userRole === 'admin' && transfer.to_church.id === userChurchId) return true
+    if (userRole === 'church_secretary' && transfer.to_church.id === userChurchId) return true
     return false
   }
 

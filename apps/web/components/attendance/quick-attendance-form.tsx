@@ -32,7 +32,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
   const [date, setDate] = useState<Date>(new Date())
   const [serviceType, setServiceType] = useState<string>('sabbath_morning')
   const [selectedChurchId, setSelectedChurchId] = useState<string>(
-    currentUser.role === 'admin' ? currentUser.church_id || '' : ''
+    currentUser.role === 'church_secretary' ? currentUser.church_id || '' : ''
   )
   const [members, setMembers] = useState<Member[]>([])
   const [visitors, setVisitors] = useState<Visitor[]>([])
@@ -181,8 +181,8 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
       <CardContent className="space-y-6">
         {/* Church, Date, and Service Type Selection */}
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Church Selector - show for all except admin (who has default church) */}
-          {currentUser.role === 'admin' ? (
+          {/* Church Selector - show for all except church_secretary (who has default church) */}
+          {currentUser.role === 'church_secretary' ? (
             <div className="space-y-2">
               <Label htmlFor="church">Church</Label>
               <div className="flex h-10 w-full items-center border border-input bg-muted px-3 py-2 text-sm">
@@ -408,7 +408,7 @@ export function QuickAttendanceForm({ currentUser, churches }: QuickAttendanceFo
           </div>
         )}
 
-        {!selectedChurchId && currentUser.role !== 'admin' && (
+        {!selectedChurchId && currentUser.role !== 'church_secretary' && (
           <p className="text-sm text-muted-foreground text-center py-8">
             Please select a church to begin
           </p>

@@ -31,7 +31,7 @@ export default async function ChurchesPage({ searchParams }: ChurchesPageProps) 
       .eq('id', authUser.id)
       .single()
 
-    if (userData?.role === 'admin' && userData?.church_id) {
+    if (userData?.role === 'church_secretary' && userData?.church_id) {
       redirect(`/churches/${userData.church_id}`)
     }
   }

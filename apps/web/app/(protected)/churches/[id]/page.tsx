@@ -31,8 +31,8 @@ export default async function ChurchDetailPage({ params }: ChurchDetailPageProps
         .eq('id', authUser.id)
         .single()
 
-      // Admin users can only view their own church
-      if (userData?.role === 'admin' && userData?.church_id !== id) {
+      // Church Secretary users can only view their own church
+      if (userData?.role === 'church_secretary' && userData?.church_id !== id) {
         notFound()
       }
     }

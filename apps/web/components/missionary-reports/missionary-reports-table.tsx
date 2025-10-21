@@ -212,8 +212,8 @@ export function MissionaryReportsTable({
                                 Edit
                               </Link>
                             </DropdownMenuItem>
-                            {/* Superadmin, admin, pastor can delete all; bibleworkers can delete only their own */}
-                            {(userRole === 'superadmin' || userRole === 'admin' || userRole === 'pastor' ||
+                            {/* Superadmin, church_secretary, pastor can delete all; bibleworkers can delete only their own */}
+                            {(userRole === 'superadmin' || userRole === 'church_secretary' || userRole === 'pastor' ||
                               (isBibleworker && report.reported_by === userId)) && (
                               <DropdownMenuItem
                                 onClick={() => handleDeleteClick(report.id)}

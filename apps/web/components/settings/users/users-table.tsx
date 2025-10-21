@@ -54,20 +54,20 @@ interface UsersTableProps {
 
 const roleIcons = {
   superadmin: Crown,
-  coordinator: UserCog,
+  field_secretary: UserCog,
   pastor: Church,
+  church_secretary: Shield,
+  coordinator: UserCog,
   bibleworker: BookOpen,
-  admin: Shield,
-  member: User,
 }
 
 const roleColors = {
   superadmin: 'bg-purple-100 text-purple-800 border-purple-200',
-  coordinator: 'bg-blue-100 text-blue-800 border-blue-200',
+  field_secretary: 'bg-cyan-100 text-cyan-800 border-cyan-200',
   pastor: 'bg-green-100 text-green-800 border-green-200',
+  church_secretary: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  coordinator: 'bg-blue-100 text-blue-800 border-blue-200',
   bibleworker: 'bg-orange-100 text-orange-800 border-orange-200',
-  admin: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  member: 'bg-gray-100 text-gray-800 border-gray-200',
 }
 
 export function UsersTable({
@@ -137,7 +137,13 @@ export function UsersTable({
                     <div className="flex gap-2">
                       <Badge variant="outline" className={roleColor}>
                         <RoleIcon className="mr-1 h-3 w-3" />
-                        {user.role === 'bibleworker' ? 'Bible Worker' : user.role}
+                        {user.role === 'bibleworker'
+                          ? 'Bible Worker'
+                          : user.role === 'church_secretary'
+                          ? 'Church Secretary'
+                          : user.role === 'field_secretary'
+                          ? 'Field Secretary'
+                          : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </Badge>
                       {!user.is_active && (
                         <Badge variant="destructive" className="text-xs">
@@ -148,10 +154,16 @@ export function UsersTable({
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {user.role === 'admin' && user.churches && (
+                      {user.role === 'church_secretary' && user.churches && (
                         <div className="flex items-center gap-1">
                           <Church className="h-3 w-3 text-muted-foreground" />
                           <span>{user.churches.name}</span>
+                        </div>
+                      )}
+                      {user.role === 'field_secretary' && user.field_id && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-muted-foreground">Field:</span>
+                          <span>{user.field_id}</span>
                         </div>
                       )}
                       {user.role === 'pastor' && (

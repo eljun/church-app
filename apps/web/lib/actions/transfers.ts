@@ -36,7 +36,7 @@ export async function createTransferRequest(input: CreateTransferRequestInput) {
     const validated = createTransferRequestSchema.parse(input)
 
     // Check permissions - can only transfer from your church
-    if (userData.role === 'admin' && validated.from_church_id !== userData.church_id) {
+    if (userData.role === 'church_secretary' && validated.from_church_id !== userData.church_id) {
       return { error: 'Forbidden: Can only transfer members from your church' }
     }
 
@@ -136,7 +136,7 @@ export async function approveTransferRequest(input: ApproveTransferInput) {
     }
 
     // Check permissions - can only approve transfers TO your church
-    if (userData.role === 'admin' && transferRequest.to_church_id !== userData.church_id) {
+    if (userData.role === 'church_secretary' && transferRequest.to_church_id !== userData.church_id) {
       return { error: 'Forbidden: Can only approve transfers to your church' }
     }
 
@@ -251,7 +251,7 @@ export async function rejectTransferRequest(input: RejectTransferInput) {
     }
 
     // Check permissions - can only reject transfers TO your church
-    if (userData.role === 'admin' && transferRequest.to_church_id !== userData.church_id) {
+    if (userData.role === 'church_secretary' && transferRequest.to_church_id !== userData.church_id) {
       return { error: 'Forbidden: Can only reject transfers to your church' }
     }
 

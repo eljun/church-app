@@ -31,7 +31,7 @@ export async function getMembers(params?: SearchMembersInput) {
     .select('*, churches(*)', { count: 'exact' })
 
   // Role-based filtering
-  if (userData.role === 'admin' && userData.church_id) {
+  if (userData.role === 'church_secretary' && userData.church_id) {
     query = query.eq('church_id', userData.church_id)
   }
 
@@ -108,7 +108,7 @@ export async function getMemberById(id: string) {
   if (!member) throw new Error('Member not found')
 
   // Check permissions
-  if (userData.role === 'admin' && member.church_id !== userData.church_id) {
+  if (userData.role === 'church_secretary' && member.church_id !== userData.church_id) {
     throw new Error('Forbidden: Cannot access member from another church')
   }
 
@@ -153,7 +153,7 @@ export async function getMembersByChurch(churchId: string) {
   if (!userData) throw new Error('User not found')
 
   // Check permissions
-  if (userData.role === 'admin' && churchId !== userData.church_id) {
+  if (userData.role === 'church_secretary' && churchId !== userData.church_id) {
     throw new Error('Forbidden: Cannot access members from another church')
   }
 

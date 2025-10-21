@@ -92,8 +92,8 @@ export default async function MissionaryActivitiesReportPage({ searchParams }: P
     report_type?: 'weekly' | 'biennial' | 'triennial'
   } = {}
 
-  // Admin: Filter to their church only
-  if (userData.role === 'admin' && userData.church_id) {
+  // Church Secretary: Filter to their church only
+  if (userData.role === 'church_secretary' && userData.church_id) {
     filters.church_id = userData.church_id
   }
 

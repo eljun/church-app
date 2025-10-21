@@ -83,7 +83,7 @@ export function MissionaryActivitiesFilters({
 
   const clearFilters = () => {
     setFilters({
-      church_id: userRole === 'admin' && userChurchId ? userChurchId : '',
+      church_id: userRole === 'church_secretary' && userChurchId ? userChurchId : '',
       start_date: '',
       end_date: '',
       report_type: '',
@@ -103,8 +103,8 @@ export function MissionaryActivitiesFilters({
       <CardContent className="pt-6">
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Church Filter (not for admins) */}
-            {userRole !== 'admin' && (
+            {/* Church Filter (not for church_secretary) */}
+            {userRole !== 'church_secretary' && (
               <div className="space-y-2">
                 <Label>Church</Label>
                 <ChurchSelect

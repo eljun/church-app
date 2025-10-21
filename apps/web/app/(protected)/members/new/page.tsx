@@ -40,7 +40,7 @@ export default async function NewMemberPage() {
       <div className="bg-white p-6">
         <MemberForm
           churches={churches}
-          userRole={userData?.role || 'admin'}
+          userRole={userData?.role || 'church_secretary'}
           userChurchId={userData?.church_id || null}
         />
       </div>

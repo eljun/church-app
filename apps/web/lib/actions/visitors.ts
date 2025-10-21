@@ -419,8 +419,8 @@ export async function convertVisitorToMember(input: {
       return { error: 'User not found' }
     }
 
-    // Only admin and superadmin can convert visitors
-    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+    // Only church_secretary and superadmin can convert visitors
+    if (userData.role !== 'church_secretary' && userData.role !== 'superadmin') {
       return { error: 'You do not have permission to convert visitors to members' }
     }
 
@@ -435,8 +435,8 @@ export async function convertVisitorToMember(input: {
       return { error: 'Visitor not found' }
     }
 
-    // For admins, verify the visitor is associated with their church
-    if (userData.role === 'admin') {
+    // For church secretaries, verify the visitor is associated with their church
+    if (userData.role === 'church_secretary') {
       if (visitor.associated_church_id !== userData.church_id) {
         return { error: 'You can only convert visitors associated with your church' }
       }

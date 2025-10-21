@@ -58,8 +58,8 @@ export default async function MissionaryReportsPage({ searchParams }: PageProps)
     limit: 20,
   }
 
-  // Admin: Filter to their church only
-  if (userData.role === 'admin' && userData.church_id) {
+  // Church Secretary: Filter to their church only
+  if (userData.role === 'church_secretary' && userData.church_id) {
     filters.church_id = userData.church_id
   }
 
@@ -68,8 +68,8 @@ export default async function MissionaryReportsPage({ searchParams }: PageProps)
     filters.church_ids = userData.assigned_church_ids
   }
 
-  // Apply URL filters (but don't override role-based church filters for admin/bibleworker)
-  if (params.church_id && userData.role !== 'admin' && userData.role !== 'bibleworker') {
+  // Apply URL filters (but don't override role-based church filters for church_secretary/bibleworker)
+  if (params.church_id && userData.role !== 'church_secretary' && userData.role !== 'bibleworker') {
     filters.church_id = params.church_id
   }
   if (params.start_date) filters.start_date = params.start_date

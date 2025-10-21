@@ -55,8 +55,8 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
       return
     }
 
-    if (role === 'admin' && !churchId) {
-      toast.error('Admin users must be assigned to a church')
+    if (role === 'church_secretary' && !churchId) {
+      toast.error('Church Secretary users must be assigned to a church')
       return
     }
 
@@ -127,9 +127,8 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="member">Member - Personal access only</SelectItem>
                   <SelectItem value="bibleworker">Bible Worker - Assigned members</SelectItem>
-                  <SelectItem value="admin">Admin - Church management</SelectItem>
+                  <SelectItem value="church_secretary">Church Secretary - Church management</SelectItem>
                   <SelectItem value="pastor">Pastor - District/Field oversight</SelectItem>
                   <SelectItem value="coordinator">Coordinator - Event coordination</SelectItem>
                   <SelectItem value="superadmin">Superadmin - Full system access</SelectItem>
@@ -139,9 +138,9 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
           </div>
 
           {/* Role-specific fields */}
-          {role === 'admin' && (
+          {role === 'church_secretary' && (
             <div className="space-y-4 border-t pt-4">
-              <h4 className="text-sm font-medium">Admin Assignment</h4>
+              <h4 className="text-sm font-medium">Church Secretary Assignment</h4>
               <div className="grid gap-2">
                 <Label htmlFor="church">Church *</Label>
                 <ChurchSelect
@@ -151,7 +150,7 @@ export function EditUserDialog({ user, churches, onClose }: EditUserDialogProps)
                   showDistrictAndField
                 />
                 <p className="text-xs text-muted-foreground">
-                  Admin users manage a specific church
+                  Church Secretary users manage a specific church
                 </p>
               </div>
             </div>

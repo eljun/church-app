@@ -35,7 +35,7 @@ export default async function NewTransferPage() {
         <TransferRequestForm
           churches={churches}
           members={members}
-          userRole={userData?.role || 'admin'}
+          userRole={userData?.role || 'church_secretary'}
           userChurchId={userData?.church_id || null}
         />
       </div>

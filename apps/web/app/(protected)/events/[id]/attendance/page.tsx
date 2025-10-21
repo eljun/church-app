@@ -28,8 +28,8 @@ export default async function EventAttendancePage({ params }: EventAttendancePag
       return null
     }
 
-    // Only admins, coordinators, and superadmins can access attendance
-    if (!['admin', 'coordinator', 'superadmin'].includes(currentUser.role)) {
+    // Only church_secretary, coordinators, and superadmins can access attendance
+    if (!['church_secretary', 'coordinator', 'superadmin'].includes(currentUser.role)) {
       redirect('/events')
     }
 

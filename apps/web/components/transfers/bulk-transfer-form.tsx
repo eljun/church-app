@@ -162,8 +162,8 @@ export function BulkTransferForm({
         </Card>
       )}
 
-      {/* Info banner for Admin - showing their source church */}
-      {userRole === 'admin' && (
+      {/* Info banner for Church Secretary - showing their source church */}
+      {userRole === 'church_secretary' && (
         <div className="p-4 bg-accent/10 border border-accent/30">
           <p className="text-sm font-medium text-gray-700">Transferring from:</p>
           <p className="font-display text-xl font-semibold text-accent mt-1">
@@ -176,7 +176,7 @@ export function BulkTransferForm({
       {fromChurchId && (
         <Card>
           <CardHeader>
-            <CardTitle>{userRole === 'admin' ? 'Step 1' : 'Step 2'}: Select Members</CardTitle>
+            <CardTitle>{userRole === 'church_secretary' ? 'Step 1' : 'Step 2'}: Select Members</CardTitle>
             <CardDescription>
               Choose which members to transfer ({filteredMembers.length} available)
             </CardDescription>
@@ -222,7 +222,7 @@ export function BulkTransferForm({
       {selectedCount > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{userRole === 'admin' ? 'Step 2' : 'Step 3'}: Select Destination Church</CardTitle>
+            <CardTitle>{userRole === 'church_secretary' ? 'Step 2' : 'Step 3'}: Select Destination Church</CardTitle>
             <CardDescription>
               Choose where to transfer the {selectedCount} selected member(s)
             </CardDescription>
@@ -242,7 +242,7 @@ export function BulkTransferForm({
       {toChurchId && (
         <Card>
           <CardHeader>
-            <CardTitle>{userRole === 'admin' ? 'Step 3' : 'Step 4'}: Add Notes (Optional)</CardTitle>
+            <CardTitle>{userRole === 'church_secretary' ? 'Step 3' : 'Step 4'}: Add Notes (Optional)</CardTitle>
             <CardDescription>
               Provide context or reason for these transfers
             </CardDescription>

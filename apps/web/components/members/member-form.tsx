@@ -68,7 +68,7 @@ export function MemberForm({
   const form = useForm<CreateMemberInput | UpdateMemberInput>({
     resolver: zodResolver(mode === 'create' ? createMemberSchema : updateMemberSchema),
     defaultValues: initialData || {
-      church_id: userRole === 'admin' ? userChurchId || '' : '',
+      church_id: userRole === 'church_secretary' ? userChurchId || '' : '',
       full_name: '',
       birthday: '',
       age: 0,
@@ -144,11 +144,11 @@ export function MemberForm({
                   churches={churches}
                   value={field.value}
                   onValueChange={field.onChange}
-                  disabled={userRole === 'admin'}
+                  disabled={userRole === 'church_secretary'}
                   placeholder="Select a church"
                 />
               </FormControl>
-              {userRole === 'admin' && (
+              {userRole === 'church_secretary' && (
                 <FormDescription>
                   You can only add members to your church
                 </FormDescription>

@@ -204,8 +204,7 @@ export async function getUserStats() {
     coordinator: data?.filter(u => u.role === 'coordinator').length || 0,
     pastor: data?.filter(u => u.role === 'pastor').length || 0,
     bibleworker: data?.filter(u => u.role === 'bibleworker').length || 0,
-    admin: data?.filter(u => u.role === 'admin').length || 0,
-    member: data?.filter(u => u.role === 'member').length || 0,
+    church_secretary: data?.filter(u => u.role === 'church_secretary').length || 0,
   }
 
   return stats

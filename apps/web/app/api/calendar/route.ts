@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // Set churchId filter for admin users
-    const churchId = userData?.role === 'admin' && userData.church_id
+    // Set churchId filter for church_secretary users
+    const churchId = userData?.role === 'church_secretary' && userData.church_id
       ? userData.church_id
       : undefined
 

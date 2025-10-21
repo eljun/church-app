@@ -43,8 +43,8 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
       return null
     }
 
-    // Only admins, coordinators, and superadmins can access registrations
-    if (!['admin', 'coordinator', 'superadmin'].includes(currentUser.role)) {
+    // Only church_secretary, coordinators, and superadmins can access registrations
+    if (!['church_secretary', 'coordinator', 'superadmin'].includes(currentUser.role)) {
       redirect('/events')
     }
 
@@ -64,20 +64,18 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
           title="Event Registrations"
           description={event.title}
           actions={
-            currentUser.role !== 'member' ? (
-              <>
-                <RegisterMembersDialog
-                  eventId={id}
-                  availableMembers={availableMembers}
-                />
-                <Button asChild variant="outline">
-                  <Link href={`/visitors/new?event_id=${id}&return_to=/events/${id}/registrations`}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Register Visitor
-                  </Link>
-                </Button>
-              </>
-            ) : undefined
+            <>
+              <RegisterMembersDialog
+                eventId={id}
+                availableMembers={availableMembers}
+              />
+              <Button asChild variant="outline">
+                <Link href={`/visitors/new?event_id=${id}&return_to=/events/${id}/registrations`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Register Visitor
+                </Link>
+              </Button>
+            </>
           }
         />
 
@@ -130,7 +128,6 @@ export default async function EventRegistrationsPage({ params, searchParams }: E
         {/* Registrations Table */}
         <RegistrationsTable
           registrations={registrations}
-          userRole={currentUser.role}
           currentPage={page}
           totalPages={totalPages}
           totalCount={count}
