@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Badge } from '../ui/badge'
 import {
   LayoutDashboard,
   Users,
@@ -59,6 +60,7 @@ interface UserData {
 
 interface SidebarProps {
   user: UserData | null
+  pendingTransfersCount?: number
 }
 
 // Navigation items - grouped by category
@@ -71,9 +73,10 @@ interface NavItem {
   name: string
   href: string
   icon: LucideIcon
+  badge?: number
 }
 
-const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], groups: NavGroup[] } => {
+const getGroupedNavigation = (user: UserData | null, pendingTransfersCount: number = 0): { topLevel: NavItem[], groups: NavGroup[] } => {
   // Coordinators only see Events (no grouping needed)
   if (user?.role === 'coordinator') {
     return {
@@ -112,7 +115,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       items: [
         { name: 'Members', href: '/members', icon: Users },
         { name: 'Interested Guest', href: '/visitors', icon: UserRound },
-        { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
+        { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight, badge: pendingTransfersCount > 0 ? pendingTransfersCount : undefined },
       ]
     })
 
@@ -166,7 +169,7 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
       items: [
         { name: 'Members', href: '/members', icon: Users },
         { name: 'Interested Guest', href: '/visitors', icon: UserRound },
-        { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight },
+        { name: 'Transfers', href: '/transfers', icon: ArrowLeftRight, badge: pendingTransfersCount > 0 ? pendingTransfersCount : undefined },
       ]
     })
 
@@ -187,11 +190,11 @@ const getGroupedNavigation = (user: UserData | null): { topLevel: NavItem[], gro
   return { topLevel, groups }
 }
 
-export function DashboardSidebar({ user }: SidebarProps) {
+export function DashboardSidebar({ user, pendingTransfersCount = 0 }: SidebarProps) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
-  const { topLevel, groups } = getGroupedNavigation(user)
+  const { topLevel, groups } = getGroupedNavigation(user, pendingTransfersCount)
 
   async function handleSignout() {
     await signOut()
@@ -305,7 +308,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
                             key={item.name}
                             href={item.href}
                             className={`
-                              flex items-center pl-4 pr-4 py-3 text-sm font-medium
+                              flex items-center justify-between pl-4 pr-4 py-3 text-sm font-medium
                               transition-colors duration-150
                               ${isActive
                                 ? 'text-white font-display font-semibold bg-white/10'
@@ -313,8 +316,15 @@ export function DashboardSidebar({ user }: SidebarProps) {
                               }
                             `}
                           >
-                            <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-white' : 'text-white/80'}`} />
-                            <span>{item.name}</span>
+                            <div className="flex items-center">
+                              <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-white' : 'text-white/80'}`} />
+                              <span>{item.name}</span>
+                            </div>
+                            {item.badge && item.badge > 0 && (
+                              <Badge className="bg-orange-500 text-white text-xs font-bold rounded-full">
+                                {item.badge}
+                              </Badge>
+                            )}
                           </Link>
                         )
                       })}
@@ -337,7 +347,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
                         <Link
                           href={item.href}
                           className={`
-                            flex items-center justify-center p-3 text-sm font-medium
+                            flex items-center justify-center p-3 text-sm font-medium relative
                             transition-colors duration-150
                             ${isActive
                               ? 'text-white font-display font-semibold bg-white/10'
@@ -346,10 +356,16 @@ export function DashboardSidebar({ user }: SidebarProps) {
                           `}
                         >
                           <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
+                          {item.badge && item.badge > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                              {item.badge}
+                            </span>
+                          )}
                         </Link>
                       </TooltipTrigger>
                       <TooltipContent side="right" className="font-semibold">
                         {item.name}
+                        {item.badge && item.badge > 0 && ` (${item.badge})`}
                       </TooltipContent>
                     </Tooltip>
                   )

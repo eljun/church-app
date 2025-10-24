@@ -2110,7 +2110,164 @@ All missionary report features documented in Phase 10 section above.
 
 ---
 
-**Current State:** Phase 10.5 COMPLETE ✅
+## 📋 Phase 12.9: Transfer Request System Enhancements (2025-10-24) - COMPLETE ✅
+
+### What Was Implemented
+
+**Comprehensive Transfer Request Workflow Improvements** - File attachments, status tracking, and notification badges
+
+#### Core Features Completed:
+✅ **File Attachment System** - Required upload of Transfer Request Letter (PDF/DOC/images)
+✅ **Transfer History with Status** - Both approved and rejected transfers shown with status badges
+✅ **Notification Badge** - Sidebar shows count of pending incoming transfers (only when count > 0)
+✅ **Church Selection Enhancement** - Church secretaries can see destination churches within district scope
+✅ **Security Improvements** - Only destination church can approve/reject transfers
+✅ **Member Visibility** - Destination church can view member details in pending transfers via RLS
+✅ **RLS Policy Updates** - Fixed all deprecated 'admin' role references to new role system
+✅ **Workflow Fix** - Approved/rejected transfers move to history table and are deleted from requests
+
+#### Database Migrations Created:
+1. **`026_add_status_to_transfer_history.sql`** - Added status column to track approved/rejected
+2. **`027_update_transfer_history_rls.sql`** - Updated RLS policies for staff roles to insert/view history
+3. **`028_fix_transfer_requests_rls.sql`** - Fixed transfer_requests and members RLS policies, added DELETE policy
+
+**Migration 026 - Status Column:**
+```sql
+ALTER TABLE transfer_history
+ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'approved'
+CHECK (status IN ('approved', 'rejected'));
+```
+
+**Migration 027 - Transfer History RLS:**
+- Staff can insert transfer history (all roles)
+- Staff can read transfer history for their scope
+- Replaced deprecated 'admin' role with church_secretary, pastor, bibleworker
+
+**Migration 028 - Critical RLS Fixes:**
+- ✅ Added DELETE policy for transfer_requests (staff can delete processed transfers)
+- ✅ Updated SELECT, INSERT, UPDATE policies with new role names
+- ✅ Fixed members table policy for transfer approval workflow
+- ✅ Removed all references to deprecated 'admin' role
+
+#### Backend Implementation:
+
+**Updated Actions** (`lib/actions/transfers.ts`):
+- `approveTransferRequest()` - Creates history record, deletes from requests, redirects to history
+- `rejectTransferRequest()` - Creates history record with rejection reason, deletes from requests
+- Enhanced error handling and logging for both operations
+
+**New Query Function** (`lib/queries/transfers.ts`):
+- `getPendingIncomingTransfersCount()` - Efficient count query for notification badge
+- `getChurchesForTransfer()` - District-scoped church list for transfer destinations
+
+**Updated Transfer History Query:**
+- Now selects `status` column for displaying approved/rejected badges
+
+#### UI Components Updated:
+
+**TransferActions Component:**
+- Redirects to `/transfers?tab=history` after approve/reject
+- Prevents 404 error from trying to view deleted transfer request
+
+**TransferHistoryTable Component:**
+- Added Status column with color-coded badges (green=approved, red=rejected)
+- Handles deleted members gracefully with warning icon
+- Simplified to single data source (transfer_history table only)
+
+**Sidebar Component:**
+- Added `pendingTransfersCount` prop
+- Badge only displays when count > 0
+- Shows count for both expanded and collapsed sidebar states
+- Tooltip shows count in collapsed mode
+
+**Transfer Detail Page:**
+- Added null check for deleted members
+- Shows attachment download button
+- Added `?ref=transfer` query parameter for member access
+
+#### File Upload System:
+
+**FileUpload Component** (`components/ui/file-upload.tsx`):
+- Drag-and-drop interface for documents
+- Supports PDF, DOC, DOCX, images (up to 10MB)
+- Upload progress indicator
+- File preview and removal
+- Integrates with Supabase Storage
+
+**Storage Bucket:**
+- Bucket: `transfer-documents`
+- Public access for downloads
+- RLS policies for authenticated uploads
+- File type restrictions enforced
+
+**Validation Updated:**
+- `createTransferRequestSchema` - Made `attachment_url` required
+- Form validates file upload before submission
+
+### Files Created (2):
+1. `packages/database/migrations/026_add_status_to_transfer_history.sql`
+2. `packages/database/migrations/027_update_transfer_history_rls.sql`
+3. `packages/database/migrations/028_fix_transfer_requests_rls.sql`
+4. `apps/web/components/ui/file-upload.tsx`
+
+### Files Modified (8):
+1. `apps/web/lib/actions/transfers.ts` - Updated approve/reject workflow
+2. `apps/web/lib/queries/transfers.ts` - Added count function and updated history query
+3. `apps/web/components/transfers/transfer-actions.tsx` - Updated redirect logic
+4. `apps/web/components/transfers/transfer-history-table.tsx` - Added status column
+5. `apps/web/components/dashboard/sidebar.tsx` - Added notification badge
+6. `apps/web/app/(protected)/layout.tsx` - Fetch pending count
+7. `apps/web/app/(protected)/transfers/page.tsx` - Simplified data fetching
+8. `apps/web/app/(protected)/transfers/[id]/page.tsx` - Added attachment display
+
+### Security Audit Update:
+✅ **Security Issue #5 FIXED** - RLS Policies Outdated
+- Updated `SECURITY_AUDIT_2025-10-21.md`
+- Marked Issue #5 as REMEDIATED (2025-10-24)
+- Updated status overview: 11 issues fixed (was 10)
+- Updated checklist: RLS policies marked complete
+- Updated timeline: Phase 12.9 marked completed
+
+### Documentation Cleanup:
+✅ **Deleted temporary files:**
+- TRANSFER_ATTACHMENT_IMPLEMENTATION.md
+- TRANSFER_SECURITY_FIX.md
+- TRANSFER_MEMBER_ACCESS_FIX.md
+- MIGRATIONS_TO_RUN.md
+
+✅ **Kept valuable reference:**
+- SECURITY_AUDIT_2025-10-21.md (updated with latest fixes)
+
+### Build Status:
+✅ **All migrations successfully applied**
+✅ **No TypeScript errors**
+✅ **Production ready**
+✅ **All features tested and working**
+
+### Key Features Summary:
+
+**Data Flow:**
+1. Transfer requested → Goes into `transfer_requests` with `status='pending'`
+2. Transfer approved → Creates record in `transfer_history` with `status='approved'` → Deletes from `transfer_requests`
+3. Transfer rejected → Creates record in `transfer_history` with `status='rejected'` → Deletes from `transfer_requests`
+
+**User Experience:**
+- Required file upload prevents incomplete transfer requests
+- Clear status badges distinguish approved from rejected transfers
+- Notification badge alerts users to pending requests (only shows when > 0)
+- Smooth redirect to history after approval/rejection
+- Graceful handling of edge cases (deleted members, missing attachments)
+
+**Security:**
+- Comprehensive RLS policies for all staff roles
+- Only destination church can approve/reject transfers
+- Source church has read-only access to transfer detail
+- DELETE policy allows cleanup of processed transfers
+- Member visibility controlled by RLS during pending transfers
+
+---
+
+**Current State:** Phase 12.9 COMPLETE ✅
 **Next Phase:** Phase 11 - RBAC System Overhaul & Role Structure Finalization
 
 ---

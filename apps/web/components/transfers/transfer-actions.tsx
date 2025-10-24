@@ -50,6 +50,8 @@ export function TransferActions({ transferId }: TransferActionsProps) {
       toast.error(result.error)
     } else {
       toast.success('Transfer approved successfully')
+      // Redirect to transfers page since the request has been moved to history
+      router.push('/transfers?tab=history')
       router.refresh()
     }
   }
@@ -70,6 +72,8 @@ export function TransferActions({ transferId }: TransferActionsProps) {
       toast.success('Transfer rejected')
       setRejectDialogOpen(false)
       setRejectionReason('')
+      // Redirect to transfers page since the request has been moved to history
+      router.push('/transfers?tab=history')
       router.refresh()
     }
   }

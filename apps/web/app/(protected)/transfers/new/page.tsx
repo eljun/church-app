@@ -1,12 +1,13 @@
-import { getChurches } from '@/lib/queries/churches'
+import { getChurchesForTransfer } from '@/lib/queries/churches'
 import { getMembers } from '@/lib/queries/members'
 import { createClient } from '@/lib/supabase/server'
 import { TransferRequestForm } from '@/components/transfers/transfer-request-form'
 
 export default async function NewTransferPage() {
   // Fetch churches and members for the dropdowns
-  const [{ data: churches }, { data: members }] = await Promise.all([
-    getChurches({ limit: 100, offset: 0 }),
+  // Use getChurchesForTransfer to allow church secretaries to see destination churches
+  const [churches, { data: members }] = await Promise.all([
+    getChurchesForTransfer(),
     getMembers({ limit: 1000, offset: 0 }),
   ])
 

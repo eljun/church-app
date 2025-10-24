@@ -77,8 +77,10 @@ export async function getMembers(params?: SearchMembersInput) {
 
 /**
  * Get a single member by ID
+ * @param id - Member ID
+ * @param skipPermissionCheck - If true, skip church permission check (used for transfer reviews)
  */
-export async function getMemberById(id: string) {
+export async function getMemberById(id: string, skipPermissionCheck: boolean = false) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -86,7 +88,7 @@ export async function getMemberById(id: string) {
 
   const { data: userData } = await supabase
     .from('users')
-    .select('role, church_id')
+    .select('role, church_id, assigned_church_ids')
     .eq('id', user.id)
     .single()
 
@@ -101,8 +103,51 @@ export async function getMemberById(id: string) {
   if (error) throw error
   if (!member) throw new Error('Member not found')
 
-  // Check permissions
-  if (userData.role === 'church_secretary' && member.church_id !== userData.church_id) {
+  // Skip permission check if requested (e.g., viewing via transfer request)
+  if (skipPermissionCheck) {
+    console.log('[getMemberById] Permission check skipped for member:', id)
+    return member
+  }
+
+  // Check permissions for restricted roles
+  const isRestrictedRole = ['church_secretary', 'pastor', 'bibleworker'].includes(userData.role)
+
+  if (isRestrictedRole && member.church_id !== userData.church_id) {
+    // Get user's church IDs (single or multiple)
+    const userChurchIds = userData.assigned_church_ids?.length
+      ? userData.assigned_church_ids
+      : userData.church_id
+        ? [userData.church_id]
+        : []
+
+    console.log('[getMemberById] Checking transfer access:', {
+      memberId: id,
+      memberChurch: member.church_id,
+      userChurches: userChurchIds
+    })
+
+    if (userChurchIds.length > 0) {
+      // Check for pending transfer to user's church
+      const { data: pendingTransfers } = await supabase
+        .from('transfer_requests')
+        .select('id, to_church_id')
+        .eq('member_id', id)
+        .eq('status', 'pending')
+
+      console.log('[getMemberById] Pending transfers:', pendingTransfers)
+
+      // Check if any transfer is to user's church
+      const hasMatchingTransfer = pendingTransfers?.some(t =>
+        userChurchIds.includes(t.to_church_id)
+      )
+
+      if (hasMatchingTransfer) {
+        console.log('[getMemberById] ✅ Access granted via pending transfer')
+        return member
+      }
+    }
+
+    console.log('[getMemberById] ❌ Access denied')
     throw new Error('Forbidden: Cannot access member from another church')
   }
 

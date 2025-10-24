@@ -1,4 +1,4 @@
-import { getChurches } from '@/lib/queries/churches'
+import { getChurchesForTransfer } from '@/lib/queries/churches'
 import { getMembers } from '@/lib/queries/members'
 import { createClient } from '@/lib/supabase/server'
 import { BulkTransferForm } from '@/components/transfers/bulk-transfer-form'
@@ -12,8 +12,9 @@ interface BulkTransferPageProps {
 export default async function BulkTransferPage({ searchParams }: BulkTransferPageProps) {
   const params = await searchParams
 
-  // Fetch churches
-  const { data: churches } = await getChurches({ limit: 100, offset: 0 })
+  // Fetch churches for transfer
+  // Use getChurchesForTransfer to allow church secretaries to see destination churches
+  const churches = await getChurchesForTransfer()
 
   // Get current user data
   const supabase = await createClient()

@@ -11,9 +11,9 @@
 A comprehensive security audit was performed on the church management application, revealing **3 critical vulnerabilities**, **5 high-priority issues**, and **4 medium-priority concerns**. Most critical issues have been **remediated** as part of Phase 12 implementation.
 
 ### Status Overview
-- ✅ **Fixed:** 10 issues
+- ✅ **Fixed:** 11 issues (including RLS policies update - Oct 2025)
 - ⚠️ **Requires Manual Action:** 2 issues (environment secrets rotation)
-- 📋 **Recommended:** 4 improvements for future phases
+- 📋 **Recommended:** 3 improvements for future phases
 
 ---
 
@@ -143,10 +143,10 @@ A comprehensive security audit was performed on the church management applicatio
 
 ## Medium Priority Issues (P2)
 
-### 5. ⚠️ PENDING: RLS Policies Outdated
+### 5. ✅ FIXED: RLS Policies Outdated
 **Severity:** MEDIUM
-**Status:** NEEDS REVIEW
-**Recommended:** Phase 12.9 or Phase 13
+**Status:** REMEDIATED
+**Date Fixed:** 2025-10-24
 
 **Issue:**
 - RLS policies reference deprecated 'admin' role
@@ -158,23 +158,22 @@ A comprehensive security audit was performed on the church management applicatio
 - Permissions enforced in application but not in database
 - Bypass via direct database access
 
-**Recommended Action:**
+**Remediation Applied:**
 ```sql
--- Review and update RLS policies in:
--- packages/database/migrations/002_rls_policies.sql
--- packages/database/migrations/016_add_bibleworker_rls_policies.sql
+-- Migration 027: Updated transfer_history RLS policies
+✅ Updated INSERT policy to allow all staff roles
+✅ Updated SELECT policy for staff scope filtering
 
--- Add policies for:
--- - field_secretary (field-level access)
--- - pastor (district-level access)
--- - coordinator (events-only access)
--- - Updated bibleworker permissions
+-- Migration 028: Fixed transfer_requests and members RLS policies
+✅ Replaced deprecated 'admin' role with new role system
+✅ Added DELETE policy for transfer_requests
+✅ Updated members policy for transfer approval workflow
+✅ All policies now support: superadmin, field_secretary, pastor, church_secretary, bibleworker
 ```
 
-**Files to Audit:**
-- `packages/database/migrations/002_rls_policies.sql`
-- `packages/database/migrations/016_add_bibleworker_rls_policies.sql`
-- All migration files with RLS policy updates
+**Files Modified:**
+- `packages/database/migrations/027_update_transfer_history_rls.sql`
+- `packages/database/migrations/028_fix_transfer_requests_rls.sql`
 
 ---
 
@@ -376,7 +375,7 @@ headers: async () => [
 - [x] **API routes** have RBAC validation
 - [x] **SQL injection** protection verified
 - [x] **RBAC system** implemented and tested
-- [ ] **RLS policies** updated for 6-role system
+- [x] **RLS policies** updated for 6-role system (Oct 2025 - Migrations 027, 028)
 - [ ] **Session timeout** configured
 - [ ] **Rate limiting** implemented (recommended)
 - [x] **Audit logging** for critical operations
@@ -393,10 +392,12 @@ headers: async () => [
 - ✅ Performance optimization (React cache)
 - ✅ Authentication query deduplication
 
-### Phase 12.9 (Recommended - Next Sprint)
-- [ ] RLS policy audit and updates
-- [ ] Bibleworker assigned churches validation
-- [ ] Comprehensive testing of all roles
+### Phase 12.9 (Completed - 2025-10-24)
+- ✅ RLS policy audit and updates (Migrations 027, 028)
+- ✅ Transfer requests workflow improvements
+- ✅ Updated all deprecated 'admin' role references
+- [ ] Bibleworker assigned churches validation (recommended for next sprint)
+- [ ] Comprehensive testing of all roles (recommended for next sprint)
 
 ### Phase 13 (Future Enhancements)
 - [ ] Session timeout configuration

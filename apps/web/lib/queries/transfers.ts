@@ -92,6 +92,34 @@ export async function getPendingIncomingTransfers() {
 }
 
 /**
+ * Get count of pending incoming transfer requests (for notifications)
+ */
+export async function getPendingIncomingTransfersCount() {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role, church_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData || !userData.church_id) return 0
+
+  const { count, error } = await supabase
+    .from('transfer_requests')
+    .select('*', { count: 'exact', head: true })
+    .eq('to_church_id', userData.church_id)
+    .eq('status', 'pending')
+
+  if (error) return 0
+
+  return count || 0
+}
+
+/**
  * Get a single transfer request by ID
  */
 export async function getTransferRequestById(id: string) {
@@ -160,7 +188,10 @@ export async function getTransferHistory(limit = 50) {
   // Build query
   let query = supabase
     .from('transfer_history')
-    .select('*, members(*)')
+    .select(`
+      *,
+      members(*)
+    `)
     .order('transfer_date', { ascending: false })
     .limit(limit)
 

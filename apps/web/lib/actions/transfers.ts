@@ -136,8 +136,12 @@ export async function approveTransferRequest(input: ApproveTransferInput) {
     }
 
     // Check permissions - can only approve transfers TO your church
-    if (userData.role === 'church_secretary' && transferRequest.to_church_id !== userData.church_id) {
-      return { error: 'Forbidden: Can only approve transfers to your church' }
+    // Superadmin and field_secretary can approve any transfer
+    // Others can only approve if they're from the destination church
+    if (userData.role !== 'superadmin' && userData.role !== 'field_secretary') {
+      if (transferRequest.to_church_id !== userData.church_id) {
+        return { error: 'Forbidden: Can only approve transfers to your church' }
+      }
     }
 
     if (transferRequest.status !== 'pending') {
@@ -182,7 +186,7 @@ export async function approveTransferRequest(input: ApproveTransferInput) {
     ])
 
     // Create transfer history record
-    await supabase.from('transfer_history').insert({
+    const { error: historyError } = await supabase.from('transfer_history').insert({
       member_id: transferRequest.member_id,
       from_church: fromChurch?.name || 'Unknown',
       to_church: toChurch?.name || 'Unknown',
@@ -190,7 +194,25 @@ export async function approveTransferRequest(input: ApproveTransferInput) {
       to_church_id: transferRequest.to_church_id,
       transfer_date: new Date().toISOString().split('T')[0],
       transfer_type: 'transfer_in',
+      notes: transferRequest.notes,
+      status: 'approved',
     })
+
+    if (historyError) {
+      console.error('[approveTransferRequest] Failed to create history record:', historyError)
+      return { error: `Failed to create history record: ${historyError.message}` }
+    }
+
+    // Delete the transfer request now that it's in history
+    const { error: deleteError } = await supabase
+      .from('transfer_requests')
+      .delete()
+      .eq('id', validated.transfer_request_id)
+
+    if (deleteError) {
+      console.error('[approveTransferRequest] Failed to delete transfer request:', deleteError)
+      return { error: `Failed to delete transfer request: ${deleteError.message}` }
+    }
 
     // Log action
     await supabase.from('audit_logs').insert({
@@ -251,25 +273,51 @@ export async function rejectTransferRequest(input: RejectTransferInput) {
     }
 
     // Check permissions - can only reject transfers TO your church
-    if (userData.role === 'church_secretary' && transferRequest.to_church_id !== userData.church_id) {
-      return { error: 'Forbidden: Can only reject transfers to your church' }
+    // Superadmin and field_secretary can reject any transfer
+    // Others can only reject if they're from the destination church
+    if (userData.role !== 'superadmin' && userData.role !== 'field_secretary') {
+      if (transferRequest.to_church_id !== userData.church_id) {
+        return { error: 'Forbidden: Can only reject transfers to your church' }
+      }
     }
 
     if (transferRequest.status !== 'pending') {
       return { error: 'Transfer request is not pending' }
     }
 
-    // Update transfer request
-    const { error } = await supabase
+    // Get church names for history
+    const [{ data: fromChurch }, { data: toChurch }] = await Promise.all([
+      supabase.from('churches').select('name').eq('id', transferRequest.from_church_id).single(),
+      supabase.from('churches').select('name').eq('id', transferRequest.to_church_id).single(),
+    ])
+
+    // Create transfer history record for rejected transfer
+    const { error: historyError } = await supabase.from('transfer_history').insert({
+      member_id: transferRequest.member_id,
+      from_church: fromChurch?.name || 'Unknown',
+      to_church: toChurch?.name || 'Unknown',
+      from_church_id: transferRequest.from_church_id,
+      to_church_id: transferRequest.to_church_id,
+      transfer_date: new Date().toISOString().split('T')[0],
+      transfer_type: 'transfer_in',
+      notes: validated.rejection_reason || transferRequest.notes,
+      status: 'rejected',
+    })
+
+    if (historyError) {
+      console.error('[rejectTransferRequest] Failed to create history record:', historyError)
+      return { error: `Failed to create history record: ${historyError.message}` }
+    }
+
+    // Delete the transfer request now that it's in history
+    const { error: deleteError } = await supabase
       .from('transfer_requests')
-      .update({
-        status: 'rejected',
-        rejection_reason: validated.rejection_reason,
-      })
+      .delete()
       .eq('id', validated.transfer_request_id)
 
-    if (error) {
-      return { error: error.message }
+    if (deleteError) {
+      console.error('[rejectTransferRequest] Failed to delete transfer request:', deleteError)
+      return { error: `Failed to delete transfer request: ${deleteError.message}` }
     }
 
     // Log action

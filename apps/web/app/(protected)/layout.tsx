@@ -3,6 +3,7 @@ import { DashboardSidebar } from '@/components/dashboard/sidebar'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { Toaster } from 'sonner'
 import { getAuthUser } from '@/lib/utils/auth-helpers'
+import { getPendingIncomingTransfersCount } from '@/lib/queries/transfers'
 
 export default async function DashboardLayout({
   children,
@@ -16,11 +17,14 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
+  // Get pending transfer count for notification badge
+  const pendingTransfersCount = await getPendingIncomingTransfersCount()
+
   return (
     <>
       <div className="flex h-screen overflow-hidden bg-white">
         {/* Sidebar */}
-        <DashboardSidebar user={userData} />
+        <DashboardSidebar user={userData} pendingTransfersCount={pendingTransfersCount} />
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col overflow-hidden">

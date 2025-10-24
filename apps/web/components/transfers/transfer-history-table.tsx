@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 
 interface TransferHistory {
   id: string
@@ -19,10 +20,11 @@ interface TransferHistory {
   from_church_id: string
   to_church_id: string
   notes: string | null
+  status?: 'approved' | 'rejected'
   members: {
     id: string
     full_name: string
-  }
+  } | null
 }
 
 interface TransferHistoryTableProps {
@@ -47,6 +49,7 @@ export function TransferHistoryTable({ history }: TransferHistoryTableProps) {
             <TableHead>From Church</TableHead>
             <TableHead>To Church</TableHead>
             <TableHead>Date</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Notes</TableHead>
           </TableRow>
         </TableHeader>
@@ -54,17 +57,21 @@ export function TransferHistoryTable({ history }: TransferHistoryTableProps) {
           {history.map((record) => (
             <TableRow key={record.id}>
               <TableCell className="py-6">
-                <Link
-                  href={`/members/${record.members.id}`}
-                  className="font-medium hover:underline"
-                >
-                  {record.members.full_name}
-                </Link>
+                {record.members ? (
+                  <Link
+                    href={`/members/${record.members.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {record.members.full_name}
+                  </Link>
+                ) : (
+                  <span className="text-gray-500 italic">Member Deleted</span>
+                )}
               </TableCell>
               <TableCell>
                 <Link
                   href={`/churches/${record.from_church_id}`}
-                  className="text-sm  hover:underline"
+                  className="text-sm hover:underline"
                 >
                   {record.from_church}
                 </Link>
@@ -82,6 +89,13 @@ export function TransferHistoryTable({ history }: TransferHistoryTableProps) {
                   <Calendar className="h-3 w-3" />
                   {new Date(record.transfer_date).toLocaleDateString()}
                 </div>
+              </TableCell>
+              <TableCell>
+                {record.status === 'rejected' ? (
+                  <Badge variant="destructive">Rejected</Badge>
+                ) : (
+                  <Badge variant="success">Approved</Badge>
+                )}
               </TableCell>
               <TableCell>
                 <span className="text-sm text-gray-600">

@@ -10,9 +10,29 @@ import { resolve } from 'path'
 import * as dotenv from 'dotenv'
 
 // Load environment variables
-dotenv.config({ path: resolve(__dirname, '../.env') })
+// Try multiple locations for .env file
+const possibleEnvPaths = [
+  resolve(__dirname, '../.env'),
+  resolve(__dirname, '../.env.local'),
+  resolve(__dirname, '../../apps/web/.env.local'),
+  resolve(__dirname, '../../../apps/web/.env.local'),
+]
 
-const supabaseUrl = process.env.SUPABASE_URL
+let envLoaded = false
+for (const envPath of possibleEnvPaths) {
+  const result = dotenv.config({ path: envPath })
+  if (!result.error) {
+    console.log(`✅ Loaded environment from: ${envPath}`)
+    envLoaded = true
+    break
+  }
+}
+
+if (!envLoaded) {
+  console.log('⚠️  No .env file found in expected locations')
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
@@ -54,14 +74,18 @@ async function runMigration() {
 
     if (error) {
       // If exec_sql function doesn't exist, try direct query
-      if (error.message.includes('function') && error.message.includes('does not exist')) {
-        console.log('ℹ️  exec_sql function not found, using alternative method...')
-        console.log('⚠️  Please run this SQL manually in your Supabase SQL Editor:')
+      if (error.code === 'PGRST202' || (error.message && (error.message.includes('function') || error.message.includes('exec_sql')))) {
+        console.log('\n❌ The exec_sql RPC function is not available.')
+        console.log('ℹ️  This is expected - Supabase no longer supports direct SQL execution via RPC.\n')
+        console.log('📋 Please run this SQL manually in your Supabase SQL Editor:\n')
         console.log('─'.repeat(80))
         console.log(sql)
         console.log('─'.repeat(80))
-        console.log('\n✅ Copy the SQL above and run it in:')
-        console.log(`   ${supabaseUrl}/project/_/sql`)
+        console.log('\n✅ To run this migration:')
+        console.log(`   1. Go to: ${supabaseUrl}/project/_/sql`)
+        console.log('   2. Copy the SQL above')
+        console.log('   3. Paste it into the SQL Editor')
+        console.log('   4. Click "Run"\n')
         process.exit(0)
       }
       throw error

@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, User, Building, FileText, XCircle } from 'lucide-react'
+import { Calendar, User, Building, FileText, XCircle, Download, AlertTriangle } from 'lucide-react'
 import { getTransferRequestById } from '@/lib/queries/transfers'
+import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TransferActions } from '@/components/transfers/transfer-actions'
 import { PageHeader } from '@/components/shared'
@@ -20,6 +22,23 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
   } catch {
     notFound()
   }
+
+  // Get current user data to check permissions
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role, church_id')
+    .eq('id', user!.id)
+    .single()
+
+  // Check if user can approve/reject this transfer
+  // Only destination church or superadmin/field_secretary can approve/reject
+  const canApproveReject =
+    userData?.role === 'superadmin' ||
+    userData?.role === 'field_secretary' ||
+    (userData?.church_id === transfer.to_church_id)
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -58,14 +77,20 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-gray-500">Name</p>
-                  <Link
-                    href={`/members/${transfer.members.id}`}
-                    className="text-lg font-medium text-primary hover:underline"
-                  >
-                    {transfer.members.full_name}
-                  </Link>
-                </div>
-              </div>
+                  {transfer.members ? (
+                    <Link
+                      href={`/members/${transfer.members.id}?ref=transfer`}
+                      className="text-lg font-medium text-primary hover:underline"
+                    >
+                      {transfer.members.full_name}
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-lg font-medium">Member Deleted</span>
+                    </div>
+                  )}
+                </div>              </div>
             </CardContent>
           </Card>
 
@@ -100,6 +125,46 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
               </div>
             </CardContent>
           </Card>
+
+          {/* Transfer Request Letter */}
+          {transfer.attachment_url && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Transfer Request Letter
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 p-2 rounded">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Attached Document</p>
+                      <p className="text-xs text-gray-500">Click to view or download</p>
+                    </div>
+                  </div>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                  >
+                    <a
+                      href={transfer.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      View Document
+                    </a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Notes */}
           {transfer.notes && (
@@ -172,8 +237,8 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
             </CardContent>
           </Card>
 
-          {/* Actions */}
-          {transfer.status === 'pending' && (
+          {/* Actions - Only show to destination church or superadmin/field_secretary */}
+          {transfer.status === 'pending' && canApproveReject && (
             <Card>
               <CardHeader>
                 <CardTitle>Actions</CardTitle>

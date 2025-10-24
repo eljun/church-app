@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2, ArrowRight } from 'lucide-react'
+import { Loader2, ArrowRight, Download } from 'lucide-react'
 import { createTransferRequestSchema } from '@/lib/validations/transfer'
 import { createTransferRequest } from '@/lib/actions/transfers'
 import type { CreateTransferRequestInput } from '@/lib/validations/transfer'
@@ -22,6 +22,8 @@ import {
 import { toast } from 'sonner'
 import { MemberSelect } from '@/components/transfers/member-select'
 import { ChurchSelect } from '@/components/shared'
+import { FileUpload } from '@/components/ui/file-upload'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface Church {
   id: string
@@ -65,6 +67,7 @@ export function TransferRequestForm({
       from_church_id: '',
       to_church_id: '',
       notes: null,
+      attachment_url: '',
     },
   })
 
@@ -114,6 +117,27 @@ export function TransferRequestForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Download Transfer Request Letter Template */}
+        <Alert className="bg-blue-50 border-blue-200">
+          <Download className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-sm text-gray-700">
+              Please download and complete the Transfer Request Letter form before uploading it below.
+            </span>
+            <Button
+              type="button"
+              variant="link"
+              className="text-blue-600 hover:text-blue-800 p-0 h-auto font-medium"
+              onClick={() => {
+                // This will be replaced with the actual PDF link later
+                toast.info('PDF link will be provided by you')
+              }}
+            >
+              Download Form Template
+            </Button>
+          </AlertDescription>
+        </Alert>
+
         {/* Member Selection */}
         <FormField
           control={form.control}
@@ -168,6 +192,33 @@ export function TransferRequestForm({
               </FormControl>
               <FormDescription>
                 Select the church to transfer the member to
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Transfer Request Letter Upload */}
+        <FormField
+          control={form.control}
+          name="attachment_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Transfer Request Letter <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <FileUpload
+                  value={field.value || null}
+                  onChange={(url) => field.onChange(url || '')}
+                  bucketName="transfer-documents"
+                  path="transfer-requests"
+                  label="Upload completed Transfer Request Letter"
+                  required
+                />
+              </FormControl>
+              <FormDescription>
+                Upload the completed and signed transfer request letter (PDF, DOC, or image format)
               </FormDescription>
               <FormMessage />
             </FormItem>

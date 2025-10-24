@@ -303,3 +303,60 @@ export async function getChurchesByField(field: string) {
 
   return data || []
 }
+
+/**
+ * Get all churches for transfer destination selection
+ * This bypasses normal scope restrictions to allow church secretaries
+ * to see all churches when selecting a transfer destination
+ */
+export async function getChurchesForTransfer() {
+  const supabase = await createClient()
+
+  // Verify user is authenticated
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  // Get user's role to determine scope
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role, field_id, district_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData) throw new Error('User not found')
+
+  // Build query
+  let query = supabase
+    .from('churches')
+    .select('id, name, field, district, city, province')
+    .eq('is_active', true)
+    .order('name', { ascending: true })
+
+  // For church secretaries and bibleworkers, show churches within their district
+  // For pastors, show churches within their district
+  // For field secretaries and above, show all churches
+  if (userData.role === 'church_secretary' || userData.role === 'bibleworker') {
+    // Show churches in the same district (if district is assigned)
+    if (userData.district_id) {
+      query = query.eq('district', userData.district_id)
+    }
+    // Otherwise show all churches (fallback)
+  } else if (userData.role === 'pastor') {
+    // Show churches in the same district
+    if (userData.district_id) {
+      query = query.eq('district', userData.district_id)
+    }
+  } else if (userData.role === 'field_secretary') {
+    // Show churches in the same field
+    if (userData.field_id) {
+      query = query.eq('field', userData.field_id)
+    }
+  }
+  // superadmin and coordinator see all churches (no filter)
+
+  const { data, error } = await query
+
+  if (error) throw error
+
+  return data || []
+}

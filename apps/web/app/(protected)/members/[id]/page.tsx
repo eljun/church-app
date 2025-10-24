@@ -19,10 +19,12 @@ import { PageHeader } from '@/components/shared'
 
 interface MemberDetailPageProps {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ ref?: string }>
 }
 
-export default async function MemberDetailPage({ params }: MemberDetailPageProps) {
+export default async function MemberDetailPage({ params, searchParams }: MemberDetailPageProps) {
   const { id } = await params
+  const { ref } = await searchParams
 
   // Get current user and role
   const supabase = await createClient()
@@ -34,7 +36,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
 
   const { data: currentUser } = await supabase
     .from('users')
-    .select('role')
+    .select('role, church_id')
     .eq('id', user.id)
     .single()
 
@@ -42,9 +44,12 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
   const isBibleworker = currentUser?.role === 'bibleworker'
   const isSuperadmin = currentUser?.role === 'superadmin'
 
+  // If coming from transfer page, skip permission check
+  const skipPermissionCheck = ref === 'transfer'
+
   try {
     const [member, transferHistory] = await Promise.all([
-      getMemberById(id),
+      getMemberById(id, skipPermissionCheck),
       getMemberTransferHistory(id),
     ])
 

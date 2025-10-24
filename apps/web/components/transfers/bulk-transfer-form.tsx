@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Loader2, Users, ArrowRight } from 'lucide-react'
+import { Loader2, Users, ArrowRight, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -17,6 +17,8 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { ChurchSelect } from '@/components/shared'
 import { createTransferRequest } from '@/lib/actions/transfers'
+import { FileUpload } from '@/components/ui/file-upload'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface Church {
   id: string
@@ -54,6 +56,7 @@ export function BulkTransferForm({
   const [toChurchId, setToChurchId] = useState('')
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
   const [notes, setNotes] = useState('')
+  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [progress, setProgress] = useState({ current: 0, total: 0 })
 
@@ -98,6 +101,11 @@ export function BulkTransferForm({
       return
     }
 
+    if (!attachmentUrl) {
+      toast.error('Please upload the transfer request letter')
+      return
+    }
+
     setIsSubmitting(true)
     setProgress({ current: 0, total: selectedMembers.length })
 
@@ -113,6 +121,7 @@ export function BulkTransferForm({
         from_church_id: fromChurchId,
         to_church_id: toChurchId,
         notes: notes || null,
+        attachment_url: attachmentUrl || '',
       })
 
       if ('error' in result) {
@@ -143,6 +152,27 @@ export function BulkTransferForm({
 
   return (
     <div className="space-y-6">
+      {/* Download Transfer Request Letter Template */}
+      <Alert className="bg-blue-50 border-blue-200">
+        <Download className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="flex items-center justify-between">
+          <span className="text-sm text-gray-700">
+            Please download and complete the Transfer Request Letter form before uploading it below.
+          </span>
+          <Button
+            type="button"
+            variant="link"
+            className="text-blue-600 hover:text-blue-800 p-0 h-auto font-medium"
+            onClick={() => {
+              // This will be replaced with the actual PDF link later
+              toast.info('PDF link will be provided by you')
+            }}
+          >
+            Download Form Template
+          </Button>
+        </AlertDescription>
+      </Alert>
+
       {/* Step 1: Select Source Church - Only for Superadmin */}
       {userRole === 'superadmin' && (
         <Card>
@@ -238,11 +268,36 @@ export function BulkTransferForm({
         </Card>
       )}
 
+      {/* Step: Upload Transfer Request Letter */}
+      {toChurchId && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {userRole === 'church_secretary' ? 'Step 3' : 'Step 4'}: Upload Transfer Request Letter{' '}
+              <span className="text-destructive">*</span>
+            </CardTitle>
+            <CardDescription>
+              Upload the completed and signed transfer request letter for all {selectedCount} member(s)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FileUpload
+              value={attachmentUrl}
+              onChange={setAttachmentUrl}
+              bucketName="transfer-documents"
+              path="transfer-requests"
+              label="Upload completed Transfer Request Letter"
+              required
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Step: Add Notes */}
       {toChurchId && (
         <Card>
           <CardHeader>
-            <CardTitle>{userRole === 'church_secretary' ? 'Step 3' : 'Step 4'}: Add Notes (Optional)</CardTitle>
+            <CardTitle>{userRole === 'church_secretary' ? 'Step 4' : 'Step 5'}: Add Notes (Optional)</CardTitle>
             <CardDescription>
               Provide context or reason for these transfers
             </CardDescription>
@@ -306,7 +361,7 @@ export function BulkTransferForm({
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting || selectedCount === 0}
+                disabled={isSubmitting || selectedCount === 0 || !attachmentUrl}
                 className="flex-1"
               >
                 {isSubmitting ? (

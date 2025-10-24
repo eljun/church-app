@@ -10,6 +10,7 @@ export const createTransferRequestSchema = z.object({
   from_church_id: z.string().uuid('Invalid source church ID'),
   to_church_id: z.string().uuid('Invalid destination church ID'),
   notes: z.string().nullable().optional(),
+  attachment_url: z.string().url('Invalid attachment URL').min(1, 'Transfer request letter is required'),
 })
 
 export const approveTransferSchema = z.object({
